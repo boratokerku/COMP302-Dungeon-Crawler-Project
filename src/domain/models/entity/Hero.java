@@ -1,15 +1,16 @@
-package domain.model.entity;
+package domain.models.entity;
 
 import java.util.Random;
 
-public class Hero {
+public class Hero extends Entity {
     private int hp = 17;
     private int mana = 80;
     private int def = 2;
     private int str;
     private int energy = 100;
 
-    public Hero() {
+    public Hero(int x, int y) {
+        super(x, y, 17);
         this.str = new Random().nextInt(8) + 8;
     }
 

@@ -11,4 +11,13 @@ public class Knight extends Entity {
     public void patrol() {
         // Hareket mantığı buraya gelecek
     }
+
+    @Override
+    public void update() {
+        patrol(); // Knight moves every frame via patrol logic
+    }
+
+    public int[] getPosition() {
+        return new int[] { this.x, this.y };
+    }
 }

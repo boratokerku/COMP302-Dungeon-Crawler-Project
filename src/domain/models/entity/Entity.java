@@ -29,4 +29,18 @@ public abstract class Entity {
     public int getHp() {
         return hp;
     }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void takeDamage(int amount) {
+        this.hp -= amount;
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.alive = false;
+        }
+    }
+
+    public abstract void update();
 }

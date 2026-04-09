@@ -9,21 +9,17 @@ import javax.imageio.ImageIO;
 
 public class TileManager {
     private Map<String, BufferedImage> tileCache = new HashMap<>();
-    private final int TILE_SIZE = 64; 
+    private final int TILE_SIZE = 64;
     private final int ACTUAL_SIZE = TILE_SIZE;
 
     public TileManager() {
-        // Tiles klasörünü hazırla
         new File("resources/images/tiles").mkdirs();
     }
 
-    /**
-     * Obje adına göre (örn: "wall", "floor") resmi döndürür.
-     * Eğer önbellekte yoksa dosyadan yüklemeye çalışır.
-     */
     public BufferedImage getTile(String name) {
-        if (name == null) return null;
-        
+        if (name == null)
+            return null;
+
         if (tileCache.containsKey(name)) {
             return tileCache.get(name);
         }

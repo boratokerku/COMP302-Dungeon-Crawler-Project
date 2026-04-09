@@ -1,6 +1,8 @@
 package domain.models.entity;
 
 import java.util.Random;
+
+import domain.models.AnimationState;
 import domain.models.Direction;
 import domain.models.AnimationState;
 
@@ -16,6 +18,14 @@ public class Hero extends Entity {
     public Hero(int x, int y) {
         super(x, y, 17);
         this.str = new Random().nextInt(8) + 8;
+    }
+
+    public AnimationState getAnimationState() {
+        return currentAnimationState;
+    }
+
+    public void setAnimationState(AnimationState animationState) {
+        this.currentAnimationState = animationState;
     }
 
     public boolean attemptBreak() {
@@ -67,18 +77,6 @@ public class Hero extends Entity {
     // Getters
     public Direction getDirection() {
         return currentDirection;
-    }
-
-    public int[] getPosition() {
-        return new int[]{ this.x, this.y };
-    }
-
-    public void setAnimationState(AnimationState state) {
-        this.currentAnimationState = state;
-    }
-
-    public AnimationState getAnimationState() {
-        return currentAnimationState;
     }
 
     @Override

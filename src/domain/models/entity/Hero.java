@@ -4,7 +4,7 @@ import java.util.Random;
 
 import domain.models.AnimationState;
 import domain.models.Direction;
-import domain.models.AnimationState;
+import java.awt.Point;
 
 public class Hero extends Entity {
     private int hp = 17;
@@ -83,4 +83,5 @@ public class Hero extends Entity {
     public void update() {
         // Enerji yenilenmesi veya pasif etkiler buraya
     }
+
 }

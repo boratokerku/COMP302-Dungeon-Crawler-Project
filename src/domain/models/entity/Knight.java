@@ -1,5 +1,7 @@
 package domain.models.entity;
 
+import java.awt.Point;
+
 public class Knight extends Entity {
     private String moveDirection = "HORIZONTAL"; // Knight'lar yatay veya dikey hareket eder
 
@@ -7,17 +9,30 @@ public class Knight extends Entity {
         super(x, y, 10); // Knight için örnek can, dokümanda belirtilmemişse 10 iyidir
     }
 
-    // Knight'ın kendine has zekası (Sadece ileri-geri gider)
-    public void patrol() {
-        // Hareket mantığı buraya gelecek
+    // Knight'ın kendine has zekası 
+    public void followHero(Hero hero) {
+        int heroX = hero.getX();
+        int heroY = hero.getY();
+
+        if (this.x < heroX) {
+            this.x++; 
+        } else if (this.x > heroX) {
+            this.x--; 
+        } else if (this.y < heroY) {
+            this.y++; 
+        } else if (this.y > heroY) {
+            this.y--;
+        }
     }
 
     @Override
     public void update() {
-        patrol(); // Knight moves every frame via patrol logic
+        // Hero parametresi almadığı için update metodunda bir şey yapmıyoruz. 
+        // Takip için followHero çağırılmalı.
     }
 
-    public int[] getPosition() {
-        return new int[] { this.x, this.y };
+    @Override // Bu anotasyon hata varsa seni uyarır, kullanman iyidir
+    public Point getPosition() {
+        return new Point(this.x, this.y);
     }
 }

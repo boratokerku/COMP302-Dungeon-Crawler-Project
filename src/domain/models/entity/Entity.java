@@ -1,5 +1,7 @@
 package domain.models.entity;
 
+import java.awt.Point;
+
 public abstract class Entity {
     protected int x, y;
     protected int hp;
@@ -9,6 +11,10 @@ public abstract class Entity {
         this.x = x;
         this.y = y;
         this.hp = hp;
+    }
+
+    public Point getPosition() {
+        return new Point(this.x, this.y);
     }
 
     // Ortak hareket metodu

@@ -16,45 +16,73 @@ public class Sorcerer extends Entity {
      * Hero'yu adım adım takip eder.
      * Ayrıca 7 saniyede bir %50 ihtimalle anında yanına ışınlanma özelliğini tetikler.
      */
-    public void followHero(Hero hero) {
+    public void followHero(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
+        if (!this.isAlive()) return;
+        
         long currentTime = System.currentTimeMillis();
 
-        // 1. Önce Teleport kontrolü (7 saniyede bir)
         if (currentTime - lastTeleportTime >= 7000) {
-            boolean teleported = attemptTeleport(hero);
-            lastTeleportTime = currentTime; // Zamanlayıcıyı sıfırla
+            boolean teleported = attemptTeleport(hero, map, entities);
+            lastTeleportTime = currentTime; 
             
             if (teleported) {
-                return; // Işınlandıysa bu el adım atmasına gerek yok, işlemi bitir
+                return; 
             }
         }
 
-        // 2. Işınlanmadıysa Normal Adım Adım Takip (Knight ile aynı mantık)
         int heroX = hero.getX();
         int heroY = hero.getY();
 
+        int nextX = this.x;
+        int nextY = this.y;
+
         if (this.x < heroX) {
-            this.x++; // Hero sağda → sağa git
+            nextX++; 
         } else if (this.x > heroX) {
-            this.x--; // Hero solda → sola git
+            nextX--; 
         } else if (this.y < heroY) {
-            this.y++; // Hero aşağıda → aşağı git
+            nextY++; 
         } else if (this.y > heroY) {
-            this.y--; // Hero yukarıda → yukarı git
+            nextY--;
+        }
+
+        boolean occupied = false;
+        if (entities != null) {
+            for (Entity e : entities) {
+                if (e != this && e.isAlive() && e.getX() == nextX && e.getY() == nextY) {
+                    occupied = true;
+                    break;
+                }
+            }
+        }
+
+        if (map != null && map.isWalkable(nextX, nextY) && !occupied) {
+            this.x = nextX;
+            this.y = nextY;
         }
     }
 
-    private boolean attemptTeleport(Hero hero) {
-        // %50 ihtimal kontrolü
+    private boolean attemptTeleport(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
         if (random.nextBoolean()) {
-            System.out.println("Sorcerer ışınlanma gücünü kullandı!");
-            this.x = hero.getX();
-            this.y = hero.getY();
-            return true; // Işınlanma Başarılı
-        } else {
-            System.out.println("Sorcerer güç topluyor (Işınlanma başarısız).");
-            return false; // Işınlanma Başarısız
-        }
+            boolean occupied = false;
+            if (entities != null) {
+                for (Entity e : entities) {
+                    if (e != this && e.isAlive() && e.getX() == hero.getX() && e.getY() == hero.getY()) {
+                        occupied = true;
+                        break;
+                    }
+                }
+            }
+
+            if (map != null && map.isWalkable(hero.getX(), hero.getY()) && !occupied) {
+                System.out.println("Sorcerer ışınlanma gücünü kullandı!");
+                this.x = hero.getX();
+                this.y = hero.getY();
+                return true;
+            }
+        } 
+        System.out.println("Sorcerer güç topluyor (Işınlanma başarısız veya dolu/duvar).");
+        return false;
     }
 
     @Override

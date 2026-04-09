@@ -1,16 +1,13 @@
 package domain.models.tile;
 
-public abstract class Tile {
-    protected boolean passable; // Karakterler buradan geçebilir mi?
-    protected String symbol; // Konsol çıktısı için (örn: "#", ".")
+import domain.models.entity.GameObject;
 
-    public Tile(boolean passable, String symbol) {
-        this.passable = passable;
-        this.symbol = symbol;
-    }
+public abstract class Tile extends GameObject {
+    protected String symbol; 
 
-    public boolean isPassable() {
-        return passable;
+    public Tile(int x, int y, String imageName, boolean passable) {
+        super(x, y, imageName, passable);
+        this.symbol = imageName;
     }
 
     public String getSymbol() {

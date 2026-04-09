@@ -7,7 +7,6 @@ import domain.models.Direction;
 import java.awt.Point;
 
 public class Hero extends Entity {
-    private int hp = 17;
     private int mana = 80;
     private int def = 2;
     private int str;
@@ -16,7 +15,7 @@ public class Hero extends Entity {
     private AnimationState currentAnimationState = AnimationState.IDLE;
 
     public Hero(int x, int y) {
-        super(x, y, 17);
+        super(x, y, 17); // Max HP = 17
         this.str = new Random().nextInt(8) + 8;
     }
 
@@ -42,7 +41,7 @@ public class Hero extends Entity {
     }
 
     public void consumeEnergyForMove() {
-        this.energy -= 1;
+        this.energy -= 3;
     }
 
     public void heal(int amount) {
@@ -50,27 +49,78 @@ public class Hero extends Entity {
     }
 
     public int getHp() {
-        return hp;
+        return this.hp;
+    }
+
+    public int getMana() {
+        return this.mana;
+    }
+
+    public int getEnergy() {
+        return this.energy;
     }
 
     public int getStr() {
         return str;
     }
 
-    public void move(Direction dir) {
+    public void move(Direction dir, domain.models.map.GameMap map, java.util.List<Entity> entities) {
         this.currentDirection = dir;
-        // Note: actual x/y update will be done after MovementHandler validation
-        System.out.println("Hero moving " + dir);
+
+        int nextX = this.x;
+        int nextY = this.y;
+
+        switch (dir) {
+            case UP:
+                nextY -= 1;
+                break;
+            case DOWN:
+                nextY += 1;
+                break;
+            case LEFT:
+                nextX -= 1;
+                break;
+            case RIGHT:
+                nextX += 1;
+                break;
+        }
+
+        boolean occupied = false;
+        if (entities != null) {
+            for (Entity e : entities) {
+                if (e != this && e.isAlive() && e.getX() == nextX && e.getY() == nextY) {
+                    occupied = true;
+                    this.attack(e); // Çarptığı düşmana saldır
+                    break;
+                }
+            }
+        }
+
+        // Sadece gidilecek yer "yürünebilir" (Zemin vs) ise ve dolu değilse hareket et
+        if (map != null && map.isWalkable(nextX, nextY) && !occupied) {
+            this.x = nextX;
+            this.y = nextY;
+            consumeEnergyForMove(); // Artık senin yaptığın -3 değişikliğini kullanacak
+            System.out.println("Hero moving " + dir + " to (" + this.x + ", " + this.y + ") Energy: " + this.energy);
+        } else if (!occupied) {
+            System.out.println("Hero blocked at (" + nextX + ", " + nextY + ")");
+        }
     }
 
     /**
      * Hero attacks the entity in the current facing direction.
      */
     public void attack(Entity target) {
+        int attackCost = 10;
         if (target != null && target.isAlive()) {
-            int damage = 5; // Will scale with Weapon later
-            target.takeDamage(damage);
-            System.out.println("Hero attacked target! Damage: " + damage);
+            if (this.energy >= attackCost) {
+                int damage = 5;
+                target.takeDamage(damage);
+                this.energy -= attackCost; // Saldırı maliyeti
+                System.out.println("Hero attacked target! Damage: " + damage + " Energy: " + this.energy);
+            } else {
+                System.out.println("Saldırı için yeterli enerji yok!");
+            }
         }
     }
 
@@ -81,7 +131,10 @@ public class Hero extends Entity {
 
     @Override
     public void update() {
-        // Enerji yenilenmesi veya pasif etkiler buraya
+        // Enerji yenilenmesi (Logic Loop her 120ms'de bir çağırdığında azar azar dolar)
+        if (this.energy < 100) {
+            this.energy += 1;
+        }
     }
 
 }

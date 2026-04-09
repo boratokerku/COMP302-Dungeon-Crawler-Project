@@ -2,14 +2,12 @@ package domain.models.entity;
 
 import java.awt.Point;
 
-public abstract class Entity {
-    protected int x, y;
+public abstract class Entity extends GameObject {
     protected int hp;
     protected boolean alive = true;
 
     public Entity(int x, int y, int hp) {
-        this.x = x;
-        this.y = y;
+        super(x, y, "entity", true); 
         this.hp = hp;
     }
 

@@ -9,53 +9,83 @@ import java.util.Map;
 import domain.models.AnimationState;
 
 public class AssetManager {
-    private BufferedImage characterSheet;
-    private BufferedImage itemsSheet;
-
-    // Her animasyon durumu için bir animatör tutan harita
-    private Map<AnimationState, SpriteAnimation> heroAnimations;
+    private SpriteAnimation heroWalkRight;
+    private SpriteAnimation heroIdle;
+    
+    private SpriteAnimation knightWalk;
+    private SpriteAnimation sorcererWalk;
 
     public AssetManager() {
-        heroAnimations = new HashMap<>();
-        loadSheets();
-        setupHeroAnimations();
+        heroWalkRight = new SpriteAnimation(120);
+        heroIdle = new SpriteAnimation(500);
+        knightWalk = new SpriteAnimation(150);
+        sorcererWalk = new SpriteAnimation(150);
+        
+        loadHeroAnimations();
+        loadEnemyAnimations();
     }
 
-    private void loadSheets() {
+    private void loadHeroAnimations() {
         try {
-            // Dosya yollarını projendeki klasör yapısına göre güncelle
-            characterSheet = ImageIO.read(new File("src/assets/characters x2.png"));
-            itemsSheet = ImageIO.read(new File("src/assets/items x2.png"));
-        } catch (IOException e) {
-            System.err.println("Assetler yüklenirken hata oluştu: " + e.getMessage());
+            // Load Hero walking frames (1-9)
+            for (int i = 1; i <= 9; i++) {
+                File imgFile = new File("resources/images/characters/Hero/hero_walk_" + i + ".png");
+                if (imgFile.exists()) {
+                    BufferedImage frame = ImageIO.read(imgFile);
+                    heroWalkRight.addFrame(frame);
+                }
+            }
+            // Use the first walk frame as idle for now
+            File idleFile = new File("resources/images/characters/Hero/hero_walk_1.png");
+            if (idleFile.exists()) {
+                BufferedImage idleFrame = ImageIO.read(idleFile);
+                heroIdle.addFrame(idleFrame);
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading Hero sprites: " + e.getMessage());
         }
     }
 
-    private void setupHeroAnimations() {
-        // --- HERO WALK RIGHT (Manuel Koordinatlar) ---
-        // Not: Resmin x2 olduğunu söyledin, bu yüzden kareler genelde 32x32 veya
-        // yakınıdır.
-        SpriteAnimation walkRight = new SpriteAnimation(120); // 120ms kare hızı
-
-        // Buradaki koordinatları (x, y, width, height) resmine bakarak manuel ince ayar
-        // yapmalısın
-        walkRight.addFrame(characterSheet.getSubimage(0, 64, 32, 32));
-        walkRight.addFrame(characterSheet.getSubimage(33, 64, 32, 32));
-        walkRight.addFrame(characterSheet.getSubimage(65, 64, 32, 32));
-
-        heroAnimations.put(AnimationState.WALK_RIGHT, walkRight);
-
-        // --- HERO IDLE ---
-        SpriteAnimation idle = new SpriteAnimation(500);
-        idle.addFrame(characterSheet.getSubimage(0, 64, 32, 32));
-        heroAnimations.put(AnimationState.IDLE, idle);
+    private void loadEnemyAnimations() {
+        try {
+            // Load Knight walking frames (1-9)
+            for (int i = 1; i <= 9; i++) {
+                File imgFile = new File("resources/images/characters/Enemy/Knight/knight_walk_" + i + ".png");
+                if (imgFile.exists()) {
+                    BufferedImage frame = ImageIO.read(imgFile);
+                    knightWalk.addFrame(frame);
+                }
+            }
+            
+            // Load Sorcerer walking frames (1-9)
+            for (int i = 1; i <= 9; i++) {
+                File imgFile = new File("resources/images/characters/Enemy/Sorcerer/sorcerer_walk_" + i + ".png");
+                if (imgFile.exists()) {
+                    BufferedImage frame = ImageIO.read(imgFile);
+                    sorcererWalk.addFrame(frame);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading Enemy sprites: " + e.getMessage());
+        }
     }
 
     /**
      * Hero'nun o anki durumuna göre doğru kareyi döndürür.
      */
     public BufferedImage getHeroSprite(AnimationState state) {
-        SpriteAnimation anim = heroAnimations.getOrDefault(state, heroAnimations.get(AnimationState.IDLE));
-        return anim.getCurrentFrame();
+        if (state == AnimationState.IDLE) {
+            return heroIdle.getCurrentFrame();
+        }
+        // Tüm hareketler için (şimdilik) aynı walk animasyonunu kullan
+        return heroWalkRight.getCurrentFrame();
+    }
+    
+    public BufferedImage getKnightSprite() {
+        return knightWalk.getCurrentFrame();
+    }
+    
+    public BufferedImage getSorcererSprite() {
+        return sorcererWalk.getCurrentFrame();
     }
 }

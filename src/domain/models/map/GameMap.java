@@ -1,45 +1,37 @@
 package domain.models.map;
 
 import domain.models.tile.Tile;
+import domain.models.entity.GameObject;
 
-public class GameMap {
-    private int width;
-    private int height;
-    private Tile[][] grid;
+public class GameMap extends Grid {
 
     public GameMap(int width, int height) {
-        this.width = width;
-        this.height = height;
-        this.grid = new Tile[width][height];
+        super(width, height); // Grid constructor (rows, cols)
         initializeEmptyMap();
     }
 
     private void initializeEmptyMap() {
-        // Haritayı başlangıçta boş zeminlerle doldur
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                // grid[i][j] = new FloorTile(); // Örnek
+        // Haritayı dış duvarlarla ve iç zeminlerle doldur
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (i == 0 || i == rows - 1 || j == 0 || j == cols - 1) {
+                    placeObject(new domain.models.tile.WallTile(), i, j);
+                } else {
+                    placeObject(new domain.models.tile.FloorTile(), i, j);
+                }
             }
         }
     }
 
     /**
-     * Belirli bir koordinatın yürünebilir (walkable) olup olmadığını kontrol eder.
      * Logic katmanı (MovementHandler) burayı sorgulayacak.
      */
     public boolean isWalkable(int x, int y) {
-        if (x < 0 || x >= width || y < 0 || y >= height) {
-            return false; // Harita dışı
-        }
-        return grid[x][y].isPassable(); // Tile'ın kendi özelliği
+        GameObject obj = getObjectAt(x, y);
+        return obj != null && obj.isPassable();
     }
 
     // Getters
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
+    public int getWidth() { return rows; }
+    public int getHeight() { return cols; }
 }

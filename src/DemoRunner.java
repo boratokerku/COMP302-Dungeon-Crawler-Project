@@ -1,12 +1,15 @@
 import domain.models.entity.*;
 import domain.models.map.GameMap;
 import domain.models.Direction;
+import domain.logic.EnemySpawner;
 import view.AssetManager;
 import view.GameView;
 import view.TileManager;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DemoRunner {
 
@@ -23,11 +26,11 @@ public class DemoRunner {
             // ACTUAL_SIZE = 64 px (GameView'da)
             // 13 sütun x 64px = 832px genişlik
             // 10 satır x 64px = 640px yükseklik
-            GameMap map = new GameMap(13, 10); 
+            GameMap map = new GameMap(13, 10);
             Hero hero = new Hero(1, 2); // y=1 artık duvar yüzeyi olduğu için 2'den başlıyoruz
-            Knight knight = new Knight(11, 8); // Karşı köşeye atalım
-            Sorcerer sorcerer = new Sorcerer(8, 8);
-            
+            Knight knight = new Knight(11, 8); // Başlangıç düşmanı — karşı köşe
+            Sorcerer sorcerer = new Sorcerer(8, 8); // Başlangıç düşmanı
+
             // View (Görünüm)
             GameView gameView = new GameView(hero, assetManager);
             // JPanel boyutunu tam haritaya göre ayarla
@@ -37,9 +40,15 @@ public class DemoRunner {
             gameView.setEnemies(knight, sorcerer);
 
             frame.add(gameView);
-            
-            // Çarpışma (Collision) hesaplamaları için tüm varlıkları bir listeye koyuyoruz
-            java.util.List<Entity> entities = java.util.Arrays.asList(hero, knight, sorcerer);
+
+            // ArrayList kullanıyoruz (Arrays.asList değil) — EnemySpawner yeni düşman ekleyebilsin
+            List<Entity> entities = new ArrayList<>();
+            entities.add(hero);
+            entities.add(knight);
+            entities.add(sorcerer);
+
+            // GameView'a entity listesini bağla — yeni spawn olanlar da otomatik çizilsin
+            gameView.setEntityList(entities);
 
             // Klavye girdilerini dinlemek için InputHandler'ı frame'e ekliyoruz
             controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities);
@@ -51,11 +60,28 @@ public class DemoRunner {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
+            // EnemySpawner — design doc §2.5: 9 saniyede bir, kenar tile'dan, %60/%30/%10
+            EnemySpawner spawner = new EnemySpawner(map);
+
             // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
             javax.swing.Timer logicTimer = new javax.swing.Timer(120, (e) -> {
+                // Hero enerji yenileme
                 hero.update();
+
+                // Başlangıç düşmanlarının AI'sı
                 knight.followHero(hero, map, entities);
                 sorcerer.followHero(hero, map, entities);
+
+                // Spawn kontrolü (her 9 saniyede bir yeni düşman çıkarmayı dener)
+                spawner.trySpawn(entities);
+
+                // Yeni spawn olan düşmanların AI'sını çalıştır
+                for (Knight k : spawner.getSpawnedKnights()) {
+                    if (k.isAlive()) k.followHero(hero, map, entities);
+                }
+                for (Sorcerer s : spawner.getSpawnedSorcerers()) {
+                    if (s.isAlive()) s.followHero(hero, map, entities);
+                }
             });
             logicTimer.start();
 

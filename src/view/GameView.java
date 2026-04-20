@@ -33,7 +33,10 @@ public class GameView extends JPanel {
     private domain.models.entity.Knight knight;
     private domain.models.entity.Sorcerer sorcerer;
     private TileManager tileManager;
-    
+
+    // Spawn edilen dahil TÜM entity'leri tutan liste (EnemySpawner yeni ekledikçe buraya yansır)
+    private java.util.List<domain.models.entity.Entity> entityList;
+
     // Dinamik hesaplanan ekran değişkenleri
     private int tileSize = 64;
     private int offsetX = 0;
@@ -46,6 +49,15 @@ public class GameView extends JPanel {
     public void setEnemies(domain.models.entity.Knight knight, domain.models.entity.Sorcerer sorcerer) {
         this.knight = knight;
         this.sorcerer = sorcerer;
+    }
+
+    /**
+     * EnemySpawner ile paylaşılan entity listesini bağlar.
+     * Bu liste güncellendiğinde (yeni düşman spawn olduğunda) GameView otomatik olarak
+     * yeni düşmanları da çizer — referans olduğu için her zaman güncel kalır.
+     */
+    public void setEntityList(java.util.List<domain.models.entity.Entity> list) {
+        this.entityList = list;
     }
 
     public void setTileManager(TileManager tileManager) {
@@ -150,17 +162,39 @@ public class GameView extends JPanel {
     }
 
     private void drawEnemies(Graphics2D g2d) {
-        if (knight != null && knight.isAlive()) {
-            BufferedImage kFrame = assetManager.getKnightSprite();
-            if (kFrame != null) {
-                g2d.drawImage(kFrame, offsetX + (knight.getX() * tileSize), offsetY + (knight.getY() * tileSize), tileSize, tileSize, null);
-            }
-        }
+        if (entityList != null && !entityList.isEmpty()) {
+            // entityList varsa: tüm entity'leri çiz (başlangıç + spawn edilenler)
+            for (domain.models.entity.Entity e : entityList) {
+                if (!e.isAlive()) continue; // Ölmüş entity'leri çizme
+                if (e instanceof domain.models.entity.Hero) continue; // Hero ayrıca çiziliyor
 
-        if (sorcerer != null && sorcerer.isAlive()) {
-            BufferedImage sFrame = assetManager.getSorcererSprite();
-            if (sFrame != null) {
-                g2d.drawImage(sFrame, offsetX + (sorcerer.getX() * tileSize), offsetY + (sorcerer.getY() * tileSize), tileSize, tileSize, null);
+                BufferedImage frame = null;
+                if (e instanceof domain.models.entity.Knight) {
+                    frame = assetManager.getKnightSprite();
+                } else if (e instanceof domain.models.entity.Sorcerer) {
+                    frame = assetManager.getSorcererSprite();
+                }
+
+                if (frame != null) {
+                    g2d.drawImage(frame,
+                            offsetX + (e.getX() * tileSize),
+                            offsetY + (e.getY() * tileSize),
+                            tileSize, tileSize, null);
+                }
+            }
+        } else {
+            // entityList yoksa: sadece başlangıç knight ve sorcerer'ı çiz (geriye dönük uyumluluk)
+            if (knight != null && knight.isAlive()) {
+                BufferedImage kFrame = assetManager.getKnightSprite();
+                if (kFrame != null) {
+                    g2d.drawImage(kFrame, offsetX + (knight.getX() * tileSize), offsetY + (knight.getY() * tileSize), tileSize, tileSize, null);
+                }
+            }
+            if (sorcerer != null && sorcerer.isAlive()) {
+                BufferedImage sFrame = assetManager.getSorcererSprite();
+                if (sFrame != null) {
+                    g2d.drawImage(sFrame, offsetX + (sorcerer.getX() * tileSize), offsetY + (sorcerer.getY() * tileSize), tileSize, tileSize, null);
+                }
             }
         }
     }

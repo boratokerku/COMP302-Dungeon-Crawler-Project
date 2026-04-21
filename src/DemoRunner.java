@@ -15,17 +15,12 @@ public class DemoRunner {
             JFrame frame = new JFrame("COMP302 Dungeon Crawler Demo");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-            // Gerekli yöneticiler (Managers)
             AssetManager assetManager = new AssetManager();
             TileManager tileManager = new TileManager();
 
-            // Modeller
-            // ACTUAL_SIZE = 64 px (GameView'da)
-            // 13 sütun x 64px = 832px genişlik
-            // 10 satır x 64px = 640px yükseklik
             GameMap map = new GameMap(13, 10); 
-            Hero hero = new Hero(1, 2); // y=1 artık duvar yüzeyi olduğu için 2'den başlıyoruz
-            Knight knight = new Knight(11, 8); // Karşı köşeye atalım
+            Hero hero = new Hero(1, 2);
+            Knight knight = new Knight(11, 8);
             Sorcerer sorcerer = new Sorcerer(8, 8);
             
             // View (Görünüm)

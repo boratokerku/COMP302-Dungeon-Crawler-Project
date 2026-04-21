@@ -41,7 +41,7 @@ public class Hero extends Entity {
     }
 
     public void consumeEnergyForMove() {
-        this.energy -= 3;
+        this.energy = Math.max(0, this.energy - 3);
     }
 
     public void heal(int amount) {
@@ -64,7 +64,11 @@ public class Hero extends Entity {
         return str;
     }
 
-    public void move(Direction dir, domain.models.map.GameMap map, java.util.List<Entity> entities) {
+    public boolean move(Direction dir, domain.models.map.GameMap map, java.util.List<Entity> entities) {
+        if (this.energy < 3) {
+            System.out.println("No energy to move!");
+            return false;
+        }
         this.currentDirection = dir;
 
         int nextX = this.x;
@@ -96,15 +100,17 @@ public class Hero extends Entity {
             }
         }
 
-        // Sadece gidilecek yer "yürünebilir" (Zemin vs) ise ve dolu değilse hareket et
         if (map != null && map.isWalkable(nextX, nextY) && !occupied) {
             this.x = nextX;
             this.y = nextY;
-            consumeEnergyForMove(); // Artık senin yaptığın -3 değişikliğini kullanacak
+            consumeEnergyForMove();
             System.out.println("Hero moving " + dir + " to (" + this.x + ", " + this.y + ") Energy: " + this.energy);
+            return true;
         } else if (!occupied) {
             System.out.println("Hero blocked at (" + nextX + ", " + nextY + ")");
+            return false;
         }
+        return true; // Occupied covers attack, which is an action
     }
 
     /**

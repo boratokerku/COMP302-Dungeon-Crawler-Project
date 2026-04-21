@@ -32,16 +32,8 @@ public class MainMenuView extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.BLACK);
         
-        // Logo / Title
-        JLabel titleLabel = new JLabel("Dungeon Crawler");
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 64));
-        titleLabel.setForeground(Color.RED);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Add some space at the top
-        add(Box.createVerticalStrut(100));
-        add(titleLabel);
-        add(Box.createVerticalStrut(100));
+        // Add some space at the top to push buttons below the background image's title
+        add(Box.createVerticalStrut(250));
         
         // Buttons
         JButton startBtn = createStyledButton("Start Game");

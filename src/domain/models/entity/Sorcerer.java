@@ -1,96 +1,97 @@
 package domain.models.entity;
 
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class Sorcerer extends Entity {
+
     private long lastTeleportTime; // Son ışınlanma zamanı (milisaniye)
     private final Random random = new Random();
 
     public Sorcerer(int x, int y) {
-        super(x, y, 8);
+        super(x, y, 10); // Design doc §2.5.2: "only has 10HP of health"
         this.lastTeleportTime = System.currentTimeMillis();
     }
 
     /**
-     * Hero'yu adım adım takip eder.
-     * Ayrıca 7 saniyede bir %50 ihtimalle anında yanına ışınlanma özelliğini
-     * tetikler.
+     * Sorcerer AI ana metodu.
+     *
+     * Design doc §2.5.2:
+     * "Sorcerer does not walk and moves only by teleportation."
+     * "Every 7 seconds, with 50% probability he teleports himself
+     *  to a random empty spot on the map."
+     *
+     * @param hero     Oyuncu karakteri
+     * @param map      Harita (boş tile bulmak için)
+     * @param entities Tüm varlıklar (çakışma kontrolü için)
      */
     public void followHero(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
-        if (!this.isAlive())
-            return;
+        if (!this.isAlive()) return;
 
         long currentTime = System.currentTimeMillis();
 
+        // 7 saniyede bir teleport dene (design doc §2.5.2)
         if (currentTime - lastTeleportTime >= 7000) {
-            boolean teleported = attemptTeleport(hero, map, entities);
             lastTeleportTime = currentTime;
-
-            if (teleported) {
-                return;
-            }
+            attemptTeleport(map, entities);
         }
 
-        int heroX = hero.getX();
-        int heroY = hero.getY();
-
-        int nextX = this.x;
-        int nextY = this.y;
-
-        if (this.x < heroX) {
-            nextX++;
-        } else if (this.x > heroX) {
-            nextX--;
-        } else if (this.y < heroY) {
-            nextY++;
-        } else if (this.y > heroY) {
-            nextY--;
-        }
-
-        boolean occupied = false;
-        if (entities != null) {
-            for (Entity e : entities) {
-                if (e != this && e.isAlive() && e.getX() == nextX && e.getY() == nextY) {
-                    occupied = true;
-                    break;
-                }
-            }
-        }
-
-        if (map != null && map.isWalkable(nextX, nextY) && !occupied) {
-            this.x = nextX;
-            this.y = nextY;
-        }
+        // Sorcerer yürümez — buraya başka bir şey eklenmez (design doc §2.5.2)
     }
 
-    private boolean attemptTeleport(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
-        if (random.nextBoolean()) {
-            boolean occupied = false;
-            if (entities != null) {
-                for (Entity e : entities) {
-                    if (e != this && e.isAlive() && e.getX() == hero.getX() && e.getY() == hero.getY()) {
-                        occupied = true;
-                        break;
-                    }
+    /**
+     * %50 ihtimalle haritadaki rastgele boş bir tile'a ışınlanır.
+     *
+     * Design doc §2.5.2:
+     * "with 50% probability he teleports himself to a random empty spot on the map"
+     */
+    private void attemptTeleport(domain.models.map.GameMap map, java.util.List<Entity> entities) {
+        if (!random.nextBoolean()) {
+            // %50 ihtimalle ışınlanma gerçekleşmez
+            System.out.println("Sorcerer güç topluyor (ışınlanma bu sefer gerçekleşmedi).");
+            return;
+        }
+
+        // Haritadaki tüm yürünebilir ve boş hücreleri topla
+        List<int[]> emptyTiles = new ArrayList<>();
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                if (map.isWalkable(x, y) && !isOccupied(x, y, entities)) {
+                    emptyTiles.add(new int[]{x, y});
                 }
             }
+        }
 
-            if (map != null && map.isWalkable(hero.getX(), hero.getY()) && !occupied) {
-                System.out.println("Sorcerer ışınlanma gücünü kullandı!");
-                this.x = hero.getX();
-                this.y = hero.getY();
+        if (emptyTiles.isEmpty()) {
+            System.out.println("Sorcerer ışınlanmak istedi ama boş yer bulunamadı.");
+            return;
+        }
+
+        // Boş tile'lardan rastgele birini seç
+        int[] target = emptyTiles.get(random.nextInt(emptyTiles.size()));
+        this.x = target[0];
+        this.y = target[1];
+        System.out.println("Sorcerer ışınlandı! Yeni konum: (" + this.x + ", " + this.y + ")");
+    }
+
+    /**
+     * Verilen koordinat, başka bir canlı varlık tarafından işgal edilmiş mi?
+     */
+    private boolean isOccupied(int x, int y, java.util.List<Entity> entities) {
+        if (entities == null) return false;
+        for (Entity e : entities) {
+            if (e != this && e.isAlive() && e.getX() == x && e.getY() == y) {
                 return true;
             }
         }
-        System.out.println("Sorcerer güç topluyor (Işınlanma başarısız veya dolu/duvar).");
         return false;
     }
 
     @Override
     public void update() {
-        // Parametresiz update şu an kullanılmıyor, yerine 'followHero(hero)'
-        // çağrılacak.
+        // Hareket mantığı followHero(hero, map, entities) ile tetiklenir.
     }
 
     @Override

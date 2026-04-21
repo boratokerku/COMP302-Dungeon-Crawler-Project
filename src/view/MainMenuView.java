@@ -4,9 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 
 public class MainMenuView extends JPanel {
-    
+
     private Runnable onStartGame;
     private Image backgroundImage;
 
@@ -31,71 +32,110 @@ public class MainMenuView extends JPanel {
     private void initUI() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.BLACK);
-        
+
         // Add some space at the top to push buttons below the background image's title
         add(Box.createVerticalStrut(250));
-        
+
         // Buttons
-        JButton startBtn = createStyledButton("Start Game");
-        JButton helpBtn = createStyledButton("Help");
-        JButton quitBtn = createStyledButton("Quit");
-        
+        JButton startBtn = createImageButton("resources/images/start_game_button.png");
+        JButton helpBtn = createImageButton("resources/images/help_button.png");
+        JButton quitBtn = createImageButton("resources/images/quit_button.png");
+
         startBtn.addActionListener(e -> {
             if (onStartGame != null) {
                 onStartGame.run();
             }
         });
-        
+
         helpBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, 
-                "Welcome to Dungeon Crawler!\n\n" +
-                "Use Arrow Keys or W, A, S, D to move.\n" +
-                "Avoid enemies and survive as long as you can!\n",
-                "Help",
-                JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Welcome to Dungeon Crawler!\n\n" +
+                            "Use Arrow Keys or W, A, S, D to move.\n" +
+                            "Avoid enemies and survive as long as you can!\n",
+                    "Help",
+                    JOptionPane.INFORMATION_MESSAGE);
         });
-        
+
         quitBtn.addActionListener(e -> {
             System.exit(0);
         });
-        
+
         add(startBtn);
-        add(Box.createVerticalStrut(20));
+        add(Box.createVerticalStrut(10));
         add(helpBtn);
-        add(Box.createVerticalStrut(20));
+        add(Box.createVerticalStrut(10));
         add(quitBtn);
-        
+
         // Fill remaining space
         add(Box.createVerticalGlue());
     }
 
-    private JButton createStyledButton(String text) {
-        JButton btn = new JButton(text);
+    private JButton createImageButton(String imagePath) {
+        JButton btn = new JButton();
+        try {
+            BufferedImage originalImg = ImageIO.read(new File(imagePath));
+            BufferedImage trimmedImg = trimImage(originalImg);
+            Image scaledImg = trimmedImg.getScaledInstance(320, 80, Image.SCALE_SMOOTH);
+            btn.setIcon(new ImageIcon(scaledImg));
+        } catch (Exception e) {
+            System.err.println("Buton resmi yuklenemedi: " + imagePath);
+        }
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 24));
         btn.setFocusPainted(false);
-        
-        // Fix for macOS background and foreground color visibility on JButtons
-        btn.setOpaque(true);
         btn.setBorderPainted(false);
-        
-        Color gulKurusu = new Color(181, 101, 118);
-        Color gulKurusuHover = new Color(201, 121, 138);
-        
-        btn.setBackground(gulKurusu);
-        btn.setForeground(Color.RED);
-        btn.setMaximumSize(new Dimension(250, 50));
-        btn.setPreferredSize(new Dimension(250, 50));
-        // Hover effect
-        btn.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                btn.setBackground(gulKurusuHover);
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                btn.setBackground(gulKurusu);
-            }
-        });
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        btn.setMaximumSize(new Dimension(320, 80));
+        btn.setPreferredSize(new Dimension(320, 80));
+
         return btn;
+    }
+
+    private BufferedImage trimImage(BufferedImage img) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int top = height / 2, bottom = height / 2, left = width / 2, right = width / 2;
+        boolean found = false;
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                    top = y; found = true; break;
+                }
+            }
+            if (found) break;
+        }
+        found = false;
+        for (int y = height - 1; y >= 0; y--) {
+            for (int x = 0; x < width; x++) {
+                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                    bottom = y; found = true; break;
+                }
+            }
+            if (found) break;
+        }
+        found = false;
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                    left = x; found = true; break;
+                }
+            }
+            if (found) break;
+        }
+        found = false;
+        for (int x = width - 1; x >= 0; x--) {
+            for (int y = 0; y < height; y++) {
+                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                    right = x; found = true; break;
+                }
+            }
+            if (found) break;
+        }
+        if (right <= left || bottom <= top) return img;
+        return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
     }
 
     @Override

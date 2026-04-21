@@ -14,19 +14,21 @@ public class Sorcerer extends Entity {
 
     /**
      * Hero'yu adım adım takip eder.
-     * Ayrıca 7 saniyede bir %50 ihtimalle anında yanına ışınlanma özelliğini tetikler.
+     * Ayrıca 7 saniyede bir %50 ihtimalle anında yanına ışınlanma özelliğini
+     * tetikler.
      */
     public void followHero(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
-        if (!this.isAlive()) return;
-        
+        if (!this.isAlive())
+            return;
+
         long currentTime = System.currentTimeMillis();
 
         if (currentTime - lastTeleportTime >= 7000) {
             boolean teleported = attemptTeleport(hero, map, entities);
-            lastTeleportTime = currentTime; 
-            
+            lastTeleportTime = currentTime;
+
             if (teleported) {
-                return; 
+                return;
             }
         }
 
@@ -37,11 +39,11 @@ public class Sorcerer extends Entity {
         int nextY = this.y;
 
         if (this.x < heroX) {
-            nextX++; 
+            nextX++;
         } else if (this.x > heroX) {
-            nextX--; 
+            nextX--;
         } else if (this.y < heroY) {
-            nextY++; 
+            nextY++;
         } else if (this.y > heroY) {
             nextY--;
         }
@@ -80,14 +82,15 @@ public class Sorcerer extends Entity {
                 this.y = hero.getY();
                 return true;
             }
-        } 
+        }
         System.out.println("Sorcerer güç topluyor (Işınlanma başarısız veya dolu/duvar).");
         return false;
     }
 
     @Override
     public void update() {
-        // Parametresiz update şu an kullanılmıyor, yerine 'followHero(hero)' çağrılacak.
+        // Parametresiz update şu an kullanılmıyor, yerine 'followHero(hero)'
+        // çağrılacak.
     }
 
     @Override

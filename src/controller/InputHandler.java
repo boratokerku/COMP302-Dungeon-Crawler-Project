@@ -11,11 +11,14 @@ public class InputHandler implements KeyListener {
     private domain.models.map.GameMap map;
     private java.util.List<domain.models.entity.Entity> entities;
 
+    private view.GameView gameView;
+
     public InputHandler(Hero hero, domain.models.map.GameMap map,
-            java.util.List<domain.models.entity.Entity> entities) {
+            java.util.List<domain.models.entity.Entity> entities, view.GameView gameView) {
         this.hero = hero;
         this.map = map;
         this.entities = entities;
+        this.gameView = gameView;
     }
 
     @Override
@@ -40,10 +43,35 @@ public class InputHandler implements KeyListener {
                 hero.setAnimationState(AnimationState.WALK_RIGHT);
             }
         }
-
         else if (code == KeyEvent.VK_SPACE) {
             if (hero.getEnergy() >= 10) {
                 hero.setAnimationState(AnimationState.ATTACK);
+            }
+        } else if (code == KeyEvent.VK_I) {
+            if (gameView != null) {
+                gameView.toggleInventory();
+                gameView.repaint();
+            }
+        } else if (code == KeyEvent.VK_E) {
+            // Take action for adjacent items
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    int nx = hero.getX() + dx;
+                    int ny = hero.getY() + dy;
+                    if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
+                        domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
+                        if (obj instanceof domain.models.item.MapItem) {
+                            for (domain.logic.Action action : obj.getActions()) {
+                                if (action.getName().equals("Take") && action.isAvailable(hero, obj)) {
+                                    action.execute(hero, obj);
+                                    System.out.println("Take executed on " + obj.getName() + " via E key");
+                                    if (gameView != null) gameView.repaint();
+                                    return; // Sadece bir item al
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

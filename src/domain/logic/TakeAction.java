@@ -12,7 +12,7 @@ public class TakeAction implements Action {
 
     @Override
     public boolean isAvailable(Hero hero, GameObject target) {
-        return !hero.getInventory().isFull();
+        return !hero.getInventory().isFull() && !hero.getInventory().getItems().contains(target);
     }
 
     @Override

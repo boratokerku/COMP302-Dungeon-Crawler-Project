@@ -30,6 +30,13 @@ public class MouseHandler extends MouseAdapter {
 
         if (tileSize <= 0) return;
 
+        // Check if an item in the inventory was clicked
+        GameObject invObj = gameView.getClickedInventoryItem(e.getX(), e.getY());
+        if (invObj != null) {
+            actionMenu.show(gameView, invObj, e.getX(), e.getY());
+            return;
+        }
+
         // 1. Ekrandaki tıkı Map offsetlerine göre grid koordinatına çevir
         int clickedGridX = (e.getX() - offsetX) / tileSize;
         int clickedGridY = (e.getY() - offsetY) / tileSize;

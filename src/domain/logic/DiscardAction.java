@@ -1,0 +1,32 @@
+package domain.logic;
+
+import domain.models.entity.Hero;
+import domain.models.entity.GameObject;
+import javax.swing.JOptionPane;
+
+public class DiscardAction implements Action {
+
+    @Override
+    public String getName() {
+        return "Discard";
+    }
+
+    @Override
+    public boolean isAvailable(Hero hero, GameObject target) {
+        return hero.getInventory().getItems().contains(target);
+    }
+
+    @Override
+    public void execute(Hero hero, GameObject target) {
+        int choice = JOptionPane.showConfirmDialog(null, 
+            "Are you sure? This item will be lost forever.", 
+            "Confirm Discard", 
+            JOptionPane.YES_NO_OPTION, 
+            JOptionPane.WARNING_MESSAGE);
+            
+        if (choice == JOptionPane.YES_OPTION) {
+            hero.getInventory().removeItem(target);
+            System.out.println("Item discarded: " + target.getName());
+        }
+    }
+}

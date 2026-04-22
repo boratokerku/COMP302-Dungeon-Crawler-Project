@@ -42,6 +42,12 @@ public class GameView extends JPanel {
     private int offsetX = 0;
     private int offsetY = 0;
 
+    private boolean inventoryVisible = false;
+
+    public void toggleInventory() {
+        this.inventoryVisible = !this.inventoryVisible;
+    }
+
     public void setGameMap(domain.models.map.GameMap map) {
         this.gameMap = map;
     }
@@ -159,7 +165,7 @@ public class GameView extends JPanel {
     }
 
     private void drawInventory(Graphics2D g) {
-        if (hero == null || hero.getInventory() == null) return;
+        if (!inventoryVisible || hero == null || hero.getInventory() == null) return;
 
         int slotsX = 4;
         int slotsY = 2;

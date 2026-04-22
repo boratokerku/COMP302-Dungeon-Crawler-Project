@@ -42,6 +42,12 @@ public class GameView extends JPanel {
     private int offsetX = 0;
     private int offsetY = 0;
 
+    private boolean inventoryVisible = false;
+
+    public void toggleInventory() {
+        this.inventoryVisible = !this.inventoryVisible;
+    }
+
     public void setGameMap(domain.models.map.GameMap map) {
         this.gameMap = map;
     }
@@ -110,6 +116,9 @@ public class GameView extends JPanel {
         // 4. HUD (Arayüz) Çiz
         drawHUD(g2d);
 
+        // 5. Inventory Çiz
+        drawInventory(g2d);
+
         // Kaynakları temizle
         g2d.dispose();
     }
@@ -153,6 +162,66 @@ public class GameView extends JPanel {
         g.fillRect(hudX, hudY, Math.max(0, energyWidth), barHeight);
         g.setColor(Color.WHITE);
         g.drawString("Energy: " + hero.getEnergy(), hudX + barWidth + 5, hudY + 12);
+    }
+
+    private void drawInventory(Graphics2D g) {
+        if (!inventoryVisible || hero == null || hero.getInventory() == null) return;
+
+        int slotsX = 4;
+        int slotsY = 2;
+        int slotSize = 40;
+        int padding = 5;
+
+        // Position it at the bottom right corner
+        int invWidth = slotsX * slotSize + (slotsX + 1) * padding;
+        int invHeight = slotsY * slotSize + (slotsY + 1) * padding;
+
+        int startX = getWidth() - invWidth - 20;
+        int startY = getHeight() - invHeight - 20;
+
+        // Draw inventory background
+        g.setColor(new Color(0, 0, 0, 180));
+        g.fillRoundRect(startX, startY, invWidth, invHeight, 10, 10);
+        g.setColor(new Color(200, 200, 200));
+        g.drawRoundRect(startX, startY, invWidth, invHeight, 10, 10);
+
+        // Draw title
+        g.setColor(Color.WHITE);
+        g.drawString("Inventory", startX + padding, startY - 5);
+
+        domain.models.inventory.Inventory inv = hero.getInventory();
+        java.util.List<domain.models.entity.GameObject> items = inv.getItems();
+
+        int itemIndex = 0;
+        for (int y = 0; y < slotsY; y++) {
+            for (int x = 0; x < slotsX; x++) {
+                int slotX = startX + padding + x * (slotSize + padding);
+                int slotY = startY + padding + y * (slotSize + padding);
+
+                // Draw slot background
+                g.setColor(new Color(50, 50, 50, 200));
+                g.fillRect(slotX, slotY, slotSize, slotSize);
+                g.setColor(new Color(100, 100, 100));
+                g.drawRect(slotX, slotY, slotSize, slotSize);
+
+                // Draw item if exists
+                if (itemIndex < items.size()) {
+                    domain.models.entity.GameObject item = items.get(itemIndex);
+                    if (item instanceof domain.models.item.MapItem) {
+                        java.awt.image.BufferedImage sprite = ((domain.models.item.MapItem) item).getSprite();
+                        if (sprite != null) {
+                            g.drawImage(sprite, slotX + 2, slotY + 2, slotSize - 4, slotSize - 4, null);
+                        }
+                    } else if (item.getImageName() != null && tileManager != null) {
+                        java.awt.image.BufferedImage sprite = tileManager.getTile(item.getImageName());
+                        if (sprite != null) {
+                            g.drawImage(sprite, slotX + 2, slotY + 2, slotSize - 4, slotSize - 4, null);
+                        }
+                    }
+                }
+                itemIndex++;
+            }
+        }
     }
 
     private void drawHero(Graphics2D g2d) {

@@ -90,7 +90,7 @@ public class DemoRunner {
         gameView.setEntityList(entities);
 
         // Klavye girdilerini dinlemek için InputHandler'ı frame'e ekliyoruz
-        controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities);
+        controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);
         frame.addKeyListener(inputHandler);
         frame.setFocusable(true);
         frame.requestFocusInWindow();

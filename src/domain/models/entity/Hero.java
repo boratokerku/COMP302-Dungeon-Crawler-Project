@@ -13,10 +13,16 @@ public class Hero extends Entity {
     private int energy = 100;
     private Direction currentDirection = Direction.RIGHT;
     private AnimationState currentAnimationState = AnimationState.IDLE;
+    private domain.models.inventory.Inventory inventory;
 
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
         this.str = new Random().nextInt(8) + 8;
+        this.inventory = new domain.models.inventory.Inventory(8); // 2x4 layout
+    }
+
+    public domain.models.inventory.Inventory getInventory() {
+        return inventory;
     }
 
     public AnimationState getAnimationState() {

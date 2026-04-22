@@ -64,6 +64,10 @@ public class GameView extends JPanel {
         this.tileManager = tileManager;
     }
     
+    public int getTileSize() { return tileSize; }
+    public int getOffsetX() { return offsetX; }
+    public int getOffsetY() { return offsetY; }
+    
     // Çizimden hemen önce ekran boyutlarını hesaplar
     private void calculateDimensions() {
         if (gameMap != null) {
@@ -90,6 +94,12 @@ public class GameView extends JPanel {
 
         // 1. Zemin veya Haritayı Çiz
         drawMap(g2d);
+
+        // 1.5 Etkileşim Alanı (3x3) Vurgusu
+        drawInteractionHighlight(g2d);
+
+        // 1.7 Haritadaki Eşyaları Çiz
+        drawItems(g2d);
 
         // 2. Hero'yu Çiz
         drawHero(g2d);
@@ -206,9 +216,65 @@ public class GameView extends JPanel {
             for (int y = 0; y < gameMap.getHeight(); y++) {
                 domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
                 if (obj != null) {
-                    BufferedImage tileImage = tileManager.getTile(obj.getImageName());
-                    if (tileImage != null) {
-                        g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize, tileSize, null);
+                    if (obj instanceof domain.models.item.MapItem) {
+                        // Eğer hücrede bir eşya varsa, altını delik bırakmamak için Zemin (FloorTile) çiziyoruz
+                        BufferedImage floor = tileManager.getTile("floor");
+                        if (floor != null) {
+                            g2d.drawImage(floor, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize, tileSize, null);
+                        }
+                    } else {
+                        // Normal harita objesi (Duvar vs.)
+                        BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                        if (tileImage != null) {
+                            g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize, tileSize, null);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void drawInteractionHighlight(Graphics2D g2d) {
+        if (hero == null || gameMap == null) return;
+
+        int heroGridX = hero.getX();
+        int heroGridY = hero.getY();
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if (dx == 0 && dy == 0) continue; // skip hero's own tile
+
+                int tileX = heroGridX + dx;
+                int tileY = heroGridY + dy;
+
+                // Boundary check
+                if (tileX < 0 || tileY < 0 || tileX >= gameMap.getWidth() || tileY >= gameMap.getHeight()) continue;
+
+                // Only draw on passable (non-wall) tiles
+                domain.models.entity.GameObject obj = gameMap.getObjectAt(tileX, tileY);
+                if (obj == null || !obj.isPassable()) continue;
+
+                // Soft warm highlight
+                g2d.setColor(new Color(255, 240, 180, 35)); // warm yellow, very transparent
+                g2d.fillRect(offsetX + (tileX * tileSize), offsetY + (tileY * tileSize), tileSize, tileSize);
+
+                // Soft border
+                g2d.setColor(new Color(255, 240, 180, 80));
+                g2d.drawRect(offsetX + (tileX * tileSize), offsetY + (tileY * tileSize), tileSize, tileSize);
+            }
+        }
+    }
+
+    private void drawItems(Graphics2D g2d) {
+        if (gameMap == null) return;
+        
+        for (int x = 0; x < gameMap.getWidth(); x++) {
+            for (int y = 0; y < gameMap.getHeight(); y++) {
+                domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
+                if (obj instanceof domain.models.item.MapItem) {
+                    domain.models.item.MapItem item = (domain.models.item.MapItem) obj;
+                    if (item.getSprite() != null) {
+                        g2d.drawImage(item.getSprite(), offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize, tileSize, null);
                     }
                 }
             }

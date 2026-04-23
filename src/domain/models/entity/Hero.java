@@ -53,12 +53,19 @@ public class Hero extends Entity {
 
     public void heal(int amount) {
         this.hp += amount;
-        if (this.hp > 17) this.hp = 17;
+        if (this.hp > 17)
+            this.hp = 17;
     }
 
     public void equipWeapon(domain.models.item.SwordItem sword) {
         // Basic sword buff
         this.weaponAtk = 5;
+    }
+
+    // We put this in the Hero class using Information Expert
+    // because the Hero knows its own coordinates best.
+    public boolean isAdjacentTo(int targetX, int targetY) {
+        return Math.abs(this.x - targetX) <= 1 && Math.abs(this.y - targetY) <= 1;
     }
 
     public int getHp() {

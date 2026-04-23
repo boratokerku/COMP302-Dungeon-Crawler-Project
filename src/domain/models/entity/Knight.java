@@ -6,6 +6,7 @@ import java.util.Random;
 public class Knight extends Entity {
 
     private final Random random = new Random();
+    private int moveCooldown = 0;
 
     public Knight(int x, int y) {
         super(x, y, 20); // Design doc §2.5.1: "Knights start with 20HP"
@@ -25,6 +26,12 @@ public class Knight extends Entity {
      */
     public void followHero(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
         if (!this.isAlive()) return;
+
+        moveCooldown++;
+        if (moveCooldown < 4) { // Only move every 4th tick
+            return;
+        }
+        moveCooldown = 0;
 
         // Euclidean mesafeyi hesapla, yukarıya yuvarla (design doc §2.5.1)
         double dx = this.x - hero.getX();

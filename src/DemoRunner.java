@@ -52,6 +52,18 @@ public class DemoRunner {
         Knight knight = new Knight(11, 8); // Başlangıç düşmanı — karşı köşe
         Sorcerer sorcerer = new Sorcerer(8, 8); // Başlangıç düşmanı
 
+        // Random Spawning logic for Items (2 Potions, 1 Sword, 1 Key)
+        java.util.Random rand = new java.util.Random();
+        
+        // Spawn 2 Potions
+        for (int i = 0; i < 2; i++) {
+            placeRandomItem(map, new domain.models.item.PotionItem(0, 0), hero, knight, sorcerer, rand);
+        }
+        // Spawn 1 Sword
+        placeRandomItem(map, new domain.models.item.SwordItem(0, 0), hero, knight, sorcerer, rand);
+        // Spawn 1 Key
+        placeRandomItem(map, new domain.models.staticObjects.KeyItem(0, 0), hero, knight, sorcerer, rand);
+
         // View (Görünüm)
         GameView gameView = new GameView(hero, assetManager);
         // JPanel boyutunu tam haritaya göre ayarla
@@ -63,6 +75,11 @@ public class DemoRunner {
         mainPanel.add(gameView, "Game");
         cardLayout.show(mainPanel, "Game");
 
+        // ActionMenu & MouseHandler Initialize
+        view.ActionMenu actionMenu = new view.ActionMenu(hero);
+        controller.MouseHandler mouseHandler = new controller.MouseHandler(hero, map, gameView, actionMenu);
+        gameView.addMouseListener(mouseHandler);
+
         // ArrayList kullanıyoruz (Arrays.asList değil) — EnemySpawner yeni düşman ekleyebilsin
         List<Entity> entities = new ArrayList<>();
         entities.add(hero);
@@ -73,7 +90,7 @@ public class DemoRunner {
         gameView.setEntityList(entities);
 
         // Klavye girdilerini dinlemek için InputHandler'ı frame'e ekliyoruz
-        controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities);
+        controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);
         frame.addKeyListener(inputHandler);
         frame.setFocusable(true);
         frame.requestFocusInWindow();
@@ -108,5 +125,30 @@ public class DemoRunner {
             gameView.repaint();
         });
         renderTimer.start();
+    }
+
+    private static void placeRandomItem(domain.models.map.GameMap map, domain.models.entity.GameObject item, 
+                                        domain.models.entity.Hero hero, domain.models.entity.Knight knight, 
+                                        domain.models.entity.Sorcerer sorcerer, java.util.Random rand) {
+        boolean placed = false;
+        while (!placed) {
+            int x = rand.nextInt(map.getWidth());
+            int y = rand.nextInt(map.getHeight());
+
+            // Avoid hero and enemy starting positions
+            if ((x == hero.getX() && y == hero.getY()) || 
+                (x == knight.getX() && y == knight.getY()) || 
+                (x == sorcerer.getX() && y == sorcerer.getY())) {
+                continue;
+            }
+
+            // Must be entirely empty floor (meaning no wall or existing items)
+            domain.models.entity.GameObject existingObj = map.getObjectAt(x, y);
+            if (existingObj != null && existingObj.getImageName().equals("floor") && !(existingObj instanceof domain.models.item.MapItem)) {
+                item.setPosition(x, y);
+                map.placeObject(item, x, y);
+                placed = true;
+            }
+        }
     }
 }

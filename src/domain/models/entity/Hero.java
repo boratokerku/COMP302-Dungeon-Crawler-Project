@@ -13,10 +13,17 @@ public class Hero extends Entity {
     private int energy = 100;
     private Direction currentDirection = Direction.RIGHT;
     private AnimationState currentAnimationState = AnimationState.IDLE;
+    private domain.models.inventory.Inventory inventory;
+    private int weaponAtk = 0;
 
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
         this.str = new Random().nextInt(8) + 8;
+        this.inventory = new domain.models.inventory.Inventory(8); // 2x4 layout
+    }
+
+    public domain.models.inventory.Inventory getInventory() {
+        return inventory;
     }
 
     public AnimationState getAnimationState() {
@@ -46,6 +53,12 @@ public class Hero extends Entity {
 
     public void heal(int amount) {
         this.hp += amount;
+        if (this.hp > 17) this.hp = 17;
+    }
+
+    public void equipWeapon(domain.models.item.SwordItem sword) {
+        // Basic sword buff
+        this.weaponAtk = 5;
     }
 
     public int getHp() {
@@ -94,7 +107,7 @@ public class Hero extends Entity {
             for (Entity e : entities) {
                 if (e != this && e.isAlive() && e.getX() == nextX && e.getY() == nextY) {
                     occupied = true;
-                    this.attack(e); // Çarptığı düşmana saldır
+                    this.attack(e, map); // Çarptığı düşmana saldır
                     break;
                 }
             }
@@ -116,14 +129,30 @@ public class Hero extends Entity {
     /**
      * Hero attacks the entity in the current facing direction.
      */
-    public void attack(Entity target) {
+    public void attack(Entity target, domain.models.map.GameMap map) {
         int attackCost = 10;
         if (target != null && target.isAlive()) {
             if (this.energy >= attackCost) {
-                int damage = 5;
+                int damage = calculateDamage(this.weaponAtk);
                 target.takeDamage(damage);
                 this.energy -= attackCost; // Saldırı maliyeti
                 System.out.println("Hero attacked target! Damage: " + damage + " Energy: " + this.energy);
+
+                if (!target.isAlive() && map != null) {
+                    System.out.println("Enemy defeated!");
+                    java.util.Random rand = new java.util.Random();
+                    int dropType = rand.nextInt(3);
+                    domain.models.entity.GameObject loot = null;
+                    if (dropType == 0) {
+                        loot = new domain.models.item.SwordItem(target.getX(), target.getY());
+                    } else if (dropType == 1) {
+                        loot = new domain.models.item.PotionItem(target.getX(), target.getY());
+                    } else {
+                        loot = new domain.models.staticObjects.KeyItem(target.getX(), target.getY());
+                    }
+                    map.placeObject(loot, target.getX(), target.getY());
+                    System.out.println("Loot dropped: " + loot.getName());
+                }
             } else {
                 System.out.println("Saldırı için yeterli enerji yok!");
             }

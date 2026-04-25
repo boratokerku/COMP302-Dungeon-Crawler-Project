@@ -40,7 +40,7 @@ public class DemoRunner {
 
     private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         // Gerekli yöneticiler (Managers)
-        AssetManager assetManager = new AssetManager();
+        AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();
 
         // Modeller
@@ -54,7 +54,7 @@ public class DemoRunner {
 
         // Random Spawning logic for Items (2 Potions, 1 Sword, 1 Key)
         java.util.Random rand = new java.util.Random();
-        
+
         // Spawn 2 Potions
         for (int i = 0; i < 2; i++) {
             placeRandomItem(map, new domain.models.item.PotionItem(0, 0), hero, knight, sorcerer, rand);
@@ -80,7 +80,8 @@ public class DemoRunner {
         controller.MouseHandler mouseHandler = new controller.MouseHandler(hero, map, gameView, actionMenu);
         gameView.addMouseListener(mouseHandler);
 
-        // ArrayList kullanıyoruz (Arrays.asList değil) — EnemySpawner yeni düşman ekleyebilsin
+        // ArrayList kullanıyoruz (Arrays.asList değil) — EnemySpawner yeni düşman
+        // ekleyebilsin
         List<Entity> entities = new ArrayList<>();
         entities.add(hero);
         entities.add(knight);
@@ -112,10 +113,12 @@ public class DemoRunner {
 
             // Yeni spawn olan düşmanların AI'sını çalıştır
             for (Knight k : spawner.getSpawnedKnights()) {
-                if (k.isAlive()) k.followHero(hero, map, entities);
+                if (k.isAlive())
+                    k.followHero(hero, map, entities);
             }
             for (Sorcerer s : spawner.getSpawnedSorcerers()) {
-                if (s.isAlive()) s.followHero(hero, map, entities);
+                if (s.isAlive())
+                    s.followHero(hero, map, entities);
             }
         });
         logicTimer.start();
@@ -127,24 +130,25 @@ public class DemoRunner {
         renderTimer.start();
     }
 
-    private static void placeRandomItem(domain.models.map.GameMap map, domain.models.entity.GameObject item, 
-                                        domain.models.entity.Hero hero, domain.models.entity.Knight knight, 
-                                        domain.models.entity.Sorcerer sorcerer, java.util.Random rand) {
+    private static void placeRandomItem(domain.models.map.GameMap map, domain.models.entity.GameObject item,
+            domain.models.entity.Hero hero, domain.models.entity.Knight knight,
+            domain.models.entity.Sorcerer sorcerer, java.util.Random rand) {
         boolean placed = false;
         while (!placed) {
             int x = rand.nextInt(map.getWidth());
             int y = rand.nextInt(map.getHeight());
 
             // Avoid hero and enemy starting positions
-            if ((x == hero.getX() && y == hero.getY()) || 
-                (x == knight.getX() && y == knight.getY()) || 
-                (x == sorcerer.getX() && y == sorcerer.getY())) {
+            if ((x == hero.getX() && y == hero.getY()) ||
+                    (x == knight.getX() && y == knight.getY()) ||
+                    (x == sorcerer.getX() && y == sorcerer.getY())) {
                 continue;
             }
 
             // Must be entirely empty floor (meaning no wall or existing items)
             domain.models.entity.GameObject existingObj = map.getObjectAt(x, y);
-            if (existingObj != null && existingObj.getImageName().equals("floor") && !(existingObj instanceof domain.models.item.MapItem)) {
+            if (existingObj != null && existingObj.getImageName().equals("floor")
+                    && !(existingObj instanceof domain.models.item.MapItem)) {
                 item.setPosition(x, y);
                 map.placeObject(item, x, y);
                 placed = true;

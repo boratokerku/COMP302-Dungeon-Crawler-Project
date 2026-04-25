@@ -28,7 +28,8 @@ public class MouseHandler extends MouseAdapter {
         int offsetX = gameView.getOffsetX();
         int offsetY = gameView.getOffsetY();
 
-        if (tileSize <= 0) return;
+        if (tileSize <= 0)
+            return;
 
         // Check if an item in the inventory was clicked
         GameObject invObj = gameView.getClickedInventoryItem(e.getX(), e.getY());
@@ -42,18 +43,14 @@ public class MouseHandler extends MouseAdapter {
         int clickedGridY = (e.getY() - offsetY) / tileSize;
 
         // Bounds check
-        if (clickedGridX < 0 || clickedGridX >= gameMap.getWidth() || clickedGridY < 0 || clickedGridY >= gameMap.getHeight()) {
+        if (clickedGridX < 0 || clickedGridX >= gameMap.getWidth() || clickedGridY < 0
+                || clickedGridY >= gameMap.getHeight()) {
             actionMenu.hideMenu();
             return;
         }
 
-        // 2. Hero'nun grid konumunu al
-        int heroX = hero.getX();
-        int heroY = hero.getY();
-
         // 3. 3x3 alan kontrolü (fark her iki eksende de max 1 olmalı)
-        boolean isAdjacent = Math.abs(heroX - clickedGridX) <= 1
-                          && Math.abs(heroY - clickedGridY) <= 1;
+        boolean isAdjacent = hero.isAdjacentTo(clickedGridX, clickedGridY);
 
         if (!isAdjacent) {
             actionMenu.hideMenu(); // Uzaktaki tıklamalarda menüyü kapat
@@ -68,8 +65,9 @@ public class MouseHandler extends MouseAdapter {
             return;
         }
 
-        // We show the Action Menu inside GameView, passing e.getComponent() logic actually handled by actionMenu parent,
-        // but actionMenu is a child of GameView (we'll add it). 
+        // We show the Action Menu inside GameView, passing e.getComponent() logic
+        // actually handled by actionMenu parent,
+        // but actionMenu is a child of GameView (we'll add it).
         actionMenu.show(gameView, obj, e.getX(), e.getY());
     }
 }

@@ -3,23 +3,23 @@ package domain.logic;
 import domain.models.entity.Hero;
 import domain.models.entity.GameObject;
 
-public class EquipAction implements Action {
+public class UnequipAction implements Action {
 
     @Override
     public String getName() {
-        return "Equip";
+        return "Unequip";
     }
 
     @Override
     public boolean isAvailable(Hero hero, GameObject target) {
-        return hero.getInventory().getItems().contains(target) && hero.getEquippedWeapon() != target;
+        return hero.getEquippedWeapon() == target;
     }
 
     @Override
     public void execute(Hero hero, GameObject target) {
         if (target instanceof domain.models.item.SwordItem) {
-            hero.equipWeapon((domain.models.item.SwordItem) target);
-            System.out.println("Equipped Sword: " + target.getName() + " (Item remains in inventory)");
+            hero.unequipWeapon();
+            System.out.println("Unequipped Sword: " + target.getName());
         }
     }
 }

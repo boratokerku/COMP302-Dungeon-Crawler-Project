@@ -2,6 +2,7 @@ package domain.models.item;
 
 import domain.logic.TakeAction;
 import domain.logic.EquipAction;
+import domain.logic.UnequipAction;
 import domain.logic.DiscardAction;
 
 public class SwordItem extends MapItem {
@@ -9,6 +10,7 @@ public class SwordItem extends MapItem {
         super("Knight Sword", x, y, "images/weapons/knight_sword.png");
         this.addAction(new TakeAction());
         this.addAction(new EquipAction());
+        this.addAction(new UnequipAction());
         this.addAction(new DiscardAction());
     }
 }

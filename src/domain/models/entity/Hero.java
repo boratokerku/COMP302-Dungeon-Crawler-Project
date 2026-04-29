@@ -15,6 +15,7 @@ public class Hero extends Entity {
     private AnimationState currentAnimationState = AnimationState.IDLE;
     private domain.models.inventory.Inventory inventory;
     private int weaponAtk = 0;
+    private GameObject equippedWeapon;
 
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
@@ -79,9 +80,37 @@ public class Hero extends Entity {
     public int getEnergy() {
         return this.energy;
     }
+    
+    public void setEnergy(int energy) {
+        this.energy = energy;
+    }
 
     public int getStr() {
         return str;
+    }
+    
+    public void setStr(int str) {
+        this.str = str;
+    }
+    
+    public void setHp(int hp) {
+        this.hp = hp;
+    }
+    
+    public int getDef() {
+        return this.def;
+    }
+    
+    public void setDef(int def) {
+        this.def = def;
+    }
+    
+    public GameObject getEquippedWeapon() {
+        return this.equippedWeapon;
+    }
+    
+    public void setEquippedWeapon(GameObject weapon) {
+        this.equippedWeapon = weapon;
     }
 
     public boolean move(Direction dir, domain.models.map.GameMap map, java.util.List<Entity> entities) {

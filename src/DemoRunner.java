@@ -90,11 +90,11 @@ public class DemoRunner {
         // GameView'a entity listesini bağla — yeni spawn olanlar da otomatik çizilsin
         gameView.setEntityList(entities);
 
-        // Klavye girdilerini dinlemek için InputHandler'ı frame'e ekliyoruz
+        // Klavye girdilerini dinlemek için InputHandler'ı GameView'a ekliyoruz (Frame yerine)
         controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);
-        frame.addKeyListener(inputHandler);
-        frame.setFocusable(true);
-        frame.requestFocusInWindow();
+        gameView.setFocusable(true);
+        gameView.addKeyListener(inputHandler);
+        gameView.requestFocusInWindow();
 
         // EnemySpawner — design doc §2.5: 9 saniyede bir, kenar tile'dan, %60/%30/%10
         EnemySpawner spawner = new EnemySpawner(map);

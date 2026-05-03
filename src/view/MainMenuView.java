@@ -15,11 +15,12 @@ public class MainMenuView extends JPanel {
     public MainMenuView(Runnable onStartGame) {
         this.onStartGame = onStartGame;
         try {
-            File bgFile = new File("resources/images/main_menu_bg.png");
+            File bgFile = new File("resources/images/MainMenuImages/main_menu_bg.png");
             if (bgFile.exists()) {
                 backgroundImage = ImageIO.read(bgFile);
             } else {
-                bgFile = new File("resources/images/main_menu_bg.jpg");
+                // Fallback check if needed, but primary path is now correct
+                bgFile = new File("resources/images/main_menu_bg.png");
                 if (bgFile.exists()) {
                     backgroundImage = ImageIO.read(bgFile);
                 }
@@ -29,7 +30,7 @@ public class MainMenuView extends JPanel {
         }
 
         try {
-            File titleFile = new File("resources/images/title.png");
+            File titleFile = new File("resources/images/MainMenuImages/title.png");
             if (titleFile.exists()) {
                 BufferedImage orig = ImageIO.read(titleFile);
                 titleImage = trimImage(orig);
@@ -48,9 +49,9 @@ public class MainMenuView extends JPanel {
     private void initUI() {
         setLayout(null); // Mutlak konumlandırma ile butonların esnek ölçeklenmesini sağlayacağız
 
-        startBtn = new ScaledImageButton("resources/images/start_game_button.png");
-        helpBtn = new ScaledImageButton("resources/images/help_button.png");
-        quitBtn = new ScaledImageButton("resources/images/quit_button.png");
+        startBtn = new ScaledImageButton("resources/images/MainMenuImages/start_game_button.png");
+        helpBtn = new ScaledImageButton("resources/images/MainMenuImages/help_button.png");
+        quitBtn = new ScaledImageButton("resources/images/MainMenuImages/quit_button.png");
 
         startBtn.addActionListener(e -> {
             if (onStartGame != null) {

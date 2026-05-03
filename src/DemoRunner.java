@@ -64,6 +64,14 @@ public class DemoRunner {
         // Spawn 1 Key
         placeRandomItem(map, new domain.models.staticObjects.KeyItem(0, 0), hero, knight, sorcerer, rand);
 
+        // Spawn Static Objects
+        for (int i = 0; i < 2; i++) {
+            placeRandomItem(map, new domain.models.entity.Column("Column " + (i + 1), 0, 0), hero, knight, sorcerer, rand);
+            placeRandomItem(map, new domain.models.entity.Crate("Crate " + (i + 1), 0, 0), hero, knight, sorcerer, rand);
+        }
+        placeRandomItem(map, new domain.models.entity.Chest("Chest", 0, 0), hero, knight, sorcerer, rand);
+        placeRandomItem(map, new domain.models.entity.SearchableObject("Searchable", 0, 0), hero, knight, sorcerer, rand);
+
         // View (Görünüm)
         GameView gameView = new GameView(hero, assetManager);
         // JPanel boyutunu tam haritaya göre ayarla

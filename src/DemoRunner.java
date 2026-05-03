@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import java.awt.CardLayout;
+import java.awt.Color;
 import javax.swing.JPanel;
 
 public class DemoRunner {
@@ -29,10 +30,15 @@ public class DemoRunner {
             });
             menuView.setPreferredSize(new java.awt.Dimension(832, 640));
 
+            mainPanel.setBackground(Color.BLACK);
             mainPanel.add(menuView, "Menu");
+            cardLayout.show(mainPanel, "Menu"); 
             frame.add(mainPanel);
 
+            frame.setSize(832, 640);
             frame.pack();
+            frame.revalidate();
+            frame.repaint();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
@@ -40,21 +46,17 @@ public class DemoRunner {
 
     private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         // Gerekli yöneticiler (Managers)
-        AssetManager assetManager = new AssetManager();
+        AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();
 
         // Modeller
-        // ACTUAL_SIZE = 64 px (GameView'da)
-        // 13 sütun x 64px = 832px genişlik
-        // 10 satır x 64px = 640px yükseklik
         GameMap map = new GameMap(13, 10);
-        Hero hero = new Hero(1, 2); // y=1 artık duvar yüzeyi olduğu için 2'den başlıyoruz
-        Knight knight = new Knight(11, 8); // Başlangıç düşmanı — karşı köşe
-        Sorcerer sorcerer = new Sorcerer(8, 8); // Başlangıç düşmanı
+        Hero hero = new Hero(1, 2); 
+        Knight knight = new Knight(11, 8); 
+        Sorcerer sorcerer = new Sorcerer(8, 8); 
 
         // View (Görünüm)
         GameView gameView = new GameView(hero, assetManager);
-        // JPanel boyutunu tam haritaya göre ayarla
         gameView.setPreferredSize(new java.awt.Dimension(832, 640));
         gameView.setGameMap(map);
         gameView.setTileManager(tileManager);
@@ -63,37 +65,26 @@ public class DemoRunner {
         mainPanel.add(gameView, "Game");
         cardLayout.show(mainPanel, "Game");
 
-        // ArrayList kullanıyoruz (Arrays.asList değil) — EnemySpawner yeni düşman ekleyebilsin
         List<Entity> entities = new ArrayList<>();
         entities.add(hero);
         entities.add(knight);
         entities.add(sorcerer);
 
-        // GameView'a entity listesini bağla — yeni spawn olanlar da otomatik çizilsin
         gameView.setEntityList(entities);
 
-        // Klavye girdilerini dinlemek için InputHandler'ı frame'e ekliyoruz
         controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities);
         frame.addKeyListener(inputHandler);
         frame.setFocusable(true);
         frame.requestFocusInWindow();
 
-        // EnemySpawner — design doc §2.5: 9 saniyede bir, kenar tile'dan, %60/%30/%10
         EnemySpawner spawner = new EnemySpawner(map);
 
-        // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         javax.swing.Timer logicTimer = new javax.swing.Timer(120, (e) -> {
-            // Hero enerji yenileme
             hero.update();
-
-            // Başlangıç düşmanlarının AI'sı
             knight.followHero(hero, map, entities);
             sorcerer.followHero(hero, map, entities);
-
-            // Spawn kontrolü (her 9 saniyede bir yeni düşman çıkarmayı dener)
             spawner.trySpawn(entities);
 
-            // Yeni spawn olan düşmanların AI'sını çalıştır
             for (Knight k : spawner.getSpawnedKnights()) {
                 if (k.isAlive()) k.followHero(hero, map, entities);
             }
@@ -103,7 +94,6 @@ public class DemoRunner {
         });
         logicTimer.start();
 
-        // Render Loop (Saniyede 60 Kare - 60 FPS Çizim Motoru)
         javax.swing.Timer renderTimer = new javax.swing.Timer(16, (e) -> {
             gameView.repaint();
         });

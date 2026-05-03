@@ -9,13 +9,16 @@ import java.util.Map;
 import domain.models.AnimationState;
 
 public class AssetManager {
+
+    private static AssetManager instance;
+
     private SpriteAnimation heroWalkRight;
     private SpriteAnimation heroIdle;
     
     private SpriteAnimation knightWalk;
     private SpriteAnimation sorcererWalk;
 
-    public AssetManager() {
+    private AssetManager() {
         heroWalkRight = new SpriteAnimation(120);
         heroIdle = new SpriteAnimation(500);
         knightWalk = new SpriteAnimation(150);
@@ -25,19 +28,25 @@ public class AssetManager {
         loadEnemyAnimations();
     }
 
+    public static AssetManager getInstance() {
+        if (instance == null) {
+            instance = new AssetManager();
+        }
+        return instance;
+    }
+
     private void loadHeroAnimations() {
         try {
-            // Load Hero walking frames (1-9)
             for (int i = 1; i <= 9; i++) {
-                File imgFile = new File("resources/images/characters/Hero/hero_walk_" + i + ".png");
-                if (imgFile.exists()) {
+                String path = "resources/images/characters/Hero/hero_walk_" + i + ".png";
+                File imgFile = findFile(path);
+                if (imgFile != null) {
                     BufferedImage frame = ImageIO.read(imgFile);
                     heroWalkRight.addFrame(frame);
                 }
             }
-            // Use the first walk frame as idle for now
-            File idleFile = new File("resources/images/characters/Hero/hero_walk_1.png");
-            if (idleFile.exists()) {
+            File idleFile = findFile("resources/images/characters/Hero/hero_walk_1.png");
+            if (idleFile != null) {
                 BufferedImage idleFrame = ImageIO.read(idleFile);
                 heroIdle.addFrame(idleFrame);
             }
@@ -48,20 +57,18 @@ public class AssetManager {
 
     private void loadEnemyAnimations() {
         try {
-            // Load Knight walking frames (1-9)
             for (int i = 1; i <= 9; i++) {
-                File imgFile = new File("resources/images/characters/Enemy/Knight/knight_walk_" + i + ".png");
-                if (imgFile.exists()) {
-                    BufferedImage frame = ImageIO.read(imgFile);
+                File kFile = findFile("resources/images/characters/Enemy/Knight/knight_walk_" + i + ".png");
+                if (kFile != null) {
+                    BufferedImage frame = ImageIO.read(kFile);
                     knightWalk.addFrame(frame);
                 }
             }
             
-            // Load Sorcerer walking frames (1-9)
             for (int i = 1; i <= 9; i++) {
-                File imgFile = new File("resources/images/characters/Enemy/Sorcerer/sorcerer_walk_" + i + ".png");
-                if (imgFile.exists()) {
-                    BufferedImage frame = ImageIO.read(imgFile);
+                File sFile = findFile("resources/images/characters/Enemy/Sorcerer/sorcerer_walk_" + i + ".png");
+                if (sFile != null) {
+                    BufferedImage frame = ImageIO.read(sFile);
                     sorcererWalk.addFrame(frame);
                 }
             }
@@ -70,14 +77,18 @@ public class AssetManager {
         }
     }
 
-    /**
-     * Hero'nun o anki durumuna göre doğru kareyi döndürür.
-     */
+    private File findFile(String path) {
+        File f = new File(path);
+        if (f.exists()) return f;
+        f = new File("../" + path);
+        if (f.exists()) return f;
+        return null;
+    }
+
     public BufferedImage getHeroSprite(AnimationState state) {
         if (state == AnimationState.IDLE) {
             return heroIdle.getCurrentFrame();
         }
-        // Tüm hareketler için (şimdilik) aynı walk animasyonunu kullan
         return heroWalkRight.getCurrentFrame();
     }
     

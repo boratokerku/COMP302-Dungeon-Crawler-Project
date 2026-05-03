@@ -25,7 +25,12 @@ public class TileManager {
         }
 
         try {
-            File tileFile = new File("resources/images/tiles/" + name + ".png");
+            String path = "resources/images/tiles/" + name + ".png";
+            File tileFile = new File(path);
+            if (!tileFile.exists()) {
+                tileFile = new File("../" + path);
+            }
+            
             if (tileFile.exists()) {
                 BufferedImage img = ImageIO.read(tileFile);
                 tileCache.put(name, img);

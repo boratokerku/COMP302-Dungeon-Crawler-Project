@@ -12,57 +12,68 @@ public class Knight extends Entity {
         super(x, y, 20); // Design doc §2.5.1: "Knights start with 20HP"
     }
 
-    /**
-     * Knight AI ana metodu.
-     *
-     * Design doc §2.5.1:
-     * "If the hero is more than 5 grid cells away (computed as Euclidean distance
-     *  and rounded up to next integer) the knight can not see the hero and walks
-     *  randomly. If the distance is 5 or less the knight moves towards the hero."
-     *
-     * @param hero     Oyuncu karakteri
-     * @param map      Harita (yürünebilirlik kontrolü için)
-     * @param entities Tüm varlıklar (çakışma kontrolü için)
-     */
+    // Knight AI ana metodu — en yakın hedefi (Hero veya ShadowClone) takip eder
     public void followHero(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
         if (!this.isAlive()) return;
 
         moveCooldown++;
-        if (moveCooldown < 4) { // Only move every 4th tick
+        if (moveCooldown < 4) { // Her 4 tick'te bir hareket
             return;
         }
         moveCooldown = 0;
 
-        // Euclidean mesafeyi hesapla, yukarıya yuvarla (design doc §2.5.1)
-        double dx = this.x - hero.getX();
-        double dy = this.y - hero.getY();
-        int distance = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy));
+        // En yakın hedefi bul (Hero veya ShadowClone)
+        Entity target = findNearestTarget(hero, entities);
+
+        int distance = (int) Math.ceil(distanceTo(target));
 
         if (distance > 5) {
-            // ROAMING: Hero çok uzakta, Knight göremez → rastgele yürür
+            // ROAMING: Hedef çok uzakta → rastgele yürür
             System.out.println("Knight: Roaming");
             roam(map, entities);
         } else {
-            // CHASING: Hero algılama mesafesinde → Hero'ya doğru hareket et
-            System.out.println("Knight: Chasing Hero");
-            chaseHero(hero, map, entities);
+            // CHASING: Hedef algılama mesafesinde → hedefe doğru hareket et
+            String label = (target instanceof Hero) ? "Hero" : "Shadow Clone";
+            System.out.println("Knight: Chasing " + label);
+            chaseTarget(target, map, entities);
         }
     }
 
-    /**
-     * Hero'ya doğru bir adım atar (önce yatay ekseni kapatır, sonra dikey).
-     */
-    private void chaseHero(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
+    // Hero veya hayatta olan ShadowClone'dan hangisi daha yakınsa onu döndür
+    private Entity findNearestTarget(Hero hero, java.util.List<Entity> entities) {
+        Entity nearest = hero;
+        double minDist = distanceTo(hero);
+
+        for (Entity e : entities) {
+            if (e instanceof ShadowClone && e.isAlive()) {
+                double d = distanceTo(e);
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = e;
+                }
+            }
+        }
+        return nearest;
+    }
+
+    private double distanceTo(Entity target) {
+        double dx = this.x - target.getX();
+        double dy = this.y - target.getY();
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Herhangi bir Entity hedefine doğru bir adım atar (Hero veya ShadowClone)
+    private void chaseTarget(Entity target, domain.models.map.GameMap map, java.util.List<Entity> entities) {
         int nextX = this.x;
         int nextY = this.y;
 
-        if (this.x < hero.getX()) {
+        if (this.x < target.getX()) {
             nextX++;
-        } else if (this.x > hero.getX()) {
+        } else if (this.x > target.getX()) {
             nextX--;
-        } else if (this.y < hero.getY()) {
+        } else if (this.y < target.getY()) {
             nextY++;
-        } else if (this.y > hero.getY()) {
+        } else if (this.y > target.getY()) {
             nextY--;
         }
 
@@ -72,11 +83,7 @@ public class Knight extends Entity {
         }
     }
 
-    /**
-     * Dört yönden (UP, DOWN, LEFT, RIGHT) rastgele birini seçer ve gidebiliyorsa gider.
-     */
     private void roam(domain.models.map.GameMap map, java.util.List<Entity> entities) {
-        // 4 yön: {deltaX, deltaY}
         int[][] directions = { {0, -1}, {0, 1}, {-1, 0}, {1, 0} };
         int[] dir = directions[random.nextInt(directions.length)];
 
@@ -89,11 +96,6 @@ public class Knight extends Entity {
         }
     }
 
-    /**
-     * Verilen pozisyon yürünebilir mi ve başka bir canlı varlık tarafından işgal edilmemiş mi?
-     *
-     * @return true ise hareket etmek güvenli
-     */
     private boolean canMoveTo(int nextX, int nextY, domain.models.map.GameMap map, java.util.List<Entity> entities) {
         if (map == null || !map.isWalkable(nextX, nextY)) return false;
         if (entities != null) {

@@ -40,23 +40,23 @@ public class InputHandler implements KeyListener {
         if (code == KeyEvent.VK_W || code == KeyEvent.VK_UP) {
             if (hero.move(Direction.UP, map, entities)) {
                 hero.setAnimationState(AnimationState.WALK_UP);
-                moveCloneOpposite(Direction.UP);
             }
+            moveCloneOpposite(Direction.UP); // Hero hareket edemese bile klon dener
         } else if (code == KeyEvent.VK_S || code == KeyEvent.VK_DOWN) {
             if (hero.move(Direction.DOWN, map, entities)) {
                 hero.setAnimationState(AnimationState.WALK_DOWN);
-                moveCloneOpposite(Direction.DOWN);
             }
+            moveCloneOpposite(Direction.DOWN);
         } else if (code == KeyEvent.VK_A || code == KeyEvent.VK_LEFT) {
             if (hero.move(Direction.LEFT, map, entities)) {
                 hero.setAnimationState(AnimationState.WALK_LEFT);
-                moveCloneOpposite(Direction.LEFT);
             }
+            moveCloneOpposite(Direction.LEFT);
         } else if (code == KeyEvent.VK_D || code == KeyEvent.VK_RIGHT) {
             if (hero.move(Direction.RIGHT, map, entities)) {
                 hero.setAnimationState(AnimationState.WALK_RIGHT);
-                moveCloneOpposite(Direction.RIGHT);
             }
+            moveCloneOpposite(Direction.RIGHT);
         }
         else if (code == KeyEvent.VK_SPACE) {
             if (hero.getEnergy() >= 10) {

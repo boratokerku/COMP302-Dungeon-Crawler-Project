@@ -296,7 +296,23 @@ public class GameView extends JPanel {
                     continue; // Hero ayrıca çiziliyor
 
                 BufferedImage frame = null;
-                if (e instanceof domain.models.entity.Knight) {
+
+                if (e instanceof domain.models.entity.ShadowClone) {
+                    // Klon: hero sprite'ı %50 saydamlıkla (görsel ayrım)
+                    frame = assetManager.getHeroSprite(domain.models.AnimationState.IDLE);
+                    if (frame != null) {
+                        java.awt.AlphaComposite ac = java.awt.AlphaComposite
+                                .getInstance(java.awt.AlphaComposite.SRC_OVER, 0.5f);
+                        g2d.setComposite(ac);
+                        g2d.drawImage(frame,
+                                offsetX + (e.getX() * tileSize),
+                                offsetY + (e.getY() * tileSize),
+                                tileSize, tileSize, null);
+                        g2d.setComposite(java.awt.AlphaComposite
+                                .getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
+                    }
+                    continue;
+                } else if (e instanceof domain.models.entity.Knight) {
                     frame = assetManager.getKnightSprite();
                 } else if (e instanceof domain.models.entity.Sorcerer) {
                     frame = assetManager.getSorcererSprite();
@@ -397,27 +413,35 @@ public class GameView extends JPanel {
                 domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
                 if (obj instanceof domain.models.item.MapItem) {
                     domain.models.item.MapItem item = (domain.models.item.MapItem) obj;
-                    if (item.getSprite() != null) {
-                        boolean inZone = hero != null && Math.abs(x - hero.getX()) <= 1
-                                && Math.abs(y - hero.getY()) <= 1;
 
-                        if (!inZone) {
-                            // Draw semi-transparent if outside interaction zone
-                            java.awt.AlphaComposite ac = java.awt.AlphaComposite
-                                    .getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f);
-                            g2d.setComposite(ac);
-                        }
+                    boolean inZone = hero != null && Math.abs(x - hero.getX()) <= 1
+                            && Math.abs(y - hero.getY()) <= 1;
 
-                        int spriteSize = (int) (tileSize * 0.65);
-                        int posOffset = (tileSize - spriteSize) / 2;
-                        g2d.drawImage(item.getSprite(),
-                                offsetX + (x * tileSize) + posOffset,
-                                offsetY + (y * tileSize) + posOffset,
-                                spriteSize, spriteSize, null);
-
-                        // Reset composite (diğer varlıkları normal çizmek için)
-                        g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
+                    if (!inZone) {
+                        java.awt.AlphaComposite ac = java.awt.AlphaComposite
+                                .getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f);
+                        g2d.setComposite(ac);
                     }
+
+                    int spriteSize = (int) (tileSize * 0.65);
+                    int posOffset = (tileSize - spriteSize) / 2;
+                    int drawX = offsetX + (x * tileSize) + posOffset;
+                    int drawY = offsetY + (y * tileSize) + posOffset;
+
+                    if (item.getSprite() != null) {
+                        g2d.drawImage(item.getSprite(), drawX, drawY, spriteSize, spriteSize, null);
+                    } else {
+                        // Sprite yok — renk placeholder (scroll için mor, diğerleri sarı)
+                        if (item instanceof domain.models.item.ShadowCloneScroll) {
+                            g2d.setColor(new Color(150, 50, 255)); // Mor — scroll
+                        } else {
+                            g2d.setColor(new Color(255, 220, 50)); // Sarı — bilinmeyen item
+                        }
+                        g2d.fillOval(drawX, drawY, spriteSize, spriteSize);
+                    }
+
+                    // Composite sıfırla
+                    g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
                 }
             }
         }

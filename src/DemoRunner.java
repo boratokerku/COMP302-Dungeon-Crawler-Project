@@ -2,6 +2,7 @@ import domain.models.entity.*;
 import domain.models.map.GameMap;
 import domain.models.Direction;
 import domain.logic.EnemySpawner;
+import domain.logic.ScrollSpawner;
 import view.AssetManager;
 import view.GameView;
 import view.TileManager;
@@ -107,6 +108,9 @@ public class DemoRunner {
         // EnemySpawner — design doc §2.5: 9 saniyede bir, kenar tile'dan, %60/%30/%10
         EnemySpawner spawner = new EnemySpawner(map);
 
+        // ScrollSpawner — design doc §Phase2: 15 saniyede bir rastgele tile'a scroll çıkar
+        ScrollSpawner scrollSpawner = new ScrollSpawner(map, entities, inputHandler);
+
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         javax.swing.Timer logicTimer = new javax.swing.Timer(120, (e) -> {
             // Hero enerji yenileme
@@ -128,6 +132,13 @@ public class DemoRunner {
                 if (s.isAlive())
                     s.followHero(hero, map, entities);
             }
+
+            // Scroll spawn kontrolü (her 15 saniyede bir)
+            scrollSpawner.trySpawn();
+
+            // Aktif shadow clone'un yaşam döngüsünü güncelle (7 saniye süre)
+            ShadowClone activeClone = inputHandler.getShadowClone();
+            if (activeClone != null) activeClone.update();
         });
         logicTimer.start();
 

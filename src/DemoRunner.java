@@ -1,8 +1,8 @@
 import domain.models.entity.*;
 import domain.models.map.GameMap;
-import domain.models.Direction;
 import domain.logic.EnemySpawner;
 import domain.logic.ScrollSpawner;
+import domain.models.GameState;
 import view.AssetManager;
 import view.GameView;
 import view.TileManager;
@@ -40,19 +40,12 @@ public class DemoRunner {
         });
     }
 
+    // Yeni oyun — tüm nesneler rastgele oluşturulur
     private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
-        // Gerekli yöneticiler (Managers)
-        AssetManager assetManager = AssetManager.getInstance();
-        TileManager tileManager = new TileManager();
-
-        // Modeller
-        // ACTUAL_SIZE = 64 px (GameView'da)
-        // 13 sütun x 64px = 832px genişlik
-        // 10 satır x 64px = 640px yükseklik
         GameMap map = new GameMap(13, 10);
-        Hero hero = new Hero(1, 2); // y=1 artık duvar yüzeyi olduğu için 2'den başlıyoruz
-        Knight knight = new Knight(11, 8); // Başlangıç düşmanı — karşı köşe
-        Sorcerer sorcerer = new Sorcerer(8, 8); // Başlangıç düşmanı
+        Hero hero = new Hero(1, 2);
+        Knight knight = new Knight(11, 8);
+        Sorcerer sorcerer = new Sorcerer(8, 8);
 
         // Random Spawning logic for Items (2 Potions, 1 Sword, 1 Key)
         java.util.Random rand = new java.util.Random();
@@ -74,33 +67,100 @@ public class DemoRunner {
         placeRandomItem(map, new domain.models.entity.Chest("Chest", 0, 0), hero, knight, sorcerer, rand);
         placeRandomItem(map, new domain.models.entity.SearchableObject("Searchable", 0, 0), hero, knight, sorcerer, rand);
 
-        // View (Görünüm)
-        GameView gameView = new GameView(hero, assetManager);
-        // JPanel boyutunu tam haritaya göre ayarla
-        gameView.setPreferredSize(new java.awt.Dimension(832, 640));
-        gameView.setGameMap(map);
-        gameView.setTileManager(tileManager);
-        gameView.setEnemies(knight, sorcerer);
-
-        mainPanel.add(gameView, "Game");
-        cardLayout.show(mainPanel, "Game");
-
-        // ActionMenu & MouseHandler Initialize
-        view.ActionMenu actionMenu = new view.ActionMenu(hero);
-        controller.MouseHandler mouseHandler = new controller.MouseHandler(hero, map, gameView, actionMenu);
-        gameView.addMouseListener(mouseHandler);
-
-        // ArrayList kullanıyoruz (Arrays.asList değil) — EnemySpawner yeni düşman
-        // ekleyebilsin
         List<Entity> entities = new ArrayList<>();
         entities.add(hero);
         entities.add(knight);
         entities.add(sorcerer);
 
-        // GameView'a entity listesini bağla — yeni spawn olanlar da otomatik çizilsin
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer);
+    }
+
+    // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
+    private static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
+        GameMap map = new GameMap(13, 10);
+
+        // Hero yeniden oluştur
+        Hero hero = new Hero(state.hero.x, state.hero.y);
+        hero.setHp(state.hero.hp);
+        hero.setMana(state.hero.mana);
+        hero.setEnergy(state.hero.energy);
+
+        // Düşmanları yeniden oluştur
+        Knight knight = null;
+        Sorcerer sorcerer = null;
+        List<Entity> entities = new ArrayList<>();
+        entities.add(hero);
+
+        for (GameState.EnemyRecord rec : state.enemies) {
+            if ("Knight".equals(rec.type)) {
+                Knight k = new Knight(rec.x, rec.y);
+                k.setHp(rec.hp);
+                entities.add(k);
+                if (knight == null) knight = k;
+            } else if ("Sorcerer".equals(rec.type)) {
+                Sorcerer s = new Sorcerer(rec.x, rec.y);
+                s.setHp(rec.hp);
+                entities.add(s);
+                if (sorcerer == null) sorcerer = s;
+            }
+        }
+
+        // Kayıtta düşman yoksa fallback (başlangıç pozisyonu)
+        if (knight == null)   { knight   = new Knight(11, 8);  entities.add(knight); }
+        if (sorcerer == null) { sorcerer = new Sorcerer(8, 8); entities.add(sorcerer); }
+
+        // Haritadaki eşyaları yeniden yerleştir
+        for (GameState.ItemRecord rec : state.mapItems) {
+            domain.models.entity.GameObject item = createItem(rec.type, rec.x, rec.y);
+            if (item != null) map.placeObject(item, rec.x, rec.y);
+        }
+
+        // Envanter itemlarını yeniden oluştur
+        for (String type : state.inventoryItems) {
+            domain.models.entity.GameObject item = createItem(type, 0, 0);
+            if (item != null) hero.getInventory().addItem(item);
+        }
+
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer);
+    }
+
+    // Item tip ismine göre nesne oluşturur (save/load için)
+    private static domain.models.entity.GameObject createItem(String type, int x, int y) {
+        switch (type) {
+            case "PotionItem":        return new domain.models.item.PotionItem(x, y);
+            case "SwordItem":         return new domain.models.item.SwordItem(x, y);
+            case "ShadowCloneScroll": return new domain.models.item.ShadowCloneScroll(x, y);
+            case "KeyItem":           return new domain.models.staticObjects.KeyItem(x, y);
+            default:
+                System.err.println("Bilinmeyen item tipi: " + type);
+                return null;
+        }
+    }
+
+    // startGame ve loadGame tarafından ortak kullanılan view/timer/input kurulum
+    private static void setupGameView(JFrame frame, JPanel mainPanel, CardLayout cardLayout,
+                                      Hero hero, List<Entity> entities, GameMap map,
+                                      Knight knight, Sorcerer sorcerer) {
+        AssetManager assetManager = AssetManager.getInstance();
+        TileManager tileManager = new TileManager();
+
+        // View (Görünüm)
+        GameView gameView = new GameView(hero, assetManager);
+        gameView.setPreferredSize(new java.awt.Dimension(832, 640));
+        gameView.setGameMap(map);
+        gameView.setTileManager(tileManager);
+        gameView.setEnemies(knight, sorcerer);
         gameView.setEntityList(entities);
 
-        // Klavye girdilerini dinlemek için InputHandler'ı GameView'a ekliyoruz (Frame yerine)
+        mainPanel.add(gameView, "Game");
+        cardLayout.show(mainPanel, "Game");
+
+        // ActionMenu & MouseHandler
+        view.ActionMenu actionMenu = new view.ActionMenu(hero);
+        controller.MouseHandler mouseHandler = new controller.MouseHandler(hero, map, gameView, actionMenu);
+        gameView.addMouseListener(mouseHandler);
+
+        // Klavye girdilerini dinlemek için InputHandler
         controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);
         gameView.setFocusable(true);
         gameView.addKeyListener(inputHandler);
@@ -166,12 +226,10 @@ public class DemoRunner {
 
             // Yeni spawn olan düşmanların AI'sını çalıştır
             for (Knight k : spawner.getSpawnedKnights()) {
-                if (k.isAlive())
-                    k.followHero(hero, map, entities);
+                if (k.isAlive()) k.followHero(hero, map, entities);
             }
             for (Sorcerer s : spawner.getSpawnedSorcerers()) {
-                if (s.isAlive())
-                    s.followHero(hero, map, entities);
+                if (s.isAlive()) s.followHero(hero, map, entities);
             }
 
             // Scroll spawn kontrolü (her 15 saniyede bir)

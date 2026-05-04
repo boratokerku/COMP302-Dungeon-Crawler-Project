@@ -77,6 +77,10 @@ public class Hero extends Entity {
         return this.mana;
     }
 
+    public void setMana(int mana) {
+        this.mana = mana;
+    }
+
     public int getEnergy() {
         return this.energy;
     }

@@ -39,13 +39,21 @@ public class GameState {
     }
 
     public static class ItemRecord {
-        public String type; // "PotionItem", "SwordItem", "ShadowCloneScroll", "KeyItem"
+        public String type; // "PotionItem", "Column", "Crate", "Chest", vb.
+        public String name; // Column/Crate/Chest gibi isimli nesneler için (diğerleri için null)
         public int x, y;
 
         public ItemRecord() {}
 
         public ItemRecord(String type, int x, int y) {
             this.type = type;
+            this.x = x;
+            this.y = y;
+        }
+
+        public ItemRecord(String type, String name, int x, int y) {
+            this.type = type;
+            this.name = name;
             this.x = x;
             this.y = y;
         }

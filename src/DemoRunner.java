@@ -115,7 +115,7 @@ public class DemoRunner {
                 // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
                 scrollItems.add(rec);
             } else {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.x, rec.y);
+                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y);
                 if (item != null) map.placeObject(item, rec.x, rec.y);
             }
         }
@@ -136,15 +136,25 @@ public class DemoRunner {
     }
 
     // Item tip ismine göre nesne oluşturur — scroll hariç (scroll setupGameView'da oluşur)
-    private static domain.models.entity.GameObject createItem(String type, int x, int y) {
+    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y) {
+        String displayName = (name != null && !name.isEmpty()) ? name : type;
         switch (type) {
-            case "PotionItem": return new domain.models.item.PotionItem(x, y);
-            case "SwordItem":  return new domain.models.item.SwordItem(x, y);
-            case "KeyItem":    return new domain.models.staticObjects.KeyItem(x, y);
+            case "PotionItem":        return new domain.models.item.PotionItem(x, y);
+            case "SwordItem":         return new domain.models.item.SwordItem(x, y);
+            case "KeyItem":           return new domain.models.staticObjects.KeyItem(x, y);
+            case "Column":            return new domain.models.entity.Column(displayName, x, y);
+            case "Crate":             return new domain.models.entity.Crate(displayName, x, y);
+            case "Chest":             return new domain.models.entity.Chest(displayName, x, y);
+            case "SearchableObject":  return new domain.models.entity.SearchableObject(displayName, x, y);
             default:
                 System.err.println("Bilinmeyen item tipi: " + type);
                 return null;
         }
+    }
+
+    // Eski imza — envanter için (name yok)
+    private static domain.models.entity.GameObject createItem(String type, int x, int y) {
+        return createItem(type, null, x, y);
     }
 
     // startGame ve loadGame tarafından ortak kullanılan view/timer/input kurulum

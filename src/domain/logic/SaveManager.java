@@ -35,13 +35,21 @@ public class SaveManager {
             state.inventoryItems.add(item.getClass().getSimpleName());
         }
 
-        // Haritadaki eşyalar
+        // Haritadaki eşyalar — alınabilir itemlar ve static nesneler
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
                 if (obj instanceof MapItem) {
                     state.mapItems.add(new GameState.ItemRecord(
                             obj.getClass().getSimpleName(), x, y
+                    ));
+                } else if (obj instanceof domain.models.entity.Column
+                        || obj instanceof domain.models.entity.Crate
+                        || obj instanceof domain.models.entity.Chest
+                        || obj instanceof domain.models.entity.SearchableObject) {
+                    // Static nesneleri ismiyle birlikte kaydet
+                    state.mapItems.add(new GameState.ItemRecord(
+                            obj.getClass().getSimpleName(), obj.getName(), x, y
                     ));
                 }
             }

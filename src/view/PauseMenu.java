@@ -56,12 +56,39 @@ public class PauseMenu extends JPanel {
         });
 
         saveBtn.addActionListener(e -> {
-            // Oyuncudan save ismi iste
-            String name = JOptionPane.showInputDialog(this, "Save ismi girin:", "Kaydet", JOptionPane.PLAIN_MESSAGE);
-            if (name != null && !name.trim().isEmpty()) {
-                SaveManager.save(name.trim(), hero, entities, map);
-                JOptionPane.showMessageDialog(this, "Oyun kaydedildi: " + name.trim(), "Kayıt Başarılı", JOptionPane.INFORMATION_MESSAGE);
+            // Mevcut save'leri listele
+            java.util.List<domain.models.GameState> existingSaves = domain.logic.SaveManager.listSaves();
+            String[] options = new String[existingSaves.size() + 1];
+            options[0] = "[ Yeni Save ]";
+            for (int i = 0; i < existingSaves.size(); i++) {
+                options[i + 1] = existingSaves.get(i).saveName + "  —  " + existingSaves.get(i).timestamp;
             }
+
+            String selected = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Yeni save oluştur veya mevcut save'in üstüne yaz:",
+                    "Kaydet",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    options,
+                    options[0]
+            );
+
+            if (selected == null) return;
+
+            String saveName;
+            if ("[ Yeni Save ]".equals(selected)) {
+                saveName = JOptionPane.showInputDialog(this, "Save ismi girin:", "Yeni Save", JOptionPane.PLAIN_MESSAGE);
+                if (saveName == null || saveName.trim().isEmpty()) return;
+                saveName = saveName.trim();
+            } else {
+                // Seçilen save'in adını çıkar (format: "name  —  date")
+                int idx = java.util.Arrays.asList(options).indexOf(selected) - 1;
+                saveName = existingSaves.get(idx).saveName;
+            }
+
+            SaveManager.save(saveName, hero, entities, map);
+            JOptionPane.showMessageDialog(this, "Kaydedildi: " + saveName, "Kayıt Başarılı", JOptionPane.INFORMATION_MESSAGE);
         });
 
         menuBtn.addActionListener(e -> {

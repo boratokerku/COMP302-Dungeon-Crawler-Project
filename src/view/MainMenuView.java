@@ -5,21 +5,30 @@ import java.awt.*;
 import java.io.File;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.util.List;
+import domain.models.GameState;
+import domain.logic.SaveManager;
 
 public class MainMenuView extends JPanel {
 
     private Runnable onStartGame;
+    private java.util.function.Consumer<GameState> onLoadGame;
     private Image backgroundImage;
     private BufferedImage titleImage;
 
+    // Eski constructor — DemoRunner hemen bozulmasın diye
     public MainMenuView(Runnable onStartGame) {
+        this(onStartGame, null);
+    }
+
+    public MainMenuView(Runnable onStartGame, java.util.function.Consumer<GameState> onLoadGame) {
         this.onStartGame = onStartGame;
+        this.onLoadGame = onLoadGame;
         try {
             File bgFile = new File("resources/images/MainMenuImages/main_menu_bg.png");
             if (bgFile.exists()) {
                 backgroundImage = ImageIO.read(bgFile);
             } else {
-                // Fallback check if needed, but primary path is now correct
                 bgFile = new File("resources/images/main_menu_bg.png");
                 if (bgFile.exists()) {
                     backgroundImage = ImageIO.read(bgFile);
@@ -45,36 +54,73 @@ public class MainMenuView extends JPanel {
     private ScaledImageButton startBtn;
     private ScaledImageButton helpBtn;
     private ScaledImageButton quitBtn;
+    private JButton loadBtn; // Load Game — styled JButton (görselsiz)
 
     private void initUI() {
-        setLayout(null); // Mutlak konumlandırma ile butonların esnek ölçeklenmesini sağlayacağız
+        setLayout(null);
 
         startBtn = new ScaledImageButton("resources/images/MainMenuImages/start_game_button.png");
-        helpBtn = new ScaledImageButton("resources/images/MainMenuImages/help_button.png");
-        quitBtn = new ScaledImageButton("resources/images/MainMenuImages/quit_button.png");
+        helpBtn  = new ScaledImageButton("resources/images/MainMenuImages/help_button.png");
+        quitBtn  = new ScaledImageButton("resources/images/MainMenuImages/quit_button.png");
+
+        // Load Game butonu (resim yok, text-based)
+        loadBtn = new JButton("Load Game");
+        loadBtn.setFont(new Font("Arial", Font.BOLD, 16));
+        loadBtn.setForeground(new Color(255, 220, 100));
+        loadBtn.setBackground(new Color(60, 40, 20));
+        loadBtn.setFocusPainted(false);
+        loadBtn.setBorder(BorderFactory.createLineBorder(new Color(180, 140, 60), 2));
+        loadBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         startBtn.addActionListener(e -> {
-            if (onStartGame != null) {
-                onStartGame.run();
-            }
+            if (onStartGame != null) onStartGame.run();
         });
 
         helpBtn.addActionListener(e -> {
             JOptionPane.showMessageDialog(this,
                     "Welcome to Dungeon Crawler!\n\n" +
-                            "Use Arrow Keys or W, A, S, D to move.\n" +
-                            "Avoid enemies and survive as long as you can!\n",
-                    "Help",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    "Use Arrow Keys or W, A, S, D to move.\n" +
+                    "Avoid enemies and survive as long as you can!\n",
+                    "Help", JOptionPane.INFORMATION_MESSAGE);
         });
 
-        quitBtn.addActionListener(e -> {
-            System.exit(0);
-        });
+        quitBtn.addActionListener(e -> System.exit(0));
+
+        loadBtn.addActionListener(e -> showLoadDialog());
 
         add(startBtn);
         add(helpBtn);
         add(quitBtn);
+        add(loadBtn);
+    }
+
+    // Save listesini gösterir, seçilen save'i callback ile iletir
+    private void showLoadDialog() {
+        List<GameState> saves = SaveManager.listSaves();
+        if (saves.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Kayıtlı oyun bulunamadı.", "Yükleme", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Liste: "SaveName — 2026-05-04 21:00"
+        String[] labels = saves.stream()
+                .map(s -> s.saveName + "  —  " + s.timestamp)
+                .toArray(String[]::new);
+
+        String selected = (String) JOptionPane.showInputDialog(
+                this,
+                "Yüklenecek kaydı seçin:",
+                "Oyun Yükle",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                labels,
+                labels[0]
+        );
+
+        if (selected != null && onLoadGame != null) {
+            int idx = java.util.Arrays.asList(labels).indexOf(selected);
+            if (idx >= 0) onLoadGame.accept(saves.get(idx));
+        }
     }
 
     @Override
@@ -83,10 +129,8 @@ public class MainMenuView extends JPanel {
         int w = getWidth();
         int h = getHeight();
 
-        // Orijinal oyun penceresi olan 832x640'a göre ölçek katsayısını hesaplıyoruz
         double scaleX = w / 832.0;
         double scaleY = h / 640.0;
-        // Boşlukları doldurmak için resmi (ve butonları) kırparak/zoomlayarak büyütüyoruz (Math.max)
         double scale = Math.max(scaleX, scaleY);
 
         int logicalW = (int) (832 * scale);
@@ -94,28 +138,22 @@ public class MainMenuView extends JPanel {
         int offsetX = (w - logicalW) / 2;
         int offsetY = (h - logicalH) / 2;
 
-        // Butonların aşırı büyümesini engellemek için maksimum bir ölçek (örn. 1.25) belirliyoruz
         double btnScale = Math.min(scale, 1.25);
         int btnW = (int) (320 * btnScale);
         int btnH = (int) (80 * btnScale);
         int gap = (int) (10 * btnScale);
-        
+
         int startX = offsetX + (logicalW - btnW) / 2;
-        
-        // Butonların kapının üzerinde her zaman ortalı durması için merkez koordinatını hesaplıyoruz
-        int totalBtnHeight = 3 * btnH + 2 * gap;
-        int centerY = offsetY + (int) (380 * scale); // 250 (eski başlangıç) + 130 (buton bloklarının yarı boyu) = 380
+
+        // 4 buton için toplam yükseklik
+        int totalBtnHeight = 4 * btnH + 3 * gap;
+        int centerY = offsetY + (int) (400 * scale);
         int startY = centerY - totalBtnHeight / 2;
-        
-        if (startBtn != null) {
-            startBtn.setBounds(startX, startY, btnW, btnH);
-        }
-        if (helpBtn != null) {
-            helpBtn.setBounds(startX, startY + btnH + gap, btnW, btnH);
-        }
-        if (quitBtn != null) {
-            quitBtn.setBounds(startX, startY + 2 * btnH + 2 * gap, btnW, btnH);
-        }
+
+        if (startBtn != null) startBtn.setBounds(startX, startY, btnW, btnH);
+        if (loadBtn  != null) loadBtn.setBounds(startX, startY + btnH + gap, btnW, btnH);
+        if (helpBtn  != null) helpBtn.setBounds(startX, startY + 2 * (btnH + gap), btnW, btnH);
+        if (quitBtn  != null) quitBtn.setBounds(startX, startY + 3 * (btnH + gap), btnW, btnH);
     }
 
     private class ScaledImageButton extends JButton {

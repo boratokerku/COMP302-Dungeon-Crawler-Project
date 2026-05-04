@@ -231,6 +231,14 @@ public class GameView extends JPanel {
                         java.awt.image.BufferedImage sprite = ((domain.models.item.MapItem) item).getSprite();
                         if (sprite != null) {
                             g.drawImage(sprite, slotX + 2, slotY + 2, invSlotSize - 4, invSlotSize - 4, null);
+                        } else {
+                            // Sprite yok — placeholder
+                            if (item instanceof domain.models.item.ShadowCloneScroll) {
+                                g.setColor(new Color(150, 50, 255)); // Mor — scroll
+                            } else {
+                                g.setColor(new Color(255, 220, 50)); // Sarı — bilinmeyen
+                            }
+                            g.fillOval(slotX + 5, slotY + 5, invSlotSize - 10, invSlotSize - 10);
                         }
                     } else if (item.getImageName() != null && tileManager != null) {
                         java.awt.image.BufferedImage sprite = tileManager.getTile(item.getImageName());

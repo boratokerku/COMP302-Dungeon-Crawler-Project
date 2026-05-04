@@ -98,7 +98,7 @@ public class MainMenuView extends JPanel {
     private void showLoadDialog() {
         List<GameState> saves = SaveManager.listSaves();
         if (saves.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Kayıtlı oyun bulunamadı.", "Yükleme", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "No saved games found.", "Load Game", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -108,7 +108,7 @@ public class MainMenuView extends JPanel {
                 .toArray(String[]::new);
 
         // Özel dialog — Load ve Delete butonları
-        JDialog dialog = new JDialog((java.awt.Frame) null, "Oyun Yükle", true);
+        JDialog dialog = new JDialog((java.awt.Frame) null, "Load Game", true);
         dialog.setLayout(new java.awt.BorderLayout(10, 10));
 
         JList<String> list = new JList<>(labels);
@@ -121,9 +121,9 @@ public class MainMenuView extends JPanel {
         dialog.add(scrollPane, java.awt.BorderLayout.CENTER);
 
         JPanel btnPanel = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
-        JButton loadBtn2  = new JButton("Yükle");
-        JButton deleteBtn = new JButton("Sil");
-        JButton cancelBtn = new JButton("İptal");
+        JButton loadBtn2  = new JButton("Load");
+        JButton deleteBtn = new JButton("Delete");
+        JButton cancelBtn = new JButton("Cancel");
 
         loadBtn2.addActionListener(ev -> {
             int idx = list.getSelectedIndex();
@@ -137,7 +137,7 @@ public class MainMenuView extends JPanel {
             int idx = list.getSelectedIndex();
             if (idx >= 0) {
                 int confirm = JOptionPane.showConfirmDialog(dialog,
-                        saves.get(idx).saveName + " silinsin mi?", "Onayla",
+                        "Are you sure you want to delete " + saves.get(idx).saveName + "?", "Confirm",
                         JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     java.io.File f = new java.io.File("saves/" + saves.get(idx).saveName + ".json");

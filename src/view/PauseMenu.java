@@ -51,9 +51,9 @@ public class PauseMenu extends JPanel {
                 BorderFactory.createEmptyBorder(20, 40, 20, 40)
         ));
 
-        JButton resumeBtn = createMenuButton("Devam Et");
-        JButton saveBtn   = createMenuButton("Oyunu Kaydet");
-        JButton menuBtn   = createMenuButton("Ana Menü");
+        JButton resumeBtn = createMenuButton("Resume");
+        JButton saveBtn   = createMenuButton("Save Game");
+        JButton menuBtn   = createMenuButton("Main Menu");
 
         resumeBtn.addActionListener(e -> {
             setVisible(false);
@@ -64,15 +64,15 @@ public class PauseMenu extends JPanel {
             // Mevcut save'leri listele
             java.util.List<domain.models.GameState> existingSaves = domain.logic.SaveManager.listSaves();
             String[] options = new String[existingSaves.size() + 1];
-            options[0] = "[ Yeni Save ]";
+            options[0] = "[ New Save ]";
             for (int i = 0; i < existingSaves.size(); i++) {
                 options[i + 1] = existingSaves.get(i).saveName + "  —  " + existingSaves.get(i).timestamp;
             }
 
             String selected = (String) JOptionPane.showInputDialog(
                     this,
-                    "Yeni save oluştur veya mevcut save'in üstüne yaz:",
-                    "Kaydet",
+                    "Create a new save or overwrite an existing one:",
+                    "Save Game",
                     JOptionPane.PLAIN_MESSAGE,
                     null,
                     options,
@@ -82,8 +82,8 @@ public class PauseMenu extends JPanel {
             if (selected == null) return;
 
             String saveName;
-            if ("[ Yeni Save ]".equals(selected)) {
-                saveName = JOptionPane.showInputDialog(this, "Save ismi girin:", "Yeni Save", JOptionPane.PLAIN_MESSAGE);
+            if ("[ New Save ]".equals(selected)) {
+                saveName = JOptionPane.showInputDialog(this, "Enter save name:", "New Save", JOptionPane.PLAIN_MESSAGE);
                 if (saveName == null || saveName.trim().isEmpty()) return;
                 saveName = saveName.trim();
             } else {
@@ -93,7 +93,7 @@ public class PauseMenu extends JPanel {
             }
 
             SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner);
-            JOptionPane.showMessageDialog(this, "Kaydedildi: " + saveName, "Kayıt Başarılı", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Saved successfully: " + saveName, "Save Successful", JOptionPane.INFORMATION_MESSAGE);
         });
 
         menuBtn.addActionListener(e -> {

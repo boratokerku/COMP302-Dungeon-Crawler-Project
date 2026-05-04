@@ -7,6 +7,7 @@ src/view/GameView.java
 src/view/SpriteAnimation.java
 src/view/MainMenuView.java
 src/view/AssetManager.java
+src/view/PauseMenu.java
 src/domain/logic/EquipAction.java
 src/domain/logic/GameEngine.java
 src/domain/logic/UseAction.java
@@ -14,13 +15,18 @@ src/domain/logic/EnemySpawner.java
 src/domain/logic/TakeAction.java
 src/domain/logic/Action.java
 src/domain/logic/DiscardAction.java
+src/domain/logic/ReadAction.java
+src/domain/logic/ScrollSpawner.java
+src/domain/logic/SaveManager.java
 src/domain/models/AnimationState.java
+src/domain/models/GameState.java
 src/domain/models/entity/Hero.java
 src/domain/models/entity/Knight.java
 src/domain/models/entity/Projectile.java
 src/domain/models/entity/GameObject.java
 src/domain/models/entity/Sorcerer.java
 src/domain/models/entity/Entity.java
+src/domain/models/entity/ShadowClone.java
 src/domain/models/tile/WallTile.java
 src/domain/models/tile/Tile.java
 src/domain/models/tile/FloorTile.java
@@ -36,5 +42,6 @@ src/domain/models/item/MapItem.java
 src/domain/models/item/PotionItem.java
 src/domain/models/item/Item.java
 src/domain/models/item/Weapon.java
+src/domain/models/item/ShadowCloneScroll.java
 src/domain/models/inventory/Inventory.java
 src/domain/models/Direction.java

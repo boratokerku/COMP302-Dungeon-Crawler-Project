@@ -26,6 +26,8 @@ public class ShadowClone extends Entity {
 
     @Override
     public void update() {
+        if (!this.alive) return; // Eğer zaten öldüyse döngüden çık, spam'i engelle
+
         // 7 saniye dolunca yok ol
         if (System.currentTimeMillis() - birthTime >= LIFETIME_MS) {
             this.alive = false;

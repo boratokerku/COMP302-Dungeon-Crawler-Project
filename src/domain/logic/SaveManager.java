@@ -75,10 +75,12 @@ public class SaveManager {
                         "Sorcerer", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
                 ));
             } else if (e instanceof domain.models.entity.ShadowClone) {
-                long timeLeft = ((domain.models.entity.ShadowClone) e).getTimeLeft();
-                state.enemies.add(new GameState.EnemyRecord(
-                        "ShadowClone", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
-                ));
+                if (e.isAlive()) { // Sadece yaşayan klonları kaydet
+                    long timeLeft = ((domain.models.entity.ShadowClone) e).getTimeLeft();
+                    state.enemies.add(new GameState.EnemyRecord(
+                            "ShadowClone", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
+                    ));
+                }
             }
         }
 

@@ -45,3 +45,7 @@ src/domain/models/item/Weapon.java
 src/domain/models/item/ShadowCloneScroll.java
 src/domain/models/inventory/Inventory.java
 src/domain/models/Direction.java
+src/domain/models/entity/Column.java
+src/domain/models/entity/Crate.java
+src/domain/models/entity/Chest.java
+src/domain/models/entity/SearchableObject.java

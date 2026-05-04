@@ -8,12 +8,20 @@ import java.util.List;
 public class ShadowClone extends Entity {
 
     private static final long LIFETIME_MS = 7_000; // 7 saniye sonra yok olur
-    private final long birthTime;
+    private long birthTime;
 
     public ShadowClone(int x, int y) {
         super(x, y, Integer.MAX_VALUE);
         this.birthTime = System.currentTimeMillis();
         System.out.println("ShadowClone doğdu! Konum: (" + x + ", " + y + ")");
+    }
+
+    public long getTimeLeft() {
+        return Math.max(0, LIFETIME_MS - (System.currentTimeMillis() - birthTime));
+    }
+
+    public void setTimeLeft(long timeLeft) {
+        this.birthTime = System.currentTimeMillis() - (LIFETIME_MS - timeLeft);
     }
 
     @Override

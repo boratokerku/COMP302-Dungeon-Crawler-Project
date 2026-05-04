@@ -37,6 +37,14 @@ public class EnemySpawner {
         this.lastSpawnTime = System.currentTimeMillis();
     }
 
+    public long getTimeLeft() {
+        return Math.max(0, SPAWN_INTERVAL_MS - (System.currentTimeMillis() - lastSpawnTime));
+    }
+
+    public void setTimeLeft(long timeLeft) {
+        this.lastSpawnTime = System.currentTimeMillis() - (SPAWN_INTERVAL_MS - timeLeft);
+    }
+
     /**
      * Called every logic tick. Checks whether it is time to spawn a new enemy
      * and, if so, applies the 60/30/10 probability rule.

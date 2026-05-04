@@ -19,14 +19,19 @@ public class PauseMenu extends JPanel {
     private final Hero hero;
     private final List<Entity> entities;
     private final GameMap map;
+    private final domain.logic.EnemySpawner enemySpawner;
+    private final domain.logic.ScrollSpawner scrollSpawner;
     private final Runnable onResume;
     private final Runnable onMainMenu;
 
     public PauseMenu(Hero hero, List<Entity> entities, GameMap map,
+                     domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner,
                      Runnable onResume, Runnable onMainMenu) {
         this.hero = hero;
         this.entities = entities;
         this.map = map;
+        this.enemySpawner = enemySpawner;
+        this.scrollSpawner = scrollSpawner;
         this.onResume = onResume;
         this.onMainMenu = onMainMenu;
 
@@ -87,7 +92,7 @@ public class PauseMenu extends JPanel {
                 saveName = existingSaves.get(idx).saveName;
             }
 
-            SaveManager.save(saveName, hero, entities, map);
+            SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner);
             JOptionPane.showMessageDialog(this, "Kaydedildi: " + saveName, "Kayıt Başarılı", JOptionPane.INFORMATION_MESSAGE);
         });
 

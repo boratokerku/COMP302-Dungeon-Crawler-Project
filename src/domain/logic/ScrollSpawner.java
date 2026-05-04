@@ -25,6 +25,14 @@ public class ScrollSpawner {
         this.lastSpawnTime = System.currentTimeMillis();
     }
 
+    public long getTimeLeft() {
+        return Math.max(0, SPAWN_INTERVAL_MS - (System.currentTimeMillis() - lastSpawnTime));
+    }
+
+    public void setTimeLeft(long timeLeft) {
+        this.lastSpawnTime = System.currentTimeMillis() - (SPAWN_INTERVAL_MS - timeLeft);
+    }
+
     // Her logic tick'te çağrılır — 15 saniye dolunca scroll çıkarır
     public void trySpawn() {
         long now = System.currentTimeMillis();

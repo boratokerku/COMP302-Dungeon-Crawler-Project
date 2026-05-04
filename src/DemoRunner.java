@@ -70,18 +70,24 @@ public class DemoRunner {
         // Yeni oyunda haritada ve envantertde scroll yok — boş listeler
         List<GameState.ItemRecord> scrollItems = new ArrayList<>();
         List<String> inventoryScrollTypes = new ArrayList<>();
-        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes);
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes, null);
     }
 
     // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
     private static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
         GameMap map = new GameMap(13, 10);
 
-        // Hero yeniden oluştur
+        // Hero oluştur ve durumunu yükle
         Hero hero = new Hero(state.hero.x, state.hero.y);
         hero.setHp(state.hero.hp);
         hero.setMana(state.hero.mana);
         hero.setEnergy(state.hero.energy);
+        if (state.hero.str > 0) hero.setStr(state.hero.str); // str bilgisini yükle
+
+        // Kılıcı takılıysa ayarla
+        if ("SwordItem".equals(state.hero.equippedWeaponType)) {
+            hero.equipWeapon(new domain.models.item.SwordItem(0, 0));
+        }
 
         // Düşmanları yeniden oluştur
         Knight knight = null;
@@ -98,8 +104,15 @@ public class DemoRunner {
             } else if ("Sorcerer".equals(rec.type)) {
                 Sorcerer s = new Sorcerer(rec.x, rec.y);
                 s.setHp(rec.hp);
+                s.setTimeLeft(rec.timeLeft); // Sorcerer ışınlanma timer'ı yükle
+                if (!rec.alive) s.takeDamage(999);
                 entities.add(s);
-                if (sorcerer == null) sorcerer = s;
+                sorcerer = s;
+            } else if ("ShadowClone".equals(rec.type)) {
+                domain.models.entity.ShadowClone clone = new domain.models.entity.ShadowClone(rec.x, rec.y);
+                clone.setTimeLeft(rec.timeLeft);
+                if (!rec.alive) clone.takeDamage(999);
+                entities.add(clone);
             }
         }
 
@@ -132,7 +145,7 @@ public class DemoRunner {
             }
         }
 
-        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes);
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes, state);
     }
 
     // Item tip ismine göre nesne oluşturur — scroll hariç (scroll setupGameView'da oluşur)
@@ -163,7 +176,8 @@ public class DemoRunner {
                                       Hero hero, List<Entity> entities, GameMap map,
                                       Knight knight, Sorcerer sorcerer,
                                       List<GameState.ItemRecord> scrollItems,
-                                      List<String> inventoryScrollTypes) {
+                                      List<String> inventoryScrollTypes,
+                                      GameState state) {
         AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();
 
@@ -186,6 +200,14 @@ public class DemoRunner {
         gameView.addKeyListener(inputHandler);
         gameView.requestFocusInWindow();
 
+        // Eğer save'den yüklenen aktif bir ShadowClone varsa, InputHandler'a kaydet
+        for (Entity e : entities) {
+            if (e instanceof domain.models.entity.ShadowClone && e.isAlive()) {
+                inputHandler.setShadowClone((domain.models.entity.ShadowClone) e);
+                break;
+            }
+        }
+
         // Scroll'ları şimdi yerleştir — inputHandler hazır, tam işlevsel oluşturulur
         for (GameState.ItemRecord rec : scrollItems) {
             domain.models.item.ShadowCloneScroll scroll =
@@ -202,13 +224,22 @@ public class DemoRunner {
             }
         }
 
+        // EnemySpawner ve ScrollSpawner — timer'lar state'ten yüklenir (load game durumuysa)
+        EnemySpawner spawner = new EnemySpawner(map);
+        ScrollSpawner scrollSpawner = new ScrollSpawner(map, entities, inputHandler);
+
+        if (state != null) {
+            spawner.setTimeLeft(state.enemySpawnTimeLeft);
+            scrollSpawner.setTimeLeft(state.scrollSpawnTimeLeft);
+        }
+
         // Timer referans tutucular — lambda içinden timer'a erişmek için (pause/resume)
         final javax.swing.Timer[] logicRef  = new javax.swing.Timer[1];
         final javax.swing.Timer[] renderRef = new javax.swing.Timer[1];
 
         // PauseMenu — JFrame glass pane olarak oyunun üstüne bindiriliyor
         view.PauseMenu pauseMenu = new view.PauseMenu(
-                hero, entities, map,
+                hero, entities, map, spawner, scrollSpawner,
                 () -> {
                     if (logicRef[0] != null)  logicRef[0].start();
                     if (renderRef[0] != null) renderRef[0].start();
@@ -242,11 +273,6 @@ public class DemoRunner {
             }
         });
 
-        // EnemySpawner — design doc §2.5: 9 saniyede bir, kenar tile'dan, %60/%30/%10
-        EnemySpawner spawner = new EnemySpawner(map);
-
-        // ScrollSpawner — design doc §Phase2: 15 saniyede bir rastgele tile'a scroll çıkar
-        ScrollSpawner scrollSpawner = new ScrollSpawner(map, entities, inputHandler);
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         logicRef[0] = new javax.swing.Timer(120, (e) -> {

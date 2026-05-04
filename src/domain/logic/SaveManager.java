@@ -20,14 +20,22 @@ public class SaveManager {
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     // Oyunu kaydet — saves/<saveName>.json dosyasına yazar
-    public static void save(String saveName, Hero hero, List<Entity> entities, GameMap map) {
+    public static void save(String saveName, Hero hero, List<Entity> entities, GameMap map,
+                            domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner) {
         GameState state = new GameState();
         state.saveName = saveName;
-        state.timestamp = LocalDateTime.now().format(FMT);
+        state.timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date());
 
-        // Hero durumu
+        // Global Timerlar
+        state.enemySpawnTimeLeft = enemySpawner.getTimeLeft();
+        state.scrollSpawnTimeLeft = scrollSpawner.getTimeLeft();
+
+        // Hero verisi
+        String equippedWeaponType = hero.getEquippedWeapon() != null ? hero.getEquippedWeapon().getClass().getSimpleName() : null;
         state.hero = new GameState.HeroRecord(
-                hero.getX(), hero.getY(), hero.getHp(), hero.getMana(), hero.getEnergy()
+                hero.getX(), hero.getY(),
+                hero.getHp(), hero.getMana(), hero.getEnergy(),
+                hero.getStr(), equippedWeaponType
         );
 
         // Envanter (sınıf ismine göre — yüklerken yeniden oluşturmak için)
@@ -55,11 +63,21 @@ public class SaveManager {
             }
         }
 
-        // Düşmanlar (Hero ve ShadowClone hariç)
+        // Düşmanlar ve ShadowClone
         for (Entity e : entities) {
-            if (e instanceof Knight || e instanceof Sorcerer) {
+            if (e instanceof Knight) {
                 state.enemies.add(new GameState.EnemyRecord(
-                        e.getClass().getSimpleName(), e.getX(), e.getY(), e.getHp(), e.isAlive()
+                        "Knight", e.getX(), e.getY(), e.getHp(), e.isAlive(), 0
+                ));
+            } else if (e instanceof Sorcerer) {
+                long timeLeft = ((Sorcerer) e).getTimeLeft();
+                state.enemies.add(new GameState.EnemyRecord(
+                        "Sorcerer", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
+                ));
+            } else if (e instanceof domain.models.entity.ShadowClone) {
+                long timeLeft = ((domain.models.entity.ShadowClone) e).getTimeLeft();
+                state.enemies.add(new GameState.EnemyRecord(
+                        "ShadowClone", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
                 ));
             }
         }

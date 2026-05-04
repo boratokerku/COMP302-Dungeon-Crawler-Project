@@ -67,9 +67,10 @@ public class DemoRunner {
         entities.add(knight);
         entities.add(sorcerer);
 
-        // Yeni oyunda haritada scroll yok — boş liste
+        // Yeni oyunda haritada ve envantertde scroll yok — boş listeler
         List<GameState.ItemRecord> scrollItems = new ArrayList<>();
-        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems);
+        List<String> inventoryScrollTypes = new ArrayList<>();
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes);
     }
 
     // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
@@ -119,13 +120,19 @@ public class DemoRunner {
             }
         }
 
-        // Envanter itemlarını yeniden oluştur
+        // Envanter itemlarını yeniden oluştur — scroll hariç
+        List<String> inventoryScrollTypes = new ArrayList<>();
         for (String type : state.inventoryItems) {
-            domain.models.entity.GameObject item = createItem(type, 0, 0);
-            if (item != null) hero.getInventory().addItem(item);
+            if ("ShadowCloneScroll".equals(type)) {
+                // Scroll inputHandler gerektirir — setupGameView'da oluşturulacak
+                inventoryScrollTypes.add(type);
+            } else {
+                domain.models.entity.GameObject item = createItem(type, 0, 0);
+                if (item != null) hero.getInventory().addItem(item);
+            }
         }
 
-        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems);
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes);
     }
 
     // Item tip ismine göre nesne oluşturur — scroll hariç (scroll setupGameView'da oluşur)
@@ -145,7 +152,8 @@ public class DemoRunner {
     private static void setupGameView(JFrame frame, JPanel mainPanel, CardLayout cardLayout,
                                       Hero hero, List<Entity> entities, GameMap map,
                                       Knight knight, Sorcerer sorcerer,
-                                      List<GameState.ItemRecord> scrollItems) {
+                                      List<GameState.ItemRecord> scrollItems,
+                                      List<String> inventoryScrollTypes) {
         AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();
 
@@ -168,11 +176,20 @@ public class DemoRunner {
         gameView.addKeyListener(inputHandler);
         gameView.requestFocusInWindow();
 
-        // Scroll'ları şimdi yerleştir — inputHandler hazır olduğu için tam işlevsel oluşturulur
+        // Scroll'ları şimdi yerleştir — inputHandler hazır, tam işlevsel oluşturulur
         for (GameState.ItemRecord rec : scrollItems) {
             domain.models.item.ShadowCloneScroll scroll =
                     new domain.models.item.ShadowCloneScroll(rec.x, rec.y, entities, map, inputHandler);
             map.placeObject(scroll, rec.x, rec.y);
+        }
+
+        // Envanterdeki scroll'ları da şimdi oluştur — inputHandler hazır
+        for (String type : inventoryScrollTypes) {
+            if ("ShadowCloneScroll".equals(type)) {
+                hero.getInventory().addItem(
+                        new domain.models.item.ShadowCloneScroll(0, 0, entities, map, inputHandler)
+                );
+            }
         }
 
         // Timer referans tutucular — lambda içinden timer'a erişmek için (pause/resume)

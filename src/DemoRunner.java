@@ -47,19 +47,14 @@ public class DemoRunner {
         Knight knight = new Knight(11, 8);
         Sorcerer sorcerer = new Sorcerer(8, 8);
 
-        // Random Spawning logic for Items (2 Potions, 1 Sword, 1 Key)
         java.util.Random rand = new java.util.Random();
 
-        // Spawn 2 Potions
         for (int i = 0; i < 2; i++) {
             placeRandomItem(map, new domain.models.item.PotionItem(0, 0), hero, knight, sorcerer, rand);
         }
-        // Spawn 1 Sword
         placeRandomItem(map, new domain.models.item.SwordItem(0, 0), hero, knight, sorcerer, rand);
-        // Spawn 1 Key
         placeRandomItem(map, new domain.models.staticObjects.KeyItem(0, 0), hero, knight, sorcerer, rand);
 
-        // Spawn Static Objects
         for (int i = 0; i < 2; i++) {
             placeRandomItem(map, new domain.models.entity.Column("Column " + (i + 1), 0, 0), hero, knight, sorcerer, rand);
             placeRandomItem(map, new domain.models.entity.Crate("Crate " + (i + 1), 0, 0), hero, knight, sorcerer, rand);
@@ -72,7 +67,9 @@ public class DemoRunner {
         entities.add(knight);
         entities.add(sorcerer);
 
-        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer);
+        // Yeni oyunda haritada scroll yok — boş liste
+        List<GameState.ItemRecord> scrollItems = new ArrayList<>();
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems);
     }
 
     // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
@@ -105,14 +102,21 @@ public class DemoRunner {
             }
         }
 
-        // Kayıtta düşman yoksa fallback (başlangıç pozisyonu)
+        // Fallback: kayıtta düşman yoksa default pozisyon
         if (knight == null)   { knight   = new Knight(11, 8);  entities.add(knight); }
         if (sorcerer == null) { sorcerer = new Sorcerer(8, 8); entities.add(sorcerer); }
 
-        // Haritadaki eşyaları yeniden yerleştir
+        // Harita itemlarını ayır: scroll'lar ayrı tutulur (inputHandler gerektirir)
+        List<GameState.ItemRecord> scrollItems = new ArrayList<>();
+
         for (GameState.ItemRecord rec : state.mapItems) {
-            domain.models.entity.GameObject item = createItem(rec.type, rec.x, rec.y);
-            if (item != null) map.placeObject(item, rec.x, rec.y);
+            if ("ShadowCloneScroll".equals(rec.type)) {
+                // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
+                scrollItems.add(rec);
+            } else {
+                domain.models.entity.GameObject item = createItem(rec.type, rec.x, rec.y);
+                if (item != null) map.placeObject(item, rec.x, rec.y);
+            }
         }
 
         // Envanter itemlarını yeniden oluştur
@@ -121,16 +125,15 @@ public class DemoRunner {
             if (item != null) hero.getInventory().addItem(item);
         }
 
-        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer);
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems);
     }
 
-    // Item tip ismine göre nesne oluşturur (save/load için)
+    // Item tip ismine göre nesne oluşturur — scroll hariç (scroll setupGameView'da oluşur)
     private static domain.models.entity.GameObject createItem(String type, int x, int y) {
         switch (type) {
-            case "PotionItem":        return new domain.models.item.PotionItem(x, y);
-            case "SwordItem":         return new domain.models.item.SwordItem(x, y);
-            case "ShadowCloneScroll": return new domain.models.item.ShadowCloneScroll(x, y);
-            case "KeyItem":           return new domain.models.staticObjects.KeyItem(x, y);
+            case "PotionItem": return new domain.models.item.PotionItem(x, y);
+            case "SwordItem":  return new domain.models.item.SwordItem(x, y);
+            case "KeyItem":    return new domain.models.staticObjects.KeyItem(x, y);
             default:
                 System.err.println("Bilinmeyen item tipi: " + type);
                 return null;
@@ -138,13 +141,14 @@ public class DemoRunner {
     }
 
     // startGame ve loadGame tarafından ortak kullanılan view/timer/input kurulum
+    // scrollItems: haritaya yerleştirilecek scroll kayıtları — inputHandler gerektirdiği için burada oluşturulur
     private static void setupGameView(JFrame frame, JPanel mainPanel, CardLayout cardLayout,
                                       Hero hero, List<Entity> entities, GameMap map,
-                                      Knight knight, Sorcerer sorcerer) {
+                                      Knight knight, Sorcerer sorcerer,
+                                      List<GameState.ItemRecord> scrollItems) {
         AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();
 
-        // View (Görünüm)
         GameView gameView = new GameView(hero, assetManager);
         gameView.setPreferredSize(new java.awt.Dimension(832, 640));
         gameView.setGameMap(map);
@@ -155,16 +159,21 @@ public class DemoRunner {
         mainPanel.add(gameView, "Game");
         cardLayout.show(mainPanel, "Game");
 
-        // ActionMenu & MouseHandler
         view.ActionMenu actionMenu = new view.ActionMenu(hero);
         controller.MouseHandler mouseHandler = new controller.MouseHandler(hero, map, gameView, actionMenu);
         gameView.addMouseListener(mouseHandler);
 
-        // Klavye girdilerini dinlemek için InputHandler
         controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);
         gameView.setFocusable(true);
         gameView.addKeyListener(inputHandler);
         gameView.requestFocusInWindow();
+
+        // Scroll'ları şimdi yerleştir — inputHandler hazır olduğu için tam işlevsel oluşturulur
+        for (GameState.ItemRecord rec : scrollItems) {
+            domain.models.item.ShadowCloneScroll scroll =
+                    new domain.models.item.ShadowCloneScroll(rec.x, rec.y, entities, map, inputHandler);
+            map.placeObject(scroll, rec.x, rec.y);
+        }
 
         // Timer referans tutucular — lambda içinden timer'a erişmek için (pause/resume)
         final javax.swing.Timer[] logicRef  = new javax.swing.Timer[1];
@@ -214,17 +223,13 @@ public class DemoRunner {
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         logicRef[0] = new javax.swing.Timer(120, (e) -> {
-            // Hero enerji yenileme
             hero.update();
 
-            // Başlangıç düşmanlarının AI'sı
             knight.followHero(hero, map, entities);
             sorcerer.followHero(hero, map, entities);
 
-            // Spawn kontrolü (her 9 saniyede bir yeni düşman çıkarmayı dener)
             spawner.trySpawn(entities);
 
-            // Yeni spawn olan düşmanların AI'sını çalıştır
             for (Knight k : spawner.getSpawnedKnights()) {
                 if (k.isAlive()) k.followHero(hero, map, entities);
             }
@@ -232,10 +237,8 @@ public class DemoRunner {
                 if (s.isAlive()) s.followHero(hero, map, entities);
             }
 
-            // Scroll spawn kontrolü (her 15 saniyede bir)
             scrollSpawner.trySpawn();
 
-            // Aktif shadow clone'un yaşam döngüsünü güncelle (7 saniye süre)
             ShadowClone activeClone = inputHandler.getShadowClone();
             if (activeClone != null) activeClone.update();
         });
@@ -256,14 +259,12 @@ public class DemoRunner {
             int x = rand.nextInt(map.getWidth());
             int y = rand.nextInt(map.getHeight());
 
-            // Avoid hero and enemy starting positions
             if ((x == hero.getX() && y == hero.getY()) ||
                     (x == knight.getX() && y == knight.getY()) ||
                     (x == sorcerer.getX() && y == sorcerer.getY())) {
                 continue;
             }
 
-            // Must be entirely empty floor (meaning no wall or existing items)
             domain.models.entity.GameObject existingObj = map.getObjectAt(x, y);
             if (existingObj != null && existingObj.getImageName().equals("floor")
                     && !(existingObj instanceof domain.models.item.MapItem)) {

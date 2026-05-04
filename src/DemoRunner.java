@@ -25,9 +25,10 @@ public class DemoRunner {
             CardLayout cardLayout = new CardLayout();
             JPanel mainPanel = new JPanel(cardLayout);
 
-            view.MainMenuView menuView = new view.MainMenuView(() -> {
-                startGame(frame, mainPanel, cardLayout);
-            });
+            view.MainMenuView menuView = new view.MainMenuView(
+                    () -> startGame(frame, mainPanel, cardLayout),
+                    (state) -> loadGame(frame, mainPanel, cardLayout, state)
+            );
             menuView.setPreferredSize(new java.awt.Dimension(832, 640));
 
             mainPanel.add(menuView, "Menu");
@@ -105,6 +106,46 @@ public class DemoRunner {
         gameView.addKeyListener(inputHandler);
         gameView.requestFocusInWindow();
 
+        // Timer referans tutucular — lambda içinden timer'a erişmek için (pause/resume)
+        final javax.swing.Timer[] logicRef  = new javax.swing.Timer[1];
+        final javax.swing.Timer[] renderRef = new javax.swing.Timer[1];
+
+        // PauseMenu — JFrame glass pane olarak oyunun üstüne bindiriliyor
+        view.PauseMenu pauseMenu = new view.PauseMenu(
+                hero, entities, map,
+                () -> {
+                    if (logicRef[0] != null)  logicRef[0].start();
+                    if (renderRef[0] != null) renderRef[0].start();
+                    gameView.requestFocusInWindow();
+                },
+                () -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    cardLayout.show(mainPanel, "Menu");
+                }
+        );
+        frame.setGlassPane(pauseMenu);
+
+        // ESC tuşu — pause/resume toggle
+        gameView.getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(javax.swing.KeyStroke.getKeyStroke("ESCAPE"), "togglePause");
+        gameView.getActionMap().put("togglePause", new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                boolean paused = pauseMenu.isVisible();
+                if (paused) {
+                    pauseMenu.setVisible(false);
+                    if (logicRef[0] != null)  logicRef[0].start();
+                    if (renderRef[0] != null) renderRef[0].start();
+                    gameView.requestFocusInWindow();
+                } else {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    pauseMenu.setVisible(true);
+                }
+            }
+        });
+
         // EnemySpawner — design doc §2.5: 9 saniyede bir, kenar tile'dan, %60/%30/%10
         EnemySpawner spawner = new EnemySpawner(map);
 
@@ -112,7 +153,7 @@ public class DemoRunner {
         ScrollSpawner scrollSpawner = new ScrollSpawner(map, entities, inputHandler);
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
-        javax.swing.Timer logicTimer = new javax.swing.Timer(120, (e) -> {
+        logicRef[0] = new javax.swing.Timer(120, (e) -> {
             // Hero enerji yenileme
             hero.update();
 
@@ -140,13 +181,13 @@ public class DemoRunner {
             ShadowClone activeClone = inputHandler.getShadowClone();
             if (activeClone != null) activeClone.update();
         });
-        logicTimer.start();
+        logicRef[0].start();
 
         // Render Loop (Saniyede 60 Kare - 60 FPS Çizim Motoru)
-        javax.swing.Timer renderTimer = new javax.swing.Timer(16, (e) -> {
+        renderRef[0] = new javax.swing.Timer(16, (e) -> {
             gameView.repaint();
         });
-        renderTimer.start();
+        renderRef[0].start();
     }
 
     private static void placeRandomItem(domain.models.map.GameMap map, domain.models.entity.GameObject item,

@@ -61,6 +61,7 @@ public class Hero extends Entity {
     public void equipWeapon(domain.models.item.SwordItem sword) {
         // Basic sword buff
         this.weaponAtk = 5;
+        this.equippedWeapon = sword;
     }
 
     // We put this in the Hero class using Information Expert
@@ -75,6 +76,10 @@ public class Hero extends Entity {
 
     public int getMana() {
         return this.mana;
+    }
+
+    public void setMana(int mana) {
+        this.mana = mana;
     }
 
     public int getEnergy() {

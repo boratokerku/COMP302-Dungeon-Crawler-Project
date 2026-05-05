@@ -15,6 +15,14 @@ public class Sorcerer extends Entity {
         this.lastTeleportTime = System.currentTimeMillis();
     }
 
+    public long getTimeLeft() {
+        return Math.max(0, 7000 - (System.currentTimeMillis() - lastTeleportTime));
+    }
+
+    public void setTimeLeft(long timeLeft) {
+        this.lastTeleportTime = System.currentTimeMillis() - (7000 - timeLeft);
+    }
+
     /**
      * Sorcerer AI ana metodu.
      *

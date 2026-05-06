@@ -29,7 +29,7 @@ public class DemoRunner {
                     () -> startGame(frame, mainPanel, cardLayout),
                     (state) -> loadGame(frame, mainPanel, cardLayout, state)
             );
-            menuView.setPreferredSize(new java.awt.Dimension(832, 640));
+            menuView.setPreferredSize(new java.awt.Dimension(1250, 1000));
 
             mainPanel.add(menuView, "Menu");
             frame.add(mainPanel);
@@ -42,25 +42,39 @@ public class DemoRunner {
 
     // Yeni oyun — tüm nesneler rastgele oluşturulur
     private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
-        GameMap map = new GameMap(13, 10);
-        Hero hero = new Hero(1, 2);
-        Knight knight = new Knight(11, 8);
-        Sorcerer sorcerer = new Sorcerer(8, 8);
+        GameMap map = new GameMap(25, 20);
+        Hero hero = new Hero(4, 4);
+        Knight knight = new Knight(12, 10);
+        Sorcerer sorcerer = new Sorcerer(18, 5);
 
-        java.util.Random rand = new java.util.Random();
+        // Kasalar (Crates) odaların/koridorların köşelerinde
+        map.placeObject(new domain.models.entity.Crate("Crate", 2, 2), 2, 2);
+        map.placeObject(new domain.models.entity.Crate("Crate", 3, 2), 3, 2);
+        map.placeObject(new domain.models.entity.Crate("Crate", 22, 17), 22, 17);
+        map.placeObject(new domain.models.entity.Crate("Crate", 2, 17), 2, 17);
 
-        for (int i = 0; i < 2; i++) {
-            placeRandomItem(map, new domain.models.item.PotionItem(0, 0), hero, knight, sorcerer, rand);
-        }
-        placeRandomItem(map, new domain.models.item.SwordItem(0, 0), hero, knight, sorcerer, rand);
-        placeRandomItem(map, new domain.models.staticObjects.KeyItem(0, 0), hero, knight, sorcerer, rand);
+        // Sandıklar (Chests) uzak köşelerde
+        map.placeObject(new domain.models.entity.Chest("Main Chest", 22, 2), 22, 2);
+        map.placeObject(new domain.models.entity.Chest("Hidden Chest", 2, 18), 2, 18);
 
-        for (int i = 0; i < 2; i++) {
-            placeRandomItem(map, new domain.models.entity.Column("Column " + (i + 1), 0, 0), hero, knight, sorcerer, rand);
-            placeRandomItem(map, new domain.models.entity.Crate("Crate " + (i + 1), 0, 0), hero, knight, sorcerer, rand);
-        }
-        placeRandomItem(map, new domain.models.entity.Chest("Chest", 0, 0), hero, knight, sorcerer, rand);
-        placeRandomItem(map, new domain.models.entity.SearchableObject("Searchable", 0, 0), hero, knight, sorcerer, rand);
+        // Sütunlar (Columns) geniş alanın ortasında bir ana salon oluşturacak şekilde
+        map.placeObject(new domain.models.entity.Column("Column", 8, 8, "colon/gray_colon_whole"), 8, 8);
+        map.placeObject(new domain.models.entity.Column("Column", 16, 8, "colon/gray_colon_whole"), 16, 8);
+        map.placeObject(new domain.models.entity.Column("Column", 8, 12, "colon/gray_colon_whole"), 8, 12);
+        map.placeObject(new domain.models.entity.Column("Column", 16, 12, "colon/gray_colon_whole"), 16, 12);
+
+        // Eşyalar
+        map.placeObject(new domain.models.item.PotionItem(10, 10), 10, 10);
+        map.placeObject(new domain.models.staticObjects.KeyItem(12, 10), 12, 10);
+        map.placeObject(new domain.models.item.SwordItem(14, 10), 14, 10);
+
+
+
+        // Dekorasyonlar (Torches)
+        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 6, 1, "torch/torch_1"), 6, 1);
+        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 18, 1, "torch/torch_1"), 18, 1);
+        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 1, 10, "torch/torch_1"), 1, 10);
+        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 23, 10, "torch/torch_1"), 23, 10);
 
         List<Entity> entities = new ArrayList<>();
         entities.add(hero);
@@ -75,7 +89,7 @@ public class DemoRunner {
 
     // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
     private static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
-        GameMap map = new GameMap(13, 10);
+        GameMap map = new GameMap(25, 20);
 
         // Hero oluştur ve durumunu yükle
         Hero hero = new Hero(state.hero.x, state.hero.y);
@@ -117,8 +131,8 @@ public class DemoRunner {
         }
 
         // Fallback: kayıtta düşman yoksa default pozisyon
-        if (knight == null)   { knight   = new Knight(11, 8);  entities.add(knight); }
-        if (sorcerer == null) { sorcerer = new Sorcerer(8, 8); entities.add(sorcerer); }
+        if (knight == null)   { knight   = new Knight(12, 10);  entities.add(knight); }
+        if (sorcerer == null) { sorcerer = new Sorcerer(18, 5); entities.add(sorcerer); }
 
         // Harita itemlarını ayır: scroll'lar ayrı tutulur (inputHandler gerektirir)
         List<GameState.ItemRecord> scrollItems = new ArrayList<>();

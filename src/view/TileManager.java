@@ -35,6 +35,12 @@ public class TileManager {
             System.err.println("Tile yüklenirken hata (" + name + "): " + e.getMessage());
         }
 
+        // Eğer zemin varyasyonlarından biriyse ve bulunamadıysa (örneğin floor_crack), normal floor döndür.
+        if (name != null && name.startsWith("floor_")) {
+            System.out.println("Varyasyon bulunamadı (" + name + "), normal floor kullanılıyor.");
+            return getTile("floor");
+        }
+
         return null;
     }
 

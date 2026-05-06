@@ -4,10 +4,8 @@ import domain.models.entity.Hero;
 import domain.models.entity.GameObject;
 
 public class EquipAction implements Action {
-    private int atkBonus;
 
-    public EquipAction(int atkBonus) {
-        this.atkBonus = atkBonus;
+    public EquipAction() {
     }
 
     @Override

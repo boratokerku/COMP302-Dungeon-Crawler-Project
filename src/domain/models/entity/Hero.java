@@ -15,7 +15,7 @@ public class Hero extends Entity {
     private AnimationState currentAnimationState = AnimationState.IDLE;
     private domain.models.inventory.Inventory inventory;
     private int weaponAtk = 0;
-    private GameObject equippedWeapon;
+    private domain.models.item.SwordItem equippedWeapon;
 
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
@@ -25,6 +25,10 @@ public class Hero extends Entity {
 
     public domain.models.inventory.Inventory getInventory() {
         return inventory;
+    }
+
+    public domain.models.item.SwordItem getEquippedWeapon() {
+        return equippedWeapon;
     }
 
     public AnimationState getAnimationState() {
@@ -45,7 +49,7 @@ public class Hero extends Entity {
     }
 
     public int calculateDamage(int weaponAtk) {
-        return (this.str * 2) + (weaponAtk * 3);
+        return 5 + weaponAtk;
     }
 
     public void consumeEnergyForMove() {
@@ -59,9 +63,14 @@ public class Hero extends Entity {
     }
 
     public void equipWeapon(domain.models.item.SwordItem sword) {
-        // Basic sword buff
+        this.equippedWeapon = sword;
         this.weaponAtk = 5;
         this.equippedWeapon = sword;
+    }
+
+    public void unequipWeapon() {
+        this.equippedWeapon = null;
+        this.weaponAtk = 0;
     }
 
     // We put this in the Hero class using Information Expert

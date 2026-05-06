@@ -17,7 +17,7 @@ public class EquipAction implements Action {
 
     @Override
     public boolean isAvailable(Hero hero, GameObject target) {
-        return true;
+        return hero.getInventory().getItems().contains(target) && hero.getEquippedWeapon() != target;
     }
 
     @Override

@@ -63,7 +63,6 @@ public class Hero extends Entity {
     public void equipWeapon(domain.models.item.SwordItem sword) {
         this.equippedWeapon = sword;
         this.weaponAtk = 5;
-        this.equippedWeapon = sword;
     }
 
     public void unequipWeapon() {

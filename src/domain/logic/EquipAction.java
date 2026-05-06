@@ -22,7 +22,8 @@ public class EquipAction implements Action {
     public void execute(Hero hero, GameObject target) {
         if (target instanceof domain.models.item.SwordItem) {
             hero.equipWeapon((domain.models.item.SwordItem) target);
-            System.out.println("Equipped Sword: " + target.getName());
+            hero.setStr(hero.getStr() + atkBonus);
+            System.out.println("Equipped weapon! Strength increased by " + atkBonus + ".");
         }
     }
 }

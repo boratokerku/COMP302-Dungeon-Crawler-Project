@@ -27,9 +27,7 @@ public class Hero extends Entity {
         return inventory;
     }
 
-    public domain.models.item.SwordItem getEquippedWeapon() {
-        return equippedWeapon;
-    }
+
 
     public AnimationState getAnimationState() {
         return currentAnimationState;
@@ -121,10 +119,6 @@ public class Hero extends Entity {
     
     public GameObject getEquippedWeapon() {
         return this.equippedWeapon;
-    }
-    
-    public void setEquippedWeapon(GameObject weapon) {
-        this.equippedWeapon = weapon;
     }
 
     public boolean move(Direction dir, domain.models.map.GameMap map, java.util.List<Entity> entities) {

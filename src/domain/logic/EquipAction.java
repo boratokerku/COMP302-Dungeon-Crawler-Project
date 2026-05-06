@@ -4,6 +4,11 @@ import domain.models.entity.Hero;
 import domain.models.entity.GameObject;
 
 public class EquipAction implements Action {
+    private int atkBonus;
+
+    public EquipAction(int atkBonus) {
+        this.atkBonus = atkBonus;
+    }
 
     @Override
     public String getName() {
@@ -17,9 +22,8 @@ public class EquipAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        if (target instanceof domain.models.item.SwordItem) {
-            hero.equipWeapon((domain.models.item.SwordItem) target);
-            System.out.println("Equipped Sword: " + target.getName() + " (Item remains in inventory)");
-        }
+        hero.setEquippedWeapon(target);
+        hero.setStr(hero.getStr() + atkBonus);
+        System.out.println("Equipped weapon! Strength increased by " + atkBonus + ".");
     }
 }

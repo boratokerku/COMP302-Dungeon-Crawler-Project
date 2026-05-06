@@ -65,6 +65,7 @@ public class Hero extends Entity {
     public void equipWeapon(domain.models.item.SwordItem sword) {
         this.equippedWeapon = sword;
         this.weaponAtk = 5;
+        this.equippedWeapon = sword;
     }
 
     public void unequipWeapon() {
@@ -86,12 +87,44 @@ public class Hero extends Entity {
         return this.mana;
     }
 
+    public void setMana(int mana) {
+        this.mana = mana;
+    }
+
     public int getEnergy() {
         return this.energy;
+    }
+    
+    public void setEnergy(int energy) {
+        this.energy = energy;
     }
 
     public int getStr() {
         return str;
+    }
+    
+    public void setStr(int str) {
+        this.str = str;
+    }
+    
+    public void setHp(int hp) {
+        this.hp = hp;
+    }
+    
+    public int getDef() {
+        return this.def;
+    }
+    
+    public void setDef(int def) {
+        this.def = def;
+    }
+    
+    public GameObject getEquippedWeapon() {
+        return this.equippedWeapon;
+    }
+    
+    public void setEquippedWeapon(GameObject weapon) {
+        this.equippedWeapon = weapon;
     }
 
     public boolean move(Direction dir, domain.models.map.GameMap map, java.util.List<Entity> entities) {

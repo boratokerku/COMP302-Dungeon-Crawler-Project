@@ -26,7 +26,7 @@ public class GameView extends JPanel {
 
         // Panel ayarları
         this.setPreferredSize(new Dimension(800, 600)); // Pencere boyutu
-        this.setBackground(Color.BLACK); // Arka plan (Zindan havası)
+        this.setBackground(new Color(91, 48, 80)); // Arka plan (Koyu mor — referans görsel)
         this.setDoubleBuffered(true); // Titremeyi önleyen teknik (Double Buffering)
     }
 
@@ -86,19 +86,35 @@ public class GameView extends JPanel {
     }
 
     // Çizimden hemen önce ekran boyutlarını hesaplar
+    // Üstte HUD alanı için ekstra boşluk bırakır
     private void calculateDimensions() {
         if (gameMap != null) {
-            // Ekranın o anki Genişliğini ve Yüksekliğini (tam ekran yapıldığında artar)
-            // harita sınırlarına böl
-            int tileW = getWidth() / gameMap.getWidth();
-            int tileH = getHeight() / gameMap.getHeight();
-            // Görüntünün uzayıp bozulmaması (Aspect Ratio korunması) için en küçük olanı
-            // baz al
+            int hudReserve = 80; // Üstteki HUD barı için ayrılan piksel
+
+            int usableWidth = (int)(getWidth() * 0.90);
+            int usableHeight = (int)((getHeight() - hudReserve) * 0.90);
+
+            int tileW = usableWidth / gameMap.getWidth();
+            int tileH = usableHeight / gameMap.getHeight();
             tileSize = Math.min(tileW, tileH);
 
-            // Haritayı ekranın tam ortasına hizalamak için boşluk (offset) hesapla
+            // Haritayı yatayda ortala, dikeyde HUD'un altına yerleştir
             offsetX = (getWidth() - (tileSize * gameMap.getWidth())) / 2;
-            offsetY = (getHeight() - (tileSize * gameMap.getHeight())) / 2;
+            offsetY = hudReserve + (getHeight() - hudReserve - (tileSize * gameMap.getHeight())) / 2;
+        }
+    }
+
+    // Haritanın dışındaki boş alanı wall_1 tile'ı ile döşer (düz renk yerine)
+    private void drawBackground(Graphics2D g2d) {
+        if (tileManager == null) return;
+        BufferedImage bgTile = tileManager.getTile("floor");
+        if (bgTile == null) return;
+
+        // Tüm ekranı tileSize'lık karelerle doldur (harita altında kalsa da sorun değil, üzerine çizilecek)
+        for (int px = 0; px < getWidth(); px += tileSize) {
+            for (int py = 0; py < getHeight(); py += tileSize) {
+                g2d.drawImage(bgTile, px, py, tileSize, tileSize, null);
+            }
         }
     }
 
@@ -111,6 +127,9 @@ public class GameView extends JPanel {
         // Her çizim döngüsünde ekranın boyutuna göre karelerin (Tile) büyüklüğünü
         // hesapla
         calculateDimensions();
+
+        // 0. Arka planı tile ile döşe (düz renk yerine)
+        drawBackground(g2d);
 
         // 1. Zemin veya Haritayı Çiz
         drawMap(g2d);
@@ -365,6 +384,8 @@ public class GameView extends JPanel {
                         obj instanceof domain.models.entity.Column ||
                         obj instanceof domain.models.entity.Chest ||
                         obj instanceof domain.models.entity.Crate ||
+                        obj instanceof domain.models.staticObjects.Door ||
+                        obj instanceof domain.models.staticObjects.Decoration ||
                         obj instanceof domain.models.entity.SearchableObject) {
                         // Eğer hücrede bir eşya veya statik obje varsa, altını delik bırakmamak için Zemin (FloorTile)
                         // çiziyoruz
@@ -372,6 +393,23 @@ public class GameView extends JPanel {
                         if (floor != null) {
                             g2d.drawImage(floor, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize, tileSize,
                                     null);
+                        }
+                    } else if (obj instanceof domain.models.tile.WallTile &&
+                               "wall/wall_side".equals(obj.getImageName())) {
+                        // Yan duvarlar: ince çiz (tile genişliğinin 1/3'ü)
+                        BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                        if (tileImage != null) {
+                            int sideWidth = Math.max(tileSize / 3, 4);
+                            int drawX;
+                            if (x == 0) {
+                                // Sol duvar: hücrenin sağ kenarında
+                                drawX = offsetX + (x * tileSize) + tileSize - sideWidth;
+                            } else {
+                                // Sağ duvar: hücrenin sol kenarında
+                                drawX = offsetX + (x * tileSize);
+                            }
+                            g2d.drawImage(tileImage, drawX, offsetY + (y * tileSize),
+                                    sideWidth, tileSize, null);
                         }
                     } else {
                         // Normal harita objesi (Duvar vs.)
@@ -465,6 +503,8 @@ public class GameView extends JPanel {
                 if (obj instanceof domain.models.entity.Column ||
                     obj instanceof domain.models.entity.Chest ||
                     obj instanceof domain.models.entity.Crate ||
+                    obj instanceof domain.models.staticObjects.Door ||
+                    obj instanceof domain.models.staticObjects.Decoration ||
                     obj instanceof domain.models.entity.SearchableObject) {
 
                     boolean inZone = hero != null && Math.abs(x - hero.getX()) <= 1

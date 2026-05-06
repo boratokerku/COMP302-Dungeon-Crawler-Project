@@ -34,6 +34,11 @@ public abstract class Entity extends GameObject {
         return hp;
     }
 
+    public void setHp(int hp) {
+        this.hp = Math.max(0, hp);
+        this.alive = this.hp > 0;
+    }
+
     public boolean isAlive() {
         return alive;
     }

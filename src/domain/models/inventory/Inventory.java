@@ -27,6 +27,14 @@ public class Inventory {
         return false;
     }
 
+    public boolean removeItem(GameObject item) {
+        if (item != null && items.remove(item)) {
+            System.out.println("Removed " + item.getName() + " from inventory.");
+            return true;
+        }
+        return false;
+    }
+
     public List<GameObject> getItems() {
         return items;
     }

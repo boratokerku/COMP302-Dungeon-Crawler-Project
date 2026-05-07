@@ -4,7 +4,6 @@ import java.util.Random;
 
 import domain.models.AnimationState;
 import domain.models.Direction;
-import java.awt.Point;
 
 public class Hero extends Entity {
     private int mana = 80;
@@ -26,8 +25,6 @@ public class Hero extends Entity {
     public domain.models.inventory.Inventory getInventory() {
         return inventory;
     }
-
-
 
     public AnimationState getAnimationState() {
         return currentAnimationState;
@@ -91,7 +88,7 @@ public class Hero extends Entity {
     public int getEnergy() {
         return this.energy;
     }
-    
+
     public void setEnergy(int energy) {
         this.energy = energy;
     }
@@ -99,23 +96,23 @@ public class Hero extends Entity {
     public int getStr() {
         return str;
     }
-    
+
     public void setStr(int str) {
         this.str = str;
     }
-    
+
     public void setHp(int hp) {
         this.hp = hp;
     }
-    
+
     public int getDef() {
         return this.def;
     }
-    
+
     public void setDef(int def) {
         this.def = def;
     }
-    
+
     public GameObject getEquippedWeapon() {
         return this.equippedWeapon;
     }

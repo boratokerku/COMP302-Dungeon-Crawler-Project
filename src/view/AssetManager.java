@@ -3,9 +3,6 @@ package view;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import domain.models.AnimationState;
 
 public class AssetManager {
@@ -90,6 +87,20 @@ public class AssetManager {
         }
         // Tüm hareketler için (şimdilik) aynı walk animasyonunu kullan
         return heroWalkRight.getCurrentFrame();
+    }
+
+    /**
+     * Returns the current sprite frame for a given sprite key.
+     * Keys are declared by entities via the Renderable interface.
+     */
+    public BufferedImage getSprite(String key) {
+        if (key == null) return null;
+        switch (key) {
+            case "knight":   return knightWalk.getCurrentFrame();
+            case "sorcerer": return sorcererWalk.getCurrentFrame();
+            case "hero":     return heroIdle.getCurrentFrame();
+            default:         return null;
+        }
     }
 
     public BufferedImage getKnightSprite() {

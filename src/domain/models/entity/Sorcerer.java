@@ -5,7 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Sorcerer extends Entity {
+public class Sorcerer extends Entity implements Renderable {
+
+    @Override
+    public String getSpriteKey() { return "sorcerer"; }
 
     private long lastTeleportTime; // Son ışınlanma zamanı (milisaniye)
     private final Random random = new Random();

@@ -3,7 +3,10 @@ package domain.models.entity;
 import java.awt.Point;
 import java.util.Random;
 
-public class Knight extends Entity {
+public class Knight extends Entity implements Renderable {
+
+    @Override
+    public String getSpriteKey() { return "knight"; }
 
     private final Random random = new Random();
     private int moveCooldown = 0;

@@ -201,13 +201,15 @@ public class GameView extends JPanel {
 
     /** Delegates inventory drawing to InventoryView. */
     private void drawInventory(Graphics2D g) {
-        if (!inventoryVisible) return;
+        if (!inventoryVisible)
+            return;
         inventoryView.draw(g, getWidth(), getHeight());
     }
 
     /** Returns the inventory item clicked at the given screen position. */
     public domain.models.entity.GameObject getClickedInventoryItem(int screenX, int screenY) {
-        if (!inventoryVisible) return null;
+        if (!inventoryVisible)
+            return null;
         return inventoryView.getClickedItem(screenX, screenY);
     }
 

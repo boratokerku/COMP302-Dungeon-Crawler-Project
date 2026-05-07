@@ -5,7 +5,14 @@ import domain.models.entity.GameObject;
 
 public class EquipAction implements Action {
 
+    private final int atkBonus;
+
     public EquipAction() {
+        this.atkBonus = 10;
+    }
+
+    public EquipAction(int atkBonus) {
+        this.atkBonus = atkBonus;
     }
 
     @Override

@@ -7,13 +7,10 @@ import java.util.List;
 
 public class GameEngine {
     private List<Entity> entities;
-    private Hero player;
     private boolean isRunning;
-    // MapManager mapManager; // İleride harita kontrolü için eklenecek
 
     public GameEngine(Hero player) {
         this.entities = new ArrayList<>();
-        this.player = player;
         this.entities.add(player);
         this.isRunning = true;
     }

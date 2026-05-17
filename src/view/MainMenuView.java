@@ -5,16 +5,13 @@ import java.awt.*;
 import java.io.File;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.util.List;
+import domain.models.GameState;
+import domain.logic.SaveManager;
 
 public class MainMenuView extends JPanel {
 
-    private Runnable onStartGame;
-    private Image backgroundImage;
-    private BufferedImage titleImage;
 
-    private ScaledImageButton startBtn;
-    private ScaledImageButton helpBtn;
-    private ScaledImageButton quitBtn;
 
     private Runnable onStartGame;
     private java.util.function.Consumer<GameState> onLoadGame;
@@ -199,80 +196,7 @@ public class MainMenuView extends JPanel {
         if (quitBtn  != null) quitBtn.setBounds(startX, startY + 3 * (btnH + gap), btnW, btnH);
     }
 
-    private class ScaledImageButton extends JButton {
-        private BufferedImage img;
 
-        public ScaledImageButton(String imagePath) {
-            try {
-                BufferedImage originalImg = ImageIO.read(new File(imagePath));
-                img = trimImage(originalImg);
-            } catch (Exception e) {
-                System.err.println("Buton resmi yuklenemedi: " + imagePath);
-            }
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setContentAreaFilled(false);
-            setOpaque(false);
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            if (img != null) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                // Resmin pürüzsüz ve orantılı bir şekilde butonun güncel boyutuna çizilmesi
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2.drawImage(img, 0, 0, getWidth(), getHeight(), null);
-                g2.dispose();
-            }
-            super.paintComponent(g);
-        }
-    }
-
-    private BufferedImage trimImage(BufferedImage img) {
-        int width = img.getWidth();
-        int height = img.getHeight();
-        int top = height / 2, bottom = height / 2, left = width / 2, right = width / 2;
-        boolean found = false;
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
-                    top = y; found = true; break;
-                }
-            }
-            if (found) break;
-        }
-        found = false;
-        for (int y = height - 1; y >= 0; y--) {
-            for (int x = 0; x < width; x++) {
-                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
-                    bottom = y; found = true; break;
-                }
-            }
-            if (found) break;
-        }
-        found = false;
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
-                    left = x; found = true; break;
-                }
-            }
-            if (found) break;
-        }
-        found = false;
-        for (int x = width - 1; x >= 0; x--) {
-            for (int y = 0; y < height; y++) {
-                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
-                    right = x; found = true; break;
-                }
-            }
-            if (found) break;
-        }
-        if (right <= left || bottom <= top) return img;
-        return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
-    }
 
     @Override
     protected void paintComponent(Graphics g) {

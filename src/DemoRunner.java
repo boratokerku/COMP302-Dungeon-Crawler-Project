@@ -20,7 +20,7 @@ public class DemoRunner {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("COMP302 Dungeon Crawler Demo");
+            JFrame frame = new JFrame("COMP302 Dungeon Crawler");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             CardLayout cardLayout = new CardLayout();

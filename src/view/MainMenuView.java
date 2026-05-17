@@ -64,15 +64,9 @@ public class MainMenuView extends JPanel {
         startBtn = new ScaledImageButton("resources/images/MainMenuImages/start_game_button.png");
         helpBtn  = new ScaledImageButton("resources/images/MainMenuImages/help_button.png");
         quitBtn  = new ScaledImageButton("resources/images/MainMenuImages/quit_button.png");
+        loadBtn = new ScaledImageButton("resources/images/MainMenuImages/load_game_button.png");
 
-        // Load Game butonu (resim yok, text-based)
-        loadBtn = new JButton("Load Game");
-        loadBtn.setFont(new Font("Arial", Font.BOLD, 16));
-        loadBtn.setForeground(new Color(255, 220, 100));
-        loadBtn.setBackground(new Color(60, 40, 20));
-        loadBtn.setFocusPainted(false);
-        loadBtn.setBorder(BorderFactory.createLineBorder(new Color(180, 140, 60), 2));
-        loadBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
 
         startBtn.addActionListener(e -> {
             if (onStartGame != null) onStartGame.run();

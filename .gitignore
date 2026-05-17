@@ -34,3 +34,5 @@ build/
 .settings/
 .idea/
 *.iml
+bin/
+out/

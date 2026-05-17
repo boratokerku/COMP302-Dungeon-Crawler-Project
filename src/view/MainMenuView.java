@@ -5,11 +5,16 @@ import java.awt.*;
 import java.io.File;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.util.List;
-import domain.models.GameState;
-import domain.logic.SaveManager;
 
 public class MainMenuView extends JPanel {
+
+    private Runnable onStartGame;
+    private Image backgroundImage;
+    private BufferedImage titleImage;
+
+    private ScaledImageButton startBtn;
+    private ScaledImageButton helpBtn;
+    private ScaledImageButton quitBtn;
 
     private Runnable onStartGame;
     private java.util.function.Consumer<GameState> onLoadGame;
@@ -35,7 +40,7 @@ public class MainMenuView extends JPanel {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Arka plan resmi yuklenemedi: " + e.getMessage());
+            System.err.println("Resim yuklenemedi: " + e.getMessage());
         }
 
         try {
@@ -323,5 +328,55 @@ public class MainMenuView extends JPanel {
                 g2.dispose();
             }
         }
+    }
+
+    // --- İç sınıf: resim tabanlı buton ---
+    private class ScaledImageButton extends JButton {
+        private BufferedImage img;
+
+        public ScaledImageButton(String imagePath) {
+            try {
+                File f = new File(imagePath);
+                if (!f.exists()) f = new File("../" + imagePath);
+                if (f.exists()) {
+                    BufferedImage raw = ImageIO.read(f);
+                    if (raw != null) img = trimImage(raw);
+                }
+            } catch (Exception ignored) {}
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setContentAreaFilled(false);
+            setOpaque(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            if (img != null) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2.drawImage(img, 0, 0, getWidth(), getHeight(), null);
+                g2.dispose();
+            }
+            super.paintComponent(g);
+        }
+    }
+
+    // --- Yardımcı: şeffaf kenarlıkları kırp ---
+    private BufferedImage trimImage(BufferedImage img) {
+        int w = img.getWidth(), h = img.getHeight();
+        int top = 0, bottom = h - 1, left = 0, right = w - 1;
+        try {
+            outer: for (int y = 0; y < h; y++) for (int x = 0; x < w; x++)
+                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { top = y; break outer; }
+            outer: for (int y = h-1; y >= 0; y--) for (int x = 0; x < w; x++)
+                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { bottom = y; break outer; }
+            outer: for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
+                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { left = x; break outer; }
+            outer: for (int x = w-1; x >= 0; x--) for (int y = 0; y < h; y++)
+                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { right = x; break outer; }
+        } catch (Exception e) { return img; }
+        if (right <= left || bottom <= top) return img;
+        return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
     }
 }

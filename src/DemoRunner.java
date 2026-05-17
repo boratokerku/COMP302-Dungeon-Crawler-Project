@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import java.awt.CardLayout;
+import java.awt.Color;
 import javax.swing.JPanel;
 
 public class DemoRunner {
@@ -31,10 +32,15 @@ public class DemoRunner {
             );
             menuView.setPreferredSize(new java.awt.Dimension(1250, 1000));
 
+            mainPanel.setBackground(Color.BLACK);
             mainPanel.add(menuView, "Menu");
+            cardLayout.show(mainPanel, "Menu"); 
             frame.add(mainPanel);
 
+            frame.setSize(832, 640);
             frame.pack();
+            frame.revalidate();
+            frame.repaint();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });

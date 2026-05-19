@@ -15,6 +15,8 @@ public class InputHandler implements KeyListener {
 
     // Aktif shadow clone (null ise henüz çağrılmamış veya süresi dolmuş)
     private ShadowClone shadowClone;
+    
+    private boolean inputEnabled = true;
 
     public InputHandler(Hero hero, domain.models.map.GameMap map,
             java.util.List<domain.models.entity.Entity> entities, view.GameView gameView) {
@@ -28,12 +30,18 @@ public class InputHandler implements KeyListener {
         this.shadowClone = clone;
     }
 
+    public void disableInput() {
+        this.inputEnabled = false;
+    }
+
     public ShadowClone getShadowClone() {
         return shadowClone;
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (!inputEnabled) return;
+        
         int code = e.getKeyCode();
 
         // Hareket ve Yön Mantığı
@@ -93,6 +101,8 @@ public class InputHandler implements KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
+        if (!inputEnabled) return;
+        
         int code = e.getKeyCode();
         if (isMovementKey(code)) {
             hero.setAnimationState(AnimationState.IDLE);

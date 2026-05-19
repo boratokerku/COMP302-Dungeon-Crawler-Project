@@ -283,12 +283,33 @@ public class DemoRunner {
         );
         frame.setGlassPane(pauseMenu);
 
+        // GameOverMenu — JFrame glass pane olarak Hero ölünce bindirilecek
+        view.GameOverMenu gameOverMenu = new view.GameOverMenu(
+                () -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    startGame(frame, mainPanel, cardLayout);
+                },
+                (loadedState) -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    loadGame(frame, mainPanel, cardLayout, loadedState);
+                },
+                () -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    cardLayout.show(mainPanel, "Menu");
+                }
+        );
+
         // ESC tuşu — pause/resume toggle
         gameView.getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(javax.swing.KeyStroke.getKeyStroke("ESCAPE"), "togglePause");
         gameView.getActionMap().put("togglePause", new javax.swing.AbstractAction() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (gameOverMenu.isVisible()) return; // Game over aktifken ESC basılamaz
+                
                 boolean paused = pauseMenu.isVisible();
                 if (paused) {
                     pauseMenu.setVisible(false);
@@ -306,6 +327,18 @@ public class DemoRunner {
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         logicRef[0] = new javax.swing.Timer(120, (e) -> {
+            // GAME OVER KONTROLÜ
+            if (!hero.isAlive()) {
+                if (logicRef[0] != null)  logicRef[0].stop(); // Oyun motorunu (hareketleri) durdur
+                if (renderRef[0] != null) renderRef[0].stop(); // FPS motorunu durdur
+                inputHandler.disableInput(); // Oyuncunun tuş basmalarını engelle
+                
+                // Game Over ekranını JFrame'in en üst katmanına (GlassPane) bas
+                frame.setGlassPane(gameOverMenu);
+                gameOverMenu.setVisible(true);
+                return;
+            }
+
             hero.update();
 
             knight.followHero(hero, map, entities);

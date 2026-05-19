@@ -19,6 +19,29 @@ public class GameView extends JPanel {
     private InventoryView inventoryView;
     private boolean inventoryVisible = false;
 
+    // Floating text structure for high-quality damage visual effects
+    public static class FloatingText {
+        public double x, y;
+        public String text;
+        public Color color;
+        public int duration = 30; // 30 frames duration
+        public double dy = -0.04; // slowly moves up
+        public float alpha = 1.0f;
+    }
+
+    private static final java.util.List<FloatingText> floatingTexts = new java.util.ArrayList<>();
+
+    public static void addFloatingText(double x, double y, String text, Color color) {
+        FloatingText ft = new FloatingText();
+        ft.x = x;
+        ft.y = y;
+        ft.text = text;
+        ft.color = color;
+        synchronized (floatingTexts) {
+            floatingTexts.add(ft);
+        }
+    }
+
     public GameView(Hero hero, AssetManager assetManager) {
         this.hero = hero;
         this.assetManager = assetManager;
@@ -154,8 +177,42 @@ public class GameView extends JPanel {
         // 5. Inventory Çiz
         drawInventory(g2d);
 
+        // 5.5 Süzülen Hasar Efektlerini Çiz (Floating Texts)
+        drawFloatingTexts(g2d);
+
         // Kaynakları temizle
         g2d.dispose();
+    }
+
+    private void drawFloatingTexts(Graphics2D g2d) {
+        synchronized (floatingTexts) {
+            java.util.Iterator<FloatingText> it = floatingTexts.iterator();
+            while (it.hasNext()) {
+                FloatingText ft = it.next();
+                
+                // Fade out effect using alpha channel
+                int alphaVal = (int) (ft.alpha * 255);
+                if (alphaVal < 0) alphaVal = 0;
+                if (alphaVal > 255) alphaVal = 255;
+                
+                g2d.setColor(new Color(ft.color.getRed(), ft.color.getGreen(), ft.color.getBlue(), alphaVal));
+                g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 22));
+                
+                int px = offsetX + (int) (ft.x * tileSize) + tileSize / 4;
+                int py = offsetY + (int) (ft.y * tileSize) - 10;
+                
+                g2d.drawString(ft.text, px, py);
+                
+                // Advance animation states
+                ft.y += ft.dy;
+                ft.alpha = Math.max(0.0f, ft.alpha - 0.035f);
+                ft.duration--;
+                
+                if (ft.duration <= 0) {
+                    it.remove();
+                }
+            }
+        }
     }
 
     private void drawHUD(Graphics2D g) {

@@ -181,6 +181,7 @@ public class Hero extends Entity {
             if (this.energy >= attackCost) {
                 int damage = calculateDamage(this.weaponAtk);
                 target.takeDamage(damage);
+                view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 60, 60));
                 this.energy -= attackCost; // Saldırı maliyeti
                 System.out.println("Hero attacked target! Damage: " + damage + " Energy: " + this.energy);
 

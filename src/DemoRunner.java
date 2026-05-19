@@ -383,6 +383,7 @@ public class DemoRunner {
                         int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
                         int damage = Math.max(0, proj.getDamage() - def);
                         target.takeDamage(damage);
+                        view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
                         proj.setHp(0); // Mermi yok ol
                         System.out.println("Target hit by projectile! Damage: " + damage + " | Target HP: " + target.getHp());
                     }

@@ -76,6 +76,7 @@ public class Knight extends Entity implements Renderable {
         int def = (target instanceof Hero) ? ((Hero) target).getDef() : 0;
         int damage = Math.max(0, baseDamage - def);
         target.takeDamage(damage);
+        view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
         System.out.println("Knight dealt " + damage + " dmg | Target HP: " + target.getHp());
     }
 

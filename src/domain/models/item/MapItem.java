@@ -12,6 +12,7 @@ public abstract class MapItem extends GameObject {
     public MapItem(String name, int x, int y, String imagePath) {
         // Passable = true, we pass dummy image name for GameObjects compatibility
         super(name, x, y, "item_placeholder", true); 
+        this.imageName = imagePath;
         loadSprite(imagePath);
     }
 

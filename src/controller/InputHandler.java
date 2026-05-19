@@ -120,20 +120,52 @@ public class InputHandler implements KeyListener {
                 gameView.repaint();
             }
         } else if (code == KeyEvent.VK_E) {
-            // Take action for adjacent items
+            // Çevredeki tüm nesnelerle (3x3 çevre karesi) etkileşime gir
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
+                    if (dx == 0 && dy == 0) continue; // Kendini pas geç
                     int nx = hero.getX() + dx;
                     int ny = hero.getY() + dy;
                     if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
                         domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
-                        if (obj instanceof domain.models.item.MapItem) {
-                            for (domain.logic.Action action : obj.getActions()) {
-                                if (action.getName().equals("Take") && action.isAvailable(hero, obj)) {
-                                    action.execute(hero, obj);
-                                    System.out.println("Take executed on " + obj.getName() + " via E key");
+                        if (obj != null) {
+                            java.util.List<domain.logic.Action> actions = obj.getActions();
+                            if (actions != null && !actions.isEmpty()) {
+                                // Kullanılabilir eylemleri filtrele
+                                java.util.List<domain.logic.Action> available = new java.util.ArrayList<>();
+                                for (domain.logic.Action action : actions) {
+                                    if (action.isAvailable(hero, obj)) {
+                                        available.add(action);
+                                    }
+                                }
+                                
+                                if (available.size() == 1) {
+                                    available.get(0).execute(hero, obj);
+                                    System.out.println(available.get(0).getName() + " executed on " + obj.getName() + " via E key");
                                     if (gameView != null) gameView.repaint();
-                                    return; // Sadece bir item al
+                                    return; // Bir etkileşim yetti, döngüden çık
+                                } else if (available.size() > 1) {
+                                    // Oyuncuya butonlu dialog penceresi sun
+                                    String[] options = new String[available.size()];
+                                    for (int i = 0; i < available.size(); i++) {
+                                        options[i] = available.get(i).getName();
+                                    }
+                                    int choice = javax.swing.JOptionPane.showOptionDialog(
+                                            gameView,
+                                            obj.getName() + " ile ne yapmak istersin?",
+                                            "Etkileşim Seç",
+                                            javax.swing.JOptionPane.DEFAULT_OPTION,
+                                            javax.swing.JOptionPane.QUESTION_MESSAGE,
+                                            null,
+                                            options,
+                                            options[0]
+                                    );
+                                    if (choice >= 0 && choice < available.size()) {
+                                        available.get(choice).execute(hero, obj);
+                                        System.out.println(available.get(choice).getName() + " executed on " + obj.getName() + " via E dialog choice");
+                                        if (gameView != null) gameView.repaint();
+                                    }
+                                    return; // Etkileşim tamamlandı, çık
                                 }
                             }
                         }

@@ -50,6 +50,7 @@ public class DemoRunner {
     private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         GameMap map = new GameMap(25, 20);
         Hero hero = new Hero(4, 4);
+        hero.setCurrentMap(map);
         Knight knight = new Knight(12, 10);
         Sorcerer sorcerer = new Sorcerer(18, 5);
 
@@ -93,6 +94,9 @@ public class DemoRunner {
         // Dekorasyonlar (Torches)
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 6, 1, "torch/torch_1"), 6, 1);
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 18, 1, "torch/torch_1"), 18, 1);
+
+        // Çıkış Kapısı (Exit Door) - Kilitli olarak yerleştirildi!
+        map.placeObject(new domain.models.staticObjects.Door("Exit Door", 22, 10, true), 22, 10);
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 1, 10, "torch/torch_1"), 1, 10);
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 23, 10, "torch/torch_1"), 23, 10);
 
@@ -113,6 +117,7 @@ public class DemoRunner {
 
         // Hero oluştur ve durumunu yükle
         Hero hero = new Hero(state.hero.x, state.hero.y);
+        hero.setCurrentMap(map);
         hero.setHp(state.hero.hp);
         hero.setMana(state.hero.mana);
         hero.setEnergy(state.hero.energy);
@@ -190,7 +195,7 @@ public class DemoRunner {
                 // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
                 scrollItems.add(rec);
             } else {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y);
+                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked);
                 if (item != null) map.placeObject(item, rec.x, rec.y);
             }
         }
@@ -211,7 +216,7 @@ public class DemoRunner {
     }
 
     // Item tip ismine göre nesne oluşturur — scroll hariç (scroll setupGameView'da oluşur)
-    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y) {
+    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y, boolean isLocked) {
         String displayName = (name != null && !name.isEmpty()) ? name : type;
         switch (type) {
             case "PotionItem":        return new domain.models.item.PotionItem(x, y);
@@ -229,15 +234,24 @@ public class DemoRunner {
             case "Crate":             return new domain.models.entity.Crate(displayName, x, y);
             case "Chest":             return new domain.models.entity.Chest(displayName, x, y);
             case "SearchableObject":  return new domain.models.entity.SearchableObject(displayName, x, y);
+            case "Decoration":        return new domain.models.staticObjects.Decoration(displayName, x, y, "torch/torch_1");
+            case "Door":
+                domain.models.staticObjects.Door door = new domain.models.staticObjects.Door(displayName, x, y, isLocked);
+                if (!isLocked) door.open(); // Eğer kilitli değilse açık görseline geç
+                return door;
             default:
                 System.err.println("Bilinmeyen item tipi: " + type);
                 return null;
         }
     }
 
+    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y) {
+        return createItem(type, name, x, y, false);
+    }
+
     // Eski imza — envanter için (name yok)
     private static domain.models.entity.GameObject createItem(String type, int x, int y) {
-        return createItem(type, null, x, y);
+        return createItem(type, null, x, y, false);
     }
 
     // startGame ve loadGame tarafından ortak kullanılan view/timer/input kurulum
@@ -372,6 +386,40 @@ public class DemoRunner {
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         logicRef[0] = new javax.swing.Timer(120, (e) -> {
+            // ZAFER (WIN) KONTROLÜ
+            boolean allEnemiesDefeated = true;
+            for (domain.models.entity.Entity entity : entities) {
+                if ((entity instanceof domain.models.entity.Knight || entity instanceof domain.models.entity.Sorcerer) && entity.isAlive()) {
+                    allEnemiesDefeated = false;
+                    break;
+                }
+            }
+            
+            boolean exitReached = false;
+            for (int x = 0; x < map.getWidth(); x++) {
+                for (int y = 0; y < map.getHeight(); y++) {
+                    domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                    if (obj instanceof domain.models.staticObjects.Door && "Exit Door".equals(obj.getName())) {
+                        domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
+                        if (!door.isLocked() && Math.abs(hero.getX() - x) <= 1 && Math.abs(hero.getY() - y) <= 1) {
+                            exitReached = true;
+                        }
+                    }
+                }
+            }
+
+            if (allEnemiesDefeated && exitReached) {
+                if (logicRef[0] != null)  logicRef[0].stop();
+                if (renderRef[0] != null) renderRef[0].stop();
+                inputHandler.disableInput();
+                
+                javax.swing.JOptionPane.showMessageDialog(frame,
+                        "🌟 TEBRİKLER! 🌟\n\nTüm düşmanları yendin ve Çıkış Kapısı'nı açarak COMP302 Zindanından başarıyla kaçtın!\nPhase I başarıyla tamamlandı!",
+                        "Zafer!",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
             // GAME OVER KONTROLÜ
             if (!hero.isAlive()) {
                 if (logicRef[0] != null)  logicRef[0].stop(); // Oyun motorunu (hareketleri) durdur

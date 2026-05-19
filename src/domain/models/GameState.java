@@ -55,6 +55,7 @@ public class GameState {
         public String type; // "PotionItem", "Column", "Crate", "Chest", vb.
         public String name; // Column/Crate/Chest gibi isimli nesneler için (diğerleri için null)
         public int x, y;
+        public boolean isLocked; // Door kilitli mi bilgisi için
 
         public ItemRecord() {}
 
@@ -69,6 +70,14 @@ public class GameState {
             this.name = name;
             this.x = x;
             this.y = y;
+        }
+
+        public ItemRecord(String type, String name, int x, int y, boolean isLocked) {
+            this.type = type;
+            this.name = name;
+            this.x = x;
+            this.y = y;
+            this.isLocked = isLocked;
         }
     }
 

@@ -17,6 +17,15 @@ public class Hero extends Entity {
     private domain.models.item.MapItem equippedWeapon;
     private domain.models.item.MapItem equippedArmor = null;
     private domain.models.item.MapItem equippedRing = null;
+    private domain.models.map.GameMap currentMap = null;
+
+    public void setCurrentMap(domain.models.map.GameMap map) {
+        this.currentMap = map;
+    }
+
+    public domain.models.map.GameMap getCurrentMap() {
+        return this.currentMap;
+    }
 
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17

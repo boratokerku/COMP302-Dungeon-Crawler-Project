@@ -74,7 +74,7 @@ public class Knight extends Entity implements Renderable {
     private void attackTarget(Entity target) {
         int baseDamage = 4;
         int def = (target instanceof Hero) ? ((Hero) target).getDef() : 0;
-        int damage = Math.max(0, baseDamage - def);
+        int damage = Math.max(1, baseDamage - def); // Minimum 1 damage to prevent complete invincibility
         target.takeDamage(damage);
         view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
         System.out.println("Knight dealt " + damage + " dmg | Target HP: " + target.getHp());

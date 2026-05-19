@@ -436,7 +436,7 @@ public class DemoRunner {
                                         int dropType = rand.nextInt(3);
                                         domain.models.entity.GameObject loot = null;
                                         if (dropType == 0) {
-                                            loot = domain.models.item.MapItem.createRandomWeapon(enemy.getX(), enemy.getY());
+                                            loot = domain.models.item.MapItem.createRandomItem(enemy.getX(), enemy.getY());
                                         } else if (dropType == 1) {
                                             loot = new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
                                         } else {
@@ -456,7 +456,7 @@ public class DemoRunner {
                         
                         if (proj.isAlive() && proj.getX() == target.getX() && proj.getY() == target.getY()) {
                             int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
-                            int damage = Math.max(0, proj.getDamage() - def);
+                            int damage = Math.max(1, proj.getDamage() - def); // Minimum 1 damage to prevent complete invincibility
                             target.takeDamage(damage);
                             view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
                             proj.setHp(0); // Mermi yok ol

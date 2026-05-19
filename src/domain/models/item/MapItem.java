@@ -80,4 +80,15 @@ public abstract class MapItem extends GameObject {
             return new DiamondSwordItem(x, y);
         }
     }
+
+    public static MapItem createRandomItem(int x, int y) {
+        double roll = Math.random() * 100.0;
+        if (roll < 80.0) {
+            return createRandomWeapon(x, y); // 80% chance for a weapon
+        } else if (roll < 90.0) {
+            return new ArmorItem(x, y);      // 10% chance for Steel Armor
+        } else {
+            return new RingItem(x, y);       // 10% chance for Ring of Might
+        }
+    }
 }

@@ -40,14 +40,14 @@ public class Hero extends Entity {
         int energyCost = 10;
         if (this.energy >= energyCost) {
             this.energy -= energyCost;
-            return new Random().nextInt(20) < this.str;
+            return new Random().nextInt(20) < getStr();
         }
         return false;
     }
 
     public int calculateDamage(int weaponAtk) {
         // Döküman §3: Hasar = f(STR, ATK) — sadece sabit değil, istatistiğe dayalı
-        return (this.str / 2) + weaponAtk;
+        return (getStr() / 2) + weaponAtk;
     }
 
     public void consumeEnergyForMove() {
@@ -227,7 +227,7 @@ public class Hero extends Entity {
                     int dropType = rand.nextInt(3);
                     domain.models.entity.GameObject loot = null;
                     if (dropType == 0) {
-                        loot = domain.models.item.MapItem.createRandomWeapon(target.getX(), target.getY());
+                        loot = domain.models.item.MapItem.createRandomItem(target.getX(), target.getY());
                     } else if (dropType == 1) {
                         loot = new domain.models.item.PotionItem(target.getX(), target.getY());
                     } else {

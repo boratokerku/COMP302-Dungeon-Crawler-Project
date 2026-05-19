@@ -245,13 +245,13 @@ public class GameView extends JPanel {
                     BufferedImage arrowImg = assetManager.getProjectileArrow();
                     
                     if (arrowImg != null) {
-                        int px = offsetX + (proj.getX() * tileSize);
-                        int py = offsetY + (proj.getY() * tileSize);
+                        double px = offsetX + (proj.getExactX() * tileSize);
+                        double py = offsetY + (proj.getExactY() * tileSize);
                         
                         // atan2 0 açısını Sağa (Right) doğru kabul eder.
-                        // Eğer ok görseli orijinalinde yukarı ya da çapraz bakıyorsa offset eklemek gerekir.
-                        // Genelde ok görselleri (Top-Left) ya da (Up) bakar. +Math.PI/4 veya +Math.PI/2 ekliyoruz.
-                        double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) + (Math.PI / 4.0); // 45 derece düzeltme
+                        // Ok görseli orijinalinde YUKARI (Up) bakıyor. 
+                        // Bu yüzden +90 derece (Math.PI / 2) offset ekliyoruz.
+                        double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) + (Math.PI / 2.0);
                         
                         java.awt.geom.AffineTransform old = g2d.getTransform();
                         g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
@@ -260,8 +260,8 @@ public class GameView extends JPanel {
                         g2d.setTransform(old);
                     } else {
                         // Mermi: parlayan mor daire olarak çiz (fallback)
-                        int px = offsetX + (e.getX() * tileSize) + tileSize / 4;
-                        int py = offsetY + (e.getY() * tileSize) + tileSize / 4;
+                        int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
                         int size = tileSize / 2;
                         g2d.setColor(new java.awt.Color(180, 50, 255, 200));
                         g2d.fillOval(px, py, size, size);

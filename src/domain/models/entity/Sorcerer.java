@@ -10,12 +10,16 @@ public class Sorcerer extends Entity implements Renderable {
     @Override
     public String getSpriteKey() { return "sorcerer"; }
 
-    private long lastTeleportTime; // Son ışınlanma zamanı (milisaniye)
+    private long lastTeleportTime;
+    private long lastProjectileTime; // Döküman §2.5.2: Her 5 sn'de bir mermi
+    private Projectile pendingProjectile = null; // ConcurrentModification önlemek için
     private final Random random = new Random();
 
     public Sorcerer(int x, int y) {
-        super(x, y, 10); // Design doc §2.5.2: "only has 10HP of health"
-        this.lastTeleportTime = System.currentTimeMillis();
+        super(x, y, 10);
+        long now = System.currentTimeMillis();
+        this.lastTeleportTime = now;
+        this.lastProjectileTime = now;
     }
 
     public long getTimeLeft() {
@@ -43,13 +47,42 @@ public class Sorcerer extends Entity implements Renderable {
 
         long currentTime = System.currentTimeMillis();
 
-        // 7 saniyede bir teleport dene (design doc §2.5.2)
+        // Her 7 sn'de teleport (design doc §2.5.2)
         if (currentTime - lastTeleportTime >= 7000) {
             lastTeleportTime = currentTime;
             attemptTeleport(map, entities);
         }
 
-        // Sorcerer yürümez — buraya başka bir şey eklenmez (design doc §2.5.2)
+        // Her 5 sn'de mermi fırlat (design doc §2.5.2)
+        if (currentTime - lastProjectileTime >= 5000) {
+            lastProjectileTime = currentTime;
+            pendingProjectile = createProjectile(hero);
+        }
+    }
+
+    /** DemoRunner tarafından her tick sonunda çağrılır, mermiyi alır ve sıfırlar */
+    public Projectile pollPendingProjectile() {
+        Projectile p = pendingProjectile;
+        pendingProjectile = null;
+        return p;
+    }
+
+    /** Hero'ya doğru yönelmiş bir Projectile oluşturur */
+    private Projectile createProjectile(Hero hero) {
+        int dx = Integer.compare(hero.getX(), this.x);
+        int dy = Integer.compare(hero.getY(), this.y);
+
+        // Diyagonal ise büyük eksen seçilir
+        if (dx != 0 && dy != 0) {
+            if (Math.abs(hero.getX() - this.x) >= Math.abs(hero.getY() - this.y)) dy = 0;
+            else dx = 0;
+        }
+
+        if (dx == 0 && dy == 0) return null; // Aynı konumda ise ates etme
+
+        System.out.println("Sorcerer fired projectile! Direction: (" + dx + ", " + dy + ")");
+        // Design doc §2.5.2: 8 HP damage
+        return new Projectile(this.x, this.y, dx, dy, 8, this);
     }
 
     /**

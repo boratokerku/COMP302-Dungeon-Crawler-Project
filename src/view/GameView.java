@@ -240,7 +240,17 @@ public class GameView extends JPanel {
 
                 BufferedImage frame = null;
 
-                if (e instanceof domain.models.entity.ShadowClone) {
+                if (e instanceof domain.models.entity.Projectile) {
+                    // Mermi: parlayan mor daire olarak çiz
+                    int px = offsetX + (e.getX() * tileSize) + tileSize / 4;
+                    int py = offsetY + (e.getY() * tileSize) + tileSize / 4;
+                    int size = tileSize / 2;
+                    g2d.setColor(new java.awt.Color(180, 50, 255, 200)); // Mor (büyücü mermisi)
+                    g2d.fillOval(px, py, size, size);
+                    g2d.setColor(new java.awt.Color(255, 200, 255, 150)); // Parlak kenar
+                    g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    continue;
+                } else if (e instanceof domain.models.entity.ShadowClone) {
                     // Klon: hero sprite'ı %50 saydamlıkla (görsel ayrım)
                     frame = assetManager.getHeroSprite(domain.models.AnimationState.IDLE);
                     if (frame != null) {
@@ -268,6 +278,7 @@ public class GameView extends JPanel {
                             tileSize, tileSize, null);
                 }
             }
+
         } else {
             // entityList yoksa: sadece başlangıç knight ve sorcerer'ı çiz (geriye dönük
             // uyumluluk)

@@ -310,11 +310,37 @@ public class DemoRunner {
                 if (s.isAlive()) s.followHero(hero, map, entities);
             }
 
+            // Tüm Sorcerer'lardan bekleyen mermileri topla (ConcurrentModification önlemi)
+            java.util.List<domain.models.entity.Projectile> newProjectiles = new java.util.ArrayList<>();
+            domain.models.entity.Projectile sp = sorcerer.pollPendingProjectile();
+            if (sp != null) newProjectiles.add(sp);
+            for (Sorcerer s : spawner.getSpawnedSorcerers()) {
+                domain.models.entity.Projectile p = s.pollPendingProjectile();
+                if (p != null) newProjectiles.add(p);
+            }
+            entities.addAll(newProjectiles);
+
+            // Tüm aktif mermileri ilerlet ve Hero çarpışmasını kontrol et
+            for (domain.models.entity.Entity en : entities) {
+                if (en instanceof domain.models.entity.Projectile && en.isAlive()) {
+                    domain.models.entity.Projectile proj = (domain.models.entity.Projectile) en;
+                    proj.step(map);
+                    // Design doc §2.5.2: "if it hits the hero it causes 8HP damage (some absorbed by DEF)"
+                    if (proj.isAlive() && proj.getX() == hero.getX() && proj.getY() == hero.getY()) {
+                        int damage = Math.max(0, proj.getDamage() - hero.getDef());
+                        hero.takeDamage(damage);
+                        proj.setHp(0); // Mermi yok ol
+                        System.out.println("Hero hit by projectile! Damage: " + damage + " | Hero HP: " + hero.getHp());
+                    }
+                }
+            }
+
             scrollSpawner.trySpawn();
 
             ShadowClone activeClone = inputHandler.getShadowClone();
             if (activeClone != null) activeClone.update();
         });
+
         logicRef[0].start();
 
         // Render Loop (Saniyede 60 Kare - 60 FPS Çizim Motoru)

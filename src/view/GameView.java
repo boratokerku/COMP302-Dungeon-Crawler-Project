@@ -248,9 +248,10 @@ public class GameView extends JPanel {
                         int px = offsetX + (proj.getX() * tileSize);
                         int py = offsetY + (proj.getY() * tileSize);
                         
-                        double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX());
-                        // Görselin doğal yönüne göre +Math.PI/4 gibi ofsetler eklenebilir, 
-                        // genelde sağa baktığı varsayılır. 
+                        // atan2 0 açısını Sağa (Right) doğru kabul eder.
+                        // Eğer ok görseli orijinalinde yukarı ya da çapraz bakıyorsa offset eklemek gerekir.
+                        // Genelde ok görselleri (Top-Left) ya da (Up) bakar. +Math.PI/4 veya +Math.PI/2 ekliyoruz.
+                        double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) + (Math.PI / 4.0); // 45 derece düzeltme
                         
                         java.awt.geom.AffineTransform old = g2d.getTransform();
                         g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);

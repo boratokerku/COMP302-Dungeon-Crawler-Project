@@ -101,14 +101,14 @@ public class Sorcerer extends Entity implements Renderable {
     private Projectile createProjectile(Entity hero) {
         double diffX = hero.getX() - this.x;
         double diffY = hero.getY() - this.y;
-        double dist = Math.sqrt(diffX*diffX + diffY*diffY);
 
-        if (dist == 0) return null; // Aynı konumda ise ates etme
+        if (diffX == 0 && diffY == 0) return null; // Aynı konumda ise ates etme
 
-        // Normalize and scale (tick başına 0.5 tile hareket etsin = 2 tick'te 1 tile hızı)
+        // Sadece 8 yöne izin ver (Sağ, Sol, Yukarı, Aşağı ve Tam Çaprazlar)
+        // Böylece zigzag gidiş engellenir ve göze hoş görünür.
         double speed = 0.5;
-        double dx = (diffX / dist) * speed;
-        double dy = (diffY / dist) * speed;
+        double dx = Integer.compare(hero.getX(), this.x) * speed;
+        double dy = Integer.compare(hero.getY(), this.y) * speed;
 
         System.out.println("Sorcerer fired projectile! Direction: (" + dx + ", " + dy + ")");
         // Design doc §2.5.2: 8 HP damage

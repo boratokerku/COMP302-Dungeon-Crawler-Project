@@ -86,7 +86,7 @@ public class SaveManager {
                 if (e.isAlive()) {
                     domain.models.entity.Projectile p = (domain.models.entity.Projectile) e;
                     state.projectiles.add(new GameState.ProjectileRecord(
-                            p.getX(), p.getY(), p.getDeltaX(), p.getDeltaY(), p.getDamage()
+                            p.getX(), p.getY(), p.getExactX(), p.getExactY(), p.getDeltaX(), p.getDeltaY(), p.getDamage()
                     ));
                 }
             }

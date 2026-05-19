@@ -241,14 +241,32 @@ public class GameView extends JPanel {
                 BufferedImage frame = null;
 
                 if (e instanceof domain.models.entity.Projectile) {
-                    // Mermi: parlayan mor daire olarak çiz
-                    int px = offsetX + (e.getX() * tileSize) + tileSize / 4;
-                    int py = offsetY + (e.getY() * tileSize) + tileSize / 4;
-                    int size = tileSize / 2;
-                    g2d.setColor(new java.awt.Color(180, 50, 255, 200)); // Mor (büyücü mermisi)
-                    g2d.fillOval(px, py, size, size);
-                    g2d.setColor(new java.awt.Color(255, 200, 255, 150)); // Parlak kenar
-                    g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    domain.models.entity.Projectile proj = (domain.models.entity.Projectile) e;
+                    BufferedImage arrowImg = assetManager.getProjectileArrow();
+                    
+                    if (arrowImg != null) {
+                        int px = offsetX + (proj.getX() * tileSize);
+                        int py = offsetY + (proj.getY() * tileSize);
+                        
+                        double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX());
+                        // Görselin doğal yönüne göre +Math.PI/4 gibi ofsetler eklenebilir, 
+                        // genelde sağa baktığı varsayılır. 
+                        
+                        java.awt.geom.AffineTransform old = g2d.getTransform();
+                        g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
+                        g2d.rotate(angle);
+                        g2d.drawImage(arrowImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
+                        g2d.setTransform(old);
+                    } else {
+                        // Mermi: parlayan mor daire olarak çiz (fallback)
+                        int px = offsetX + (e.getX() * tileSize) + tileSize / 4;
+                        int py = offsetY + (e.getY() * tileSize) + tileSize / 4;
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(180, 50, 255, 200));
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 200, 255, 150));
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    }
                     continue;
                 } else if (e instanceof domain.models.entity.ShadowClone) {
                     // Klon: hero sprite'ı %50 saydamlıkla (görsel ayrım)

@@ -1,14 +1,15 @@
 package domain.models.entity;
 
 public class Projectile extends Entity {
-    private int deltaX, deltaY;
+    private double deltaX, deltaY;
+    private double exactX, exactY;
     private int damage;
     private Entity owner;
-    private int moveCooldown = 0;
-    private static final int MOVE_INTERVAL = 2; // Her 2 tick'te bir hareket (240ms)
 
-    public Projectile(int x, int y, int deltaX, int deltaY, int damage, Entity owner) {
+    public Projectile(int x, int y, double exactX, double exactY, double deltaX, double deltaY, int damage, Entity owner) {
         super(x, y, 1);
+        this.exactX = exactX;
+        this.exactY = exactY;
         this.deltaX = deltaX;
         this.deltaY = deltaY;
         this.damage = damage;
@@ -23,12 +24,11 @@ public class Projectile extends Entity {
     public void step(domain.models.map.GameMap map) {
         if (!this.alive) return;
 
-        moveCooldown++;
-        if (moveCooldown < MOVE_INTERVAL) return;
-        moveCooldown = 0;
+        exactX += deltaX;
+        exactY += deltaY;
 
-        int newX = this.x + deltaX;
-        int newY = this.y + deltaY;
+        int newX = (int) Math.round(exactX);
+        int newY = (int) Math.round(exactY);
 
         // Döküman §2.5.2: "cannot pass through walls or grid cells occupied by large objects"
         if (!map.isWalkable(newX, newY)) {
@@ -48,6 +48,8 @@ public class Projectile extends Entity {
 
     public int getDamage()  { return damage; }
     public Entity getOwner() { return owner; }
-    public int getDeltaX()   { return deltaX; }
-    public int getDeltaY()   { return deltaY; }
+    public double getDeltaX()   { return deltaX; }
+    public double getDeltaY()   { return deltaY; }
+    public double getExactX()   { return exactX; }
+    public double getExactY()   { return exactY; }
 }

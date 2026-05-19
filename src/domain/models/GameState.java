@@ -96,14 +96,17 @@ public class GameState {
     /** Uçan mermilerin konumu ve yönü */
     public static class ProjectileRecord {
         public int x, y;
-        public int deltaX, deltaY;
+        public double exactX, exactY;
+        public double deltaX, deltaY;
         public int damage;
 
         public ProjectileRecord() {}
 
-        public ProjectileRecord(int x, int y, int deltaX, int deltaY, int damage) {
+        public ProjectileRecord(int x, int y, double exactX, double exactY, double deltaX, double deltaY, int damage) {
             this.x = x;
             this.y = y;
+            this.exactX = exactX;
+            this.exactY = exactY;
             this.deltaX = deltaX;
             this.deltaY = deltaY;
             this.damage = damage;

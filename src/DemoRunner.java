@@ -145,7 +145,7 @@ public class DemoRunner {
         if (state.projectiles != null) {
             for (GameState.ProjectileRecord pr : state.projectiles) {
                 entities.add(new domain.models.entity.Projectile(
-                        pr.x, pr.y, pr.deltaX, pr.deltaY, pr.damage, null
+                        pr.x, pr.y, pr.exactX, pr.exactY, pr.deltaX, pr.deltaY, pr.damage, null
                 ));
             }
         }
@@ -330,25 +330,31 @@ public class DemoRunner {
             }
             entities.addAll(newProjectiles);
 
-            // Tüm aktif mermileri ilerlet ve Hero çarpışmasını kontrol et
+            // Tüm aktif mermileri ilerlet ve Hero/Clone çarpışmasını kontrol et
             for (domain.models.entity.Entity en : entities) {
                 if (en instanceof domain.models.entity.Projectile && en.isAlive()) {
                     domain.models.entity.Projectile proj = (domain.models.entity.Projectile) en;
                     proj.step(map);
                     // Design doc §2.5.2: "if it hits the hero it causes 8HP damage (some absorbed by DEF)"
-                    if (proj.isAlive() && proj.getX() == hero.getX() && proj.getY() == hero.getY()) {
-                        int damage = Math.max(0, proj.getDamage() - hero.getDef());
-                        hero.takeDamage(damage);
+                    
+                    // Hedef kontrolü
+                    ShadowClone activeClone = inputHandler.getShadowClone();
+                    Entity target = (activeClone != null && activeClone.isAlive()) ? activeClone : hero;
+                    
+                    if (proj.isAlive() && proj.getX() == target.getX() && proj.getY() == target.getY()) {
+                        int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
+                        int damage = Math.max(0, proj.getDamage() - def);
+                        target.takeDamage(damage);
                         proj.setHp(0); // Mermi yok ol
-                        System.out.println("Hero hit by projectile! Damage: " + damage + " | Hero HP: " + hero.getHp());
+                        System.out.println("Target hit by projectile! Damage: " + damage + " | Target HP: " + target.getHp());
                     }
                 }
             }
 
             scrollSpawner.trySpawn();
 
-            ShadowClone activeClone = inputHandler.getShadowClone();
-            if (activeClone != null) activeClone.update();
+            ShadowClone activeCloneForUpdate = inputHandler.getShadowClone();
+            if (activeCloneForUpdate != null) activeCloneForUpdate.update();
         });
 
         logicRef[0].start();

@@ -14,6 +14,7 @@ public class AssetManager {
 
     private SpriteAnimation knightWalk;
     private SpriteAnimation sorcererWalk;
+    private BufferedImage projectileArrow;
 
     private AssetManager() {
         heroWalkRight = new SpriteAnimation(120);
@@ -23,6 +24,7 @@ public class AssetManager {
 
         loadHeroAnimations();
         loadEnemyAnimations();
+        loadItems();
     }
 
     // Singleton Pattern implementation
@@ -31,6 +33,15 @@ public class AssetManager {
             instance = new AssetManager();
         }
         return instance;
+    }
+
+    private void loadItems() {
+        try {
+            File f = findFile("resources/images/weapons/arrow.png");
+            if (f != null) projectileArrow = ImageIO.read(f);
+        } catch (Exception e) {
+            System.err.println("Error loading arrow sprite: " + e.getMessage());
+        }
     }
 
     private void loadHeroAnimations() {
@@ -111,5 +122,9 @@ public class AssetManager {
 
     public BufferedImage getSorcererSprite() {
         return sorcererWalk.getCurrentFrame();
+    }
+
+    public BufferedImage getProjectileArrow() {
+        return projectileArrow;
     }
 }

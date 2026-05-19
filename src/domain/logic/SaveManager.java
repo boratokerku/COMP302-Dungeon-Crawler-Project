@@ -70,15 +70,23 @@ public class SaveManager {
                         "Knight", e.getX(), e.getY(), e.getHp(), e.isAlive(), 0
                 ));
             } else if (e instanceof Sorcerer) {
-                long timeLeft = ((Sorcerer) e).getTimeLeft();
+                long teleportLeft    = ((Sorcerer) e).getTimeLeft();
+                long projectileLeft  = ((Sorcerer) e).getProjectileTimeLeft();
                 state.enemies.add(new GameState.EnemyRecord(
-                        "Sorcerer", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
+                        "Sorcerer", e.getX(), e.getY(), e.getHp(), e.isAlive(), teleportLeft, projectileLeft
                 ));
             } else if (e instanceof domain.models.entity.ShadowClone) {
-                if (e.isAlive()) { // Sadece yaşayan klonları kaydet
+                if (e.isAlive()) {
                     long timeLeft = ((domain.models.entity.ShadowClone) e).getTimeLeft();
                     state.enemies.add(new GameState.EnemyRecord(
                             "ShadowClone", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
+                    ));
+                }
+            } else if (e instanceof domain.models.entity.Projectile) {
+                if (e.isAlive()) {
+                    domain.models.entity.Projectile p = (domain.models.entity.Projectile) e;
+                    state.projectiles.add(new GameState.ProjectileRecord(
+                            p.getX(), p.getY(), p.getDeltaX(), p.getDeltaY(), p.getDamage()
                     ));
                 }
             }

@@ -124,7 +124,8 @@ public class DemoRunner {
             } else if ("Sorcerer".equals(rec.type)) {
                 Sorcerer s = new Sorcerer(rec.x, rec.y);
                 s.setHp(rec.hp);
-                s.setTimeLeft(rec.timeLeft); // Sorcerer ışınlanma timer'ı yükle
+                s.setTimeLeft(rec.timeLeft);                    // Işınlanma timer'ı
+                s.setProjectileTimeLeft(rec.projectileTimeLeft); // Mermi timer'ı
                 if (!rec.alive) s.takeDamage(999);
                 entities.add(s);
                 sorcerer = s;
@@ -139,6 +140,15 @@ public class DemoRunner {
         // Fallback: kayıtta düşman yoksa default pozisyon
         if (knight == null)   { knight   = new Knight(12, 10);  entities.add(knight); }
         if (sorcerer == null) { sorcerer = new Sorcerer(18, 5); entities.add(sorcerer); }
+
+        // Kaydedilmiş uçan mermileri yeniden oluştur
+        if (state.projectiles != null) {
+            for (GameState.ProjectileRecord pr : state.projectiles) {
+                entities.add(new domain.models.entity.Projectile(
+                        pr.x, pr.y, pr.deltaX, pr.deltaY, pr.damage, null
+                ));
+            }
+        }
 
         // Harita itemlarını ayır: scroll'lar ayrı tutulur (inputHandler gerektirir)
         List<GameState.ItemRecord> scrollItems = new ArrayList<>();

@@ -46,6 +46,8 @@ public class Projectile extends Entity {
         // Hareket mantığı DemoRunner'da step(map) üzerinden yönetilir
     }
 
-    public int getDamage() { return damage; }
+    public int getDamage()  { return damage; }
     public Entity getOwner() { return owner; }
+    public int getDeltaX()   { return deltaX; }
+    public int getDeltaY()   { return deltaY; }
 }

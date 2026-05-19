@@ -30,6 +30,14 @@ public class Sorcerer extends Entity implements Renderable {
         this.lastTeleportTime = System.currentTimeMillis() - (7000 - timeLeft);
     }
 
+    public long getProjectileTimeLeft() {
+        return Math.max(0, 5000 - (System.currentTimeMillis() - lastProjectileTime));
+    }
+
+    public void setProjectileTimeLeft(long timeLeft) {
+        this.lastProjectileTime = System.currentTimeMillis() - (5000 - timeLeft);
+    }
+
     /**
      * Sorcerer AI ana metodu.
      *

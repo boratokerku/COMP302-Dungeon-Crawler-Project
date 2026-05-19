@@ -44,7 +44,8 @@ public class Hero extends Entity {
     }
 
     public int calculateDamage(int weaponAtk) {
-        return 5 + weaponAtk;
+        // Döküman §3: Hasar = f(STR, ATK) — sadece sabit değil, istatistiğe dayalı
+        return (this.str / 2) + weaponAtk;
     }
 
     public void consumeEnergyForMove() {
@@ -59,7 +60,12 @@ public class Hero extends Entity {
 
     public void equipWeapon(domain.models.item.SwordItem sword) {
         this.equippedWeapon = sword;
-        this.weaponAtk = 5;
+        this.weaponAtk = 5; // Default ATK (save/load için geriye dönük uyumluluk)
+    }
+
+    public void equipWeapon(domain.models.item.SwordItem sword, int atk) {
+        this.equippedWeapon = sword;
+        this.weaponAtk = atk; // Silahın gerçek ATK değeri
     }
 
     public void unequipWeapon() {

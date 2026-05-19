@@ -27,8 +27,8 @@ public class EquipAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        if (target instanceof domain.models.item.SwordItem) {
-            hero.equipWeapon((domain.models.item.SwordItem) target, atkBonus);
+        if (target instanceof domain.models.item.MapItem) {
+            hero.equipWeapon((domain.models.item.MapItem) target, atkBonus);
             System.out.println("Equipped: " + target.getName() + " | ATK: " + atkBonus + " | STR: " + hero.getStr());
         }
     }

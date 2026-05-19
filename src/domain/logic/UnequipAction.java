@@ -17,9 +17,9 @@ public class UnequipAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        if (target instanceof domain.models.item.SwordItem) {
+        if (target instanceof domain.models.item.MapItem) {
             hero.unequipWeapon();
-            System.out.println("Unequipped Sword: " + target.getName());
+            System.out.println("Unequipped Weapon: " + target.getName());
         }
     }
 }

@@ -74,6 +74,18 @@ public class DemoRunner {
         map.placeObject(new domain.models.staticObjects.KeyItem(12, 10), 12, 10);
         map.placeObject(new domain.models.item.SwordItem(14, 10), 14, 10);
 
+        // =====================================================================
+        // TODO: TEMPORARY DEVELOPMENT TEST DROPS - GEÇİCİ GELİŞTİRİCİ TEST SİLAHLARI
+        // Bu blok sadece test aşamasında tüm yeni silahları kolayca denemek için eklenmiştir.
+        // Yay, Balta, Asa, Katana ve Elmas Kılıç kahramanın etrafında yer alır.
+        map.placeObject(new domain.models.item.WoodenSwordItem(4, 5), 4, 5);
+        map.placeObject(new domain.models.item.AxeItem(5, 4), 5, 4);
+        map.placeObject(new domain.models.item.BowItem(5, 5), 5, 5);
+        map.placeObject(new domain.models.item.FireWandItem(3, 4), 3, 4);
+        map.placeObject(new domain.models.item.SamuraiSwordItem(3, 5), 3, 5);
+        map.placeObject(new domain.models.item.DiamondSwordItem(5, 3), 5, 3);
+        // =====================================================================
+
 
 
         // Dekorasyonlar (Torches)
@@ -104,9 +116,12 @@ public class DemoRunner {
         hero.setEnergy(state.hero.energy);
         if (state.hero.str > 0) hero.setStr(state.hero.str); // str bilgisini yükle
 
-        // Kılıcı takılıysa ayarla
-        if ("SwordItem".equals(state.hero.equippedWeaponType)) {
-            hero.equipWeapon(new domain.models.item.SwordItem(0, 0));
+        // Kılıcı veya kuşanılmış silahı takılıysa ayarla
+        if (state.hero.equippedWeaponType != null && !state.hero.equippedWeaponType.isEmpty()) {
+            domain.models.entity.GameObject weapon = createItem(state.hero.equippedWeaponType, 0, 0);
+            if (weapon instanceof domain.models.item.MapItem) {
+                hero.equipWeapon((domain.models.item.MapItem) weapon);
+            }
         }
 
         // Düşmanları yeniden oluştur

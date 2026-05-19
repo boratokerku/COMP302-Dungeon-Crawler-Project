@@ -270,6 +270,86 @@ public class GameView extends JPanel {
         return inventoryView.getClickedItem(screenX, screenY);
     }
 
+    private final java.util.Map<String, BufferedImage> weaponImageCache = new java.util.HashMap<>();
+
+    private BufferedImage getWeaponImage(String imageName) {
+        if (imageName == null) return null;
+        if (weaponImageCache.containsKey(imageName)) {
+            return weaponImageCache.get(imageName);
+        }
+        try {
+            // Robust multi-path lookup
+            String[] pathsToTry = {
+                "resources/" + imageName,
+                "../resources/" + imageName,
+                imageName,
+                "../" + imageName,
+                "src/resources/" + imageName
+            };
+            java.io.File f = null;
+            for (String p : pathsToTry) {
+                java.io.File test = new java.io.File(p);
+                if (test.exists()) {
+                    f = test;
+                    break;
+                }
+            }
+            if (f != null) {
+                System.out.println("[DEBUG] Weapon image loaded successfully from: " + f.getPath());
+                BufferedImage img = javax.imageio.ImageIO.read(f);
+                weaponImageCache.put(imageName, img);
+                return img;
+            } else {
+                System.out.println("[DEBUG] WEAPON IMAGE NOT FOUND: " + imageName);
+            }
+        } catch (Exception e) {
+            System.err.println("[DEBUG] Error loading weapon image: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private String lastLoggedWeapon = null;
+
+    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir) {
+        if (hero.getEquippedWeapon() == null) {
+            if (lastLoggedWeapon != null) {
+                System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL");
+                lastLoggedWeapon = null;
+            }
+            return;
+        }
+        
+        String path = hero.getEquippedWeapon().getImageName();
+        if (!path.equals(lastLoggedWeapon)) {
+            System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon changed to: " + hero.getEquippedWeapon().getName() + " (path: " + path + ")");
+            lastLoggedWeapon = path;
+        }
+        
+        BufferedImage weaponImg = getWeaponImage(path);
+        if (weaponImg == null) {
+            System.out.println("[DEBUG] drawEquippedWeapon: weaponImg is null for path: " + path);
+            return;
+        }
+        
+        int wSize = tileSize / 2; // 32x32 size
+        java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
+        
+        // Exact pixel tuning based on hero sprites (hand locations)
+        int weaponX = x + (dir == Direction.RIGHT ? 36 : 8);
+        int weaponY = y + tileSize / 3; // hand vertical height
+        
+        g2d.translate(weaponX + wSize / 2, weaponY + wSize / 2);
+        
+        // Rotate 45 degrees slant
+        double angle = (dir == Direction.RIGHT) ? Math.toRadians(45) : Math.toRadians(-45);
+        g2d.rotate(angle);
+        
+        // Draw the weapon icon centered
+        g2d.drawImage(weaponImg, -wSize / 2, -wSize / 2, wSize, wSize, null);
+        
+        g2d.setTransform(oldTransform);
+    }
+
     private void drawHero(Graphics2D g2d) {
         BufferedImage frame = assetManager.getHeroSprite(hero.getAnimationState());
 
@@ -280,8 +360,10 @@ public class GameView extends JPanel {
             if (hero.getDirection() == Direction.LEFT) {
                 // Resmi yatayda aynalayarak çiziyoruz
                 g2d.drawImage(frame, x + tileSize, y, -tileSize, tileSize, null);
+                drawEquippedWeapon(g2d, x, y, Direction.LEFT);
             } else {
                 g2d.drawImage(frame, x, y, tileSize, tileSize, null);
+                drawEquippedWeapon(g2d, x, y, Direction.RIGHT);
             }
         }
     }

@@ -23,17 +23,6 @@ public class OpenAction implements Action {
 
     @Override
     public boolean isAvailable(Hero hero, GameObject target) {
-        if (target instanceof domain.models.entity.Chest) {
-            domain.models.entity.Chest chest = (domain.models.entity.Chest) target;
-            if (chest.isLocked()) {
-                for (GameObject item : hero.getInventory().getItems()) {
-                    if (item instanceof domain.models.staticObjects.KeyItem) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
         return true;
     }
 
@@ -44,9 +33,11 @@ public class OpenAction implements Action {
             int ty = target.getY();
             domain.models.map.GameMap map = target.getMap();
             
+            boolean wasLocked = false;
             if (target instanceof domain.models.entity.Chest) {
                 domain.models.entity.Chest chest = (domain.models.entity.Chest) target;
                 if (chest.isLocked()) {
+                    wasLocked = true;
                     domain.models.staticObjects.KeyItem keyToUse = null;
                     for (GameObject item : hero.getInventory().getItems()) {
                         if (item instanceof domain.models.staticObjects.KeyItem) {
@@ -58,13 +49,25 @@ public class OpenAction implements Action {
                         if (keyToUse.isSingleUse()) {
                             hero.getInventory().removeItem(keyToUse);
                         }
+                        chest.setLocked(false);
                         System.out.println("Unlocked chest using key!");
+                        view.GameView.addFloatingText(tx, ty, "UNLOCKED!", java.awt.Color.GREEN);
                     } else {
+                        // Show warning dialog for locked chest without key!
+                        javax.swing.JOptionPane.showMessageDialog(
+                                null,
+                                "This chest is locked! You need a Key to open it.",
+                                "Chest Locked",
+                                javax.swing.JOptionPane.WARNING_MESSAGE
+                        );
                         System.out.println("Chest is locked! Need a key!");
-                        return;
+                        view.GameView.addFloatingText(tx, ty, "LOCKED!", java.awt.Color.RED);
+                        return; // Stop execution
                     }
                 }
             }
+            
+            String containerType = wasLocked ? "Locked Chest" : "Unlocked Chest";
             
             // Remove the chest from the map
             map.removeObject(target);
@@ -75,7 +78,7 @@ public class OpenAction implements Action {
                     domain.models.item.MapItem mi = (domain.models.item.MapItem) item;
                     mi.setPosition(tx, ty);
                     map.placeObject(mi, tx, ty);
-                    System.out.println("Opened chest! Dropped " + mi.getName() + " on the floor.");
+                    System.out.println("Opened " + containerType + "! Dropped " + mi.getName() + " on the floor.");
                     dropped = true;
                     break;
                 }
@@ -86,9 +89,9 @@ public class OpenAction implements Action {
                 domain.models.item.MapItem loot = domain.models.item.MapItem.createRandomItem(tx, ty);
                 if (loot != null) {
                     map.placeObject(loot, tx, ty);
-                    System.out.println("Opened chest! Dropped " + loot.getName() + " on the floor.");
+                    System.out.println("Opened " + containerType + "! Dropped " + loot.getName() + " on the floor.");
                 } else {
-                    System.out.println("Opened chest, but it was empty.");
+                    System.out.println("Opened " + containerType + ", but it was empty.");
                 }
             }
             

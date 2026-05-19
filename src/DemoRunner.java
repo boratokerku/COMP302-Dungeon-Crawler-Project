@@ -61,7 +61,7 @@ public class DemoRunner {
         map.placeObject(new domain.models.entity.Crate("Crate", 2, 17), 2, 17);
 
         // Sandıklar (Chests) uzak köşelerde
-        map.placeObject(new domain.models.entity.Chest("Main Chest", 22, 2), 22, 2);
+        map.placeObject(new domain.models.entity.Chest("Main Chest", 22, 2, true), 22, 2);
         map.placeObject(new domain.models.entity.Chest("Hidden Chest", 2, 18), 2, 18);
 
         // Sütunlar (Columns) geniş alanın ortasında bir ana salon oluşturacak şekilde

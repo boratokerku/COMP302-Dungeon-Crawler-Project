@@ -139,17 +139,49 @@ public class InputHandler implements KeyListener {
                                     }
                                 }
                                 
-                                if (available.size() == 1) {
+                                if (available.size() == 1 && !(obj instanceof domain.models.entity.Crate) && !(obj instanceof domain.models.entity.Chest)) {
                                     available.get(0).execute(hero, obj);
                                     System.out.println(available.get(0).getName() + " executed on " + obj.getName() + " via E key");
                                     if (gameView != null) gameView.repaint();
                                     return; // Bir etkileşim yetti, döngüden çık
-                                } else if (available.size() > 1) {
-                                    // Oyuncuya butonlu dialog penceresi sun
-                                    String[] options = new String[available.size()];
-                                    for (int i = 0; i < available.size(); i++) {
-                                        options[i] = available.get(i).getName();
+                                } else if (available.size() >= 1) {
+                                    // Oyuncuya butonlu dialog penceresi sun (maliyetler dahil)
+                                    boolean hasKey = false;
+                                    for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                                        if (item instanceof domain.models.staticObjects.KeyItem) {
+                                            hasKey = true;
+                                            break;
+                                        }
                                     }
+                                    
+                                    String[] options;
+                                    if (obj instanceof domain.models.entity.Crate) {
+                                        options = new String[]{"Break (-10 Energy)", "Cancel"};
+                                    } else if (obj instanceof domain.models.entity.Chest) {
+                                        domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                                        if (chest.isLocked()) {
+                                            options = new String[available.size() + 1];
+                                            for (int i = 0; i < available.size(); i++) {
+                                                domain.logic.Action act = available.get(i);
+                                                if (act instanceof domain.logic.BreakAction) {
+                                                    options[i] = "Break (-10 Energy)";
+                                                } else if (act instanceof domain.logic.OpenAction) {
+                                                    options[i] = hasKey ? "Open (Uses Key)" : "Open (Need Key)";
+                                                } else {
+                                                    options[i] = act.getName();
+                                                }
+                                            }
+                                            options[available.size()] = "Cancel";
+                                        } else {
+                                            options = new String[]{"Open (Unlocked)", "Cancel"};
+                                        }
+                                    } else {
+                                        options = new String[available.size()];
+                                        for (int i = 0; i < available.size(); i++) {
+                                            options[i] = available.get(i).getName();
+                                        }
+                                    }
+                                    
                                     int choice = javax.swing.JOptionPane.showOptionDialog(
                                             gameView,
                                             "What would you like to do with " + obj.getName() + "?",
@@ -160,10 +192,31 @@ public class InputHandler implements KeyListener {
                                             options,
                                             options[0]
                                     );
-                                    if (choice >= 0 && choice < available.size()) {
-                                        available.get(choice).execute(hero, obj);
-                                        System.out.println(available.get(choice).getName() + " executed on " + obj.getName() + " via E dialog choice");
-                                        if (gameView != null) gameView.repaint();
+                                    
+                                    if (obj instanceof domain.models.entity.Crate) {
+                                        if (choice == 0) { // Break (-10 Energy) selected
+                                            available.get(0).execute(hero, obj);
+                                            if (gameView != null) gameView.repaint();
+                                        }
+                                    } else if (obj instanceof domain.models.entity.Chest) {
+                                        domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                                        if (chest.isLocked()) {
+                                            if (choice >= 0 && choice < available.size()) {
+                                                available.get(choice).execute(hero, obj);
+                                                if (gameView != null) gameView.repaint();
+                                            }
+                                        } else {
+                                            if (choice == 0) { // Open (Unlocked) selected
+                                                available.get(0).execute(hero, obj);
+                                                if (gameView != null) gameView.repaint();
+                                            }
+                                        }
+                                    } else {
+                                        if (choice >= 0 && choice < available.size()) {
+                                            available.get(choice).execute(hero, obj);
+                                            System.out.println(available.get(choice).getName() + " executed on " + obj.getName() + " via E dialog choice");
+                                            if (gameView != null) gameView.repaint();
+                                        }
                                     }
                                     return; // Etkileşim tamamlandı, çık
                                 }

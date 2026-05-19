@@ -96,6 +96,30 @@ public class InputHandler implements KeyListener {
                     }
                 }
             }
+        } else if (code == KeyEvent.VK_T) {
+            view.GameView.debugHandX++;
+            System.out.println("[TUNER] handX = " + view.GameView.debugHandX + ", handY = " + view.GameView.debugHandY + ", angleDegrees = " + view.GameView.debugAngleOffsetDegrees);
+            if (gameView != null) gameView.repaint();
+        } else if (code == KeyEvent.VK_G) {
+            view.GameView.debugHandX--;
+            System.out.println("[TUNER] handX = " + view.GameView.debugHandX + ", handY = " + view.GameView.debugHandY + ", angleDegrees = " + view.GameView.debugAngleOffsetDegrees);
+            if (gameView != null) gameView.repaint();
+        } else if (code == KeyEvent.VK_Y) {
+            view.GameView.debugHandY++;
+            System.out.println("[TUNER] handX = " + view.GameView.debugHandX + ", handY = " + view.GameView.debugHandY + ", angleDegrees = " + view.GameView.debugAngleOffsetDegrees);
+            if (gameView != null) gameView.repaint();
+        } else if (code == KeyEvent.VK_H) {
+            view.GameView.debugHandY--;
+            System.out.println("[TUNER] handX = " + view.GameView.debugHandX + ", handY = " + view.GameView.debugHandY + ", angleDegrees = " + view.GameView.debugAngleOffsetDegrees);
+            if (gameView != null) gameView.repaint();
+        } else if (code == KeyEvent.VK_U) {
+            view.GameView.debugAngleOffsetDegrees += 5.0;
+            System.out.println("[TUNER] handX = " + view.GameView.debugHandX + ", handY = " + view.GameView.debugHandY + ", angleDegrees = " + view.GameView.debugAngleOffsetDegrees);
+            if (gameView != null) gameView.repaint();
+        } else if (code == KeyEvent.VK_J) {
+            view.GameView.debugAngleOffsetDegrees -= 5.0;
+            System.out.println("[TUNER] handX = " + view.GameView.debugHandX + ", handY = " + view.GameView.debugHandY + ", angleDegrees = " + view.GameView.debugAngleOffsetDegrees);
+            if (gameView != null) gameView.repaint();
         }
     }
 

@@ -310,6 +310,11 @@ public class GameView extends JPanel {
 
     private String lastLoggedWeapon = null;
 
+    // Public static variables for Live Offset Tuning Mode
+    public static int debugHandX = 4;
+    public static int debugHandY = -2;
+    public static double debugAngleOffsetDegrees = 0.0;
+
     private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir) {
         if (hero.getEquippedWeapon() == null) {
             if (lastLoggedWeapon != null) {
@@ -352,26 +357,30 @@ public class GameView extends JPanel {
         
         java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
         
-        // Base hand joint coordinates relative to the 64x64 grid cell (chest height y = 40)
-        int baseHandX = x + (dir == Direction.RIGHT ? 36 : 24);
-        int baseHandY = y + 40;
+        // 1. Translate to the center of the 64x64 grid cell
+        g2d.translate(x + 32, y + 32);
         
-        // Apply weapon-specific custom hand offsets (X offset is mirrored for LEFT direction!)
-        int handX = baseHandX + (dir == Direction.RIGHT ? customHandX : -customHandX);
-        int handY = baseHandY + customHandY;
+        // 2. If facing LEFT, mirror the entire horizontal transformation context!
+        if (dir == Direction.LEFT) {
+            g2d.scale(-1, 1);
+        }
+        
+        // 3. Local hand joint coordinates relative to center (32, 32). Tuned live!
+        int handX = debugHandX + customHandX;
+        int handY = debugHandY + customHandY;
         
         g2d.translate(handX, handY);
         
-        // Calculate dynamic rotation angle
-        double swingAngle = (dir == Direction.RIGHT) ? Math.toRadians(45) : Math.toRadians(-45);
-        double totalAngle = swingAngle + (dir == Direction.RIGHT ? angleOffset : -angleOffset);
+        // 4. Calculate dynamic rotation angle (swing angle is 45 deg clockwise in local space)
+        double swingAngle = Math.toRadians(45);
+        double totalAngle = swingAngle + angleOffset + Math.toRadians(debugAngleOffsetDegrees);
         g2d.rotate(totalAngle);
         
-        // Calculate offset based on weapon pivot points
+        // 5. Calculate offset based on weapon pivot points
         int px = (int) (pivotX * wSize);
         int py = (int) (pivotY * wSize);
         
-        // Draw the weapon icon such that the pivot (px, py) aligns exactly with hand (0,0)
+        // 6. Draw the weapon icon such that the pivot (px, py) aligns exactly with hand (0,0)
         g2d.drawImage(weaponImg, -px, -py, wSize, wSize, null);
         
         g2d.setTransform(oldTransform);

@@ -28,20 +28,37 @@ public class OpenAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        List<String> itemNames = new ArrayList<>();
-        
-        for (GameObject item : new ArrayList<>(contents)) {
-            if (hero.getInventory() != null && !hero.getInventory().isFull()) {
-                hero.getInventory().addItem(item);
-                itemNames.add(item.getName());
+        if (target != null && target.getMap() != null) {
+            int tx = target.getX();
+            int ty = target.getY();
+            domain.models.map.GameMap map = target.getMap();
+            
+            // Remove the chest from the map
+            map.removeObject(target);
+            
+            boolean dropped = false;
+            for (GameObject item : new ArrayList<>(contents)) {
+                if (item instanceof domain.models.item.MapItem) {
+                    domain.models.item.MapItem mi = (domain.models.item.MapItem) item;
+                    mi.setPosition(tx, ty);
+                    map.placeObject(mi, tx, ty);
+                    System.out.println("Opened chest! Dropped " + mi.getName() + " on the floor.");
+                    dropped = true;
+                    break;
+                }
             }
-        }
-        contents.clear();
-        
-        if (!itemNames.isEmpty()) {
-            System.out.println("Opened! Got: " + String.join(", ", itemNames));
-        } else {
-            System.out.println("Opened! Got: nothing (or inventory full)");
+            
+            // Fallback: If chest contents are empty, drop a random loot item
+            if (!dropped) {
+                domain.models.item.MapItem loot = domain.models.item.MapItem.createRandomItem(tx, ty);
+                if (loot != null) {
+                    map.placeObject(loot, tx, ty);
+                    System.out.println("Opened chest! Dropped " + loot.getName() + " on the floor.");
+                } else {
+                    System.out.println("Opened chest, but it was empty.");
+                }
+            }
+            contents.clear();
         }
     }
 }

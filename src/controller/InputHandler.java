@@ -152,8 +152,8 @@ public class InputHandler implements KeyListener {
                                     }
                                     int choice = javax.swing.JOptionPane.showOptionDialog(
                                             gameView,
-                                            obj.getName() + " ile ne yapmak istersin?",
-                                            "Etkileşim Seç",
+                                            "What would you like to do with " + obj.getName() + "?",
+                                            "Select Interaction",
                                             javax.swing.JOptionPane.DEFAULT_OPTION,
                                             javax.swing.JOptionPane.QUESTION_MESSAGE,
                                             null,

@@ -23,11 +23,24 @@ public class BreakAction implements Action {
         
         if (roll <= successChance) {
             if (target != null && target.getMap() != null) {
-                target.getMap().removeObject(target);
+                int tx = target.getX();
+                int ty = target.getY();
+                domain.models.map.GameMap map = target.getMap();
+                
+                // Remove the container first
+                map.removeObject(target);
+                
+                // Drop a high-quality random loot on the floor!
+                domain.models.item.MapItem loot = domain.models.item.MapItem.createRandomItem(tx, ty);
+                if (loot != null) {
+                    map.placeObject(loot, tx, ty);
+                    System.out.println("Broke container open! Dropped " + loot.getName() + " at (" + tx + ", " + ty + ")");
+                } else {
+                    System.out.println("Broke container open, but it was empty.");
+                }
             }
-            System.out.println("Broke it open!");
         } else {
-            System.out.println("Failed to break. (Need more STR)");
+            System.out.println("Failed to break container! (Need more STR)");
         }
     }
 }

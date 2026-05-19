@@ -32,4 +32,11 @@ public abstract class MapItem extends GameObject {
     public BufferedImage getSprite() {
         return sprite;
     }
+
+    // Default weapon rendering metadata for high-quality custom offsets
+    public double getWeaponPivotX() { return 0.5; }
+    public double getWeaponPivotY() { return 0.5; }
+    public double getWeaponAngleOffset() { return 0.0; }
+    public int getHandOffsetX() { return 0; }
+    public int getHandOffsetY() { return 0; }
 }

@@ -101,14 +101,15 @@ public class Sorcerer extends Entity implements Renderable {
     private Projectile createProjectile(Entity hero) {
         double diffX = hero.getX() - this.x;
         double diffY = hero.getY() - this.y;
+        double dist = Math.sqrt(diffX*diffX + diffY*diffY);
 
-        if (diffX == 0 && diffY == 0) return null; // Aynı konumda ise ates etme
+        if (dist == 0) return null; // Aynı konumda ise ates etme
 
-        // Sadece 8 yöne izin ver (Sağ, Sol, Yukarı, Aşağı ve Tam Çaprazlar)
-        // Böylece zigzag gidiş engellenir ve göze hoş görünür.
+        // Pürüzsüz vektörel yönelim (Tam isabet)
+        // GameView artık getExactX/Y kullandığı için zigzag yapmadan hedefe dümdüz uçar.
         double speed = 0.5;
-        double dx = Integer.compare(hero.getX(), this.x) * speed;
-        double dy = Integer.compare(hero.getY(), this.y) * speed;
+        double dx = (diffX / dist) * speed;
+        double dy = (diffY / dist) * speed;
 
         System.out.println("Sorcerer fired projectile! Direction: (" + dx + ", " + dy + ")");
         // Design doc §2.5.2: 8 HP damage

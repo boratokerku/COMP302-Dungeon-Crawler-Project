@@ -33,10 +33,12 @@ public class GameState {
         public int energy;
         public int str;
         public String equippedWeaponType; // null veya "SwordItem"
+        public String equippedArmorType;  // null veya "ArmorItem"
+        public String equippedRingType;   // null veya "RingItem"
 
         public HeroRecord() {}
 
-        public HeroRecord(int x, int y, int hp, int mana, int energy, int str, String equippedWeaponType) {
+        public HeroRecord(int x, int y, int hp, int mana, int energy, int str, String equippedWeaponType, String equippedArmorType, String equippedRingType) {
             this.x = x;
             this.y = y;
             this.hp = hp;
@@ -44,6 +46,8 @@ public class GameState {
             this.energy = energy;
             this.str = str;
             this.equippedWeaponType = equippedWeaponType;
+            this.equippedArmorType = equippedArmorType;
+            this.equippedRingType = equippedRingType;
         }
     }
 
@@ -93,16 +97,18 @@ public class GameState {
         }
     }
 
-    /** Uçan mermilerin konumu ve yönü */
+    /** Uçan mermilerin konumu, yönü, tipi ve sahiplik durumu */
     public static class ProjectileRecord {
         public int x, y;
         public double exactX, exactY;
         public double deltaX, deltaY;
         public int damage;
+        public String type;       // "ARROW", "SPELL", "FIREBALL"
+        public boolean heroOwned;  // true if fired by hero, false if fired by sorcerer
 
         public ProjectileRecord() {}
 
-        public ProjectileRecord(int x, int y, double exactX, double exactY, double deltaX, double deltaY, int damage) {
+        public ProjectileRecord(int x, int y, double exactX, double exactY, double deltaX, double deltaY, int damage, String type, boolean heroOwned) {
             this.x = x;
             this.y = y;
             this.exactX = exactX;
@@ -110,6 +116,8 @@ public class GameState {
             this.deltaX = deltaX;
             this.deltaY = deltaY;
             this.damage = damage;
+            this.type = type;
+            this.heroOwned = heroOwned;
         }
     }
 }

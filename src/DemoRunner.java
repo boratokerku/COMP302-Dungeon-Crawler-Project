@@ -75,15 +75,17 @@ public class DemoRunner {
         map.placeObject(new domain.models.item.SwordItem(14, 10), 14, 10);
 
         // =====================================================================
-        // TODO: TEMPORARY DEVELOPMENT TEST DROPS - GEÇİCİ GELİŞTİRİCİ TEST SİLAHLARI
-        // Bu blok sadece test aşamasında tüm yeni silahları kolayca denemek için eklenmiştir.
-        // Yay, Balta, Asa, Katana ve Elmas Kılıç kahramanın etrafında yer alır.
+        // TODO: TEMPORARY DEVELOPMENT TEST DROPS - GEÇİCİ GELİŞTİRİCİ TEST SİLAHLARI VE EŞYALARI
+        // Bu blok sadece test aşamasında tüm yeni silahları ve giyilebilir eşyaları kolayca denemek için eklenmiştir.
+        // Yay, Balta, Asa, Katana, Elmas Kılıç, Çelik Zırh ve Güç Yüzüğü kahramanın etrafında yer alır.
         map.placeObject(new domain.models.item.WoodenSwordItem(4, 5), 4, 5);
         map.placeObject(new domain.models.item.AxeItem(5, 4), 5, 4);
         map.placeObject(new domain.models.item.BowItem(5, 5), 5, 5);
         map.placeObject(new domain.models.item.FireWandItem(3, 4), 3, 4);
         map.placeObject(new domain.models.item.SamuraiSwordItem(3, 5), 3, 5);
         map.placeObject(new domain.models.item.DiamondSwordItem(5, 3), 5, 3);
+        map.placeObject(new domain.models.item.ArmorItem(4, 3), 4, 3);
+        map.placeObject(new domain.models.item.RingItem(3, 3), 3, 3);
         // =====================================================================
 
 
@@ -123,6 +125,20 @@ public class DemoRunner {
                 hero.equipWeapon((domain.models.item.MapItem) weapon);
             }
         }
+        // Kuşanılmış zırhı takılıysa ayarla
+        if (state.hero.equippedArmorType != null && !state.hero.equippedArmorType.isEmpty()) {
+            domain.models.entity.GameObject armor = createItem(state.hero.equippedArmorType, 0, 0);
+            if (armor instanceof domain.models.item.MapItem) {
+                hero.equipArmor((domain.models.item.MapItem) armor);
+            }
+        }
+        // Kuşanılmış yüzüğü takılıysa ayarla
+        if (state.hero.equippedRingType != null && !state.hero.equippedRingType.isEmpty()) {
+            domain.models.entity.GameObject ring = createItem(state.hero.equippedRingType, 0, 0);
+            if (ring instanceof domain.models.item.MapItem) {
+                hero.equipRing((domain.models.item.MapItem) ring);
+            }
+        }
 
         // Düşmanları yeniden oluştur
         Knight knight = null;
@@ -159,8 +175,9 @@ public class DemoRunner {
         // Kaydedilmiş uçan mermileri yeniden oluştur
         if (state.projectiles != null) {
             for (GameState.ProjectileRecord pr : state.projectiles) {
+                Entity owner = pr.heroOwned ? hero : sorcerer;
                 entities.add(new domain.models.entity.Projectile(
-                        pr.x, pr.y, pr.exactX, pr.exactY, pr.deltaX, pr.deltaY, pr.damage, null
+                        pr.x, pr.y, pr.exactX, pr.exactY, pr.deltaX, pr.deltaY, pr.damage, owner, pr.type
                 ));
             }
         }
@@ -205,6 +222,8 @@ public class DemoRunner {
             case "DiamondSwordItem":  return new domain.models.item.DiamondSwordItem(x, y);
             case "BowItem":           return new domain.models.item.BowItem(x, y);
             case "FireWandItem":      return new domain.models.item.FireWandItem(x, y);
+            case "ArmorItem":         return new domain.models.item.ArmorItem(x, y);
+            case "RingItem":          return new domain.models.item.RingItem(x, y);
             case "KeyItem":           return new domain.models.staticObjects.KeyItem(x, y);
             case "Column":            return new domain.models.entity.Column(displayName, x, y);
             case "Crate":             return new domain.models.entity.Crate(displayName, x, y);

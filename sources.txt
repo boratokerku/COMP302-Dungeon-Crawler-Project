@@ -23,6 +23,7 @@ src/domain/logic/OpenAction.java
 src/domain/logic/WearAction.java
 src/domain/logic/TakeAction.java
 src/domain/logic/UnequipAction.java
+src/domain/logic/TakeOffAction.java
 src/domain/logic/Action.java
 src/domain/logic/ScrollSpawner.java
 src/domain/logic/DiscardAction.java
@@ -54,6 +55,8 @@ src/domain/models/item/WoodenSwordItem.java
 src/domain/models/item/SwordItem.java
 src/domain/models/item/FireWandItem.java
 src/domain/models/item/BowItem.java
+src/domain/models/item/RingItem.java
+src/domain/models/item/ArmorItem.java
 src/domain/models/item/AxeItem.java
 src/domain/models/item/MapItem.java
 src/domain/models/item/PotionItem.java

@@ -372,8 +372,11 @@ public class GameView extends JPanel {
         
         g2d.translate(handX, handY);
         
-        // 4. Calculate dynamic rotation angle (swing angle is 45 deg clockwise in local space)
+        // 4. Calculate dynamic rotation angle (melee swing angle defaults to 45 deg, or customized per weapon)
         double swingAngle = Math.toRadians(45);
+        if (equipped instanceof domain.models.item.MapItem) {
+            swingAngle = ((domain.models.item.MapItem) equipped).getBaseRotationAngle();
+        }
         double totalAngle = swingAngle + angleOffset;
         g2d.rotate(totalAngle);
         

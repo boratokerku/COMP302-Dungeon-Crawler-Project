@@ -15,6 +15,8 @@ public class Hero extends Entity {
     private domain.models.inventory.Inventory inventory;
     private int weaponAtk = 0;
     private domain.models.item.MapItem equippedWeapon;
+    private domain.models.item.MapItem equippedArmor = null;
+    private domain.models.item.MapItem equippedRing = null;
 
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
@@ -108,7 +110,8 @@ public class Hero extends Entity {
     }
 
     public int getStr() {
-        return str;
+        int bonus = (equippedRing != null) ? equippedRing.getStrBonus() : 0;
+        return this.str + bonus;
     }
 
     public void setStr(int str) {
@@ -120,11 +123,36 @@ public class Hero extends Entity {
     }
 
     public int getDef() {
-        return this.def;
+        int bonus = (equippedArmor != null) ? equippedArmor.getDefBonus() : 0;
+        return this.def + bonus;
     }
 
     public void setDef(int def) {
         this.def = def;
+    }
+
+    public domain.models.item.MapItem getEquippedArmor() {
+        return this.equippedArmor;
+    }
+
+    public void equipArmor(domain.models.item.MapItem armor) {
+        this.equippedArmor = armor;
+    }
+
+    public void unequipArmor() {
+        this.equippedArmor = null;
+    }
+
+    public domain.models.item.MapItem getEquippedRing() {
+        return this.equippedRing;
+    }
+
+    public void equipRing(domain.models.item.MapItem ring) {
+        this.equippedRing = ring;
+    }
+
+    public void unequipRing() {
+        this.equippedRing = null;
     }
 
     public GameObject getEquippedWeapon() {

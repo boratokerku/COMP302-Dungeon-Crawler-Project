@@ -39,6 +39,13 @@ public abstract class MapItem extends GameObject {
     public double getWeaponAngleOffset() { return 0.0; }
     public int getHandOffsetX() { return 0; }
     public int getHandOffsetY() { return 0; }
+    public double getBaseRotationAngle() {
+        return Math.toRadians(45.0); // Default melee swing angle (45 degrees)
+    }
+
+    // Default item stat bonuses for Armors and Rings
+    public int getDefBonus() { return 0; }
+    public int getStrBonus() { return 0; }
     
     // Ranged weapon metadata
     public boolean isRanged() { return false; }

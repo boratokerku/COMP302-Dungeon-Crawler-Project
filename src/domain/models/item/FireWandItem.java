@@ -38,4 +38,9 @@ public class FireWandItem extends MapItem {
     public String getProjectileType() {
         return "FIREBALL";
     }
+
+    @Override
+    public double getBaseRotationAngle() {
+        return 0.0; // Magic wand is held straight (0 degrees)
+    }
 }

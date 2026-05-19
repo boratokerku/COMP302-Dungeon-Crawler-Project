@@ -33,4 +33,9 @@ public class BowItem extends MapItem {
     public String getProjectileType() {
         return "ARROW";
     }
+
+    @Override
+    public double getBaseRotationAngle() {
+        return 0.0; // Ranged physical bow is held straight (0 degrees)
+    }
 }

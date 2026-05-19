@@ -32,10 +32,13 @@ public class SaveManager {
 
         // Hero verisi
         String equippedWeaponType = hero.getEquippedWeapon() != null ? hero.getEquippedWeapon().getClass().getSimpleName() : null;
+        String equippedArmorType  = hero.getEquippedArmor()  != null ? hero.getEquippedArmor().getClass().getSimpleName() : null;
+        String equippedRingType   = hero.getEquippedRing()   != null ? hero.getEquippedRing().getClass().getSimpleName() : null;
+        
         state.hero = new GameState.HeroRecord(
                 hero.getX(), hero.getY(),
                 hero.getHp(), hero.getMana(), hero.getEnergy(),
-                hero.getStr(), equippedWeaponType
+                hero.getStr(), equippedWeaponType, equippedArmorType, equippedRingType
         );
 
         // Envanter (sınıf ismine göre — yüklerken yeniden oluşturmak için)
@@ -85,8 +88,11 @@ public class SaveManager {
             } else if (e instanceof domain.models.entity.Projectile) {
                 if (e.isAlive()) {
                     domain.models.entity.Projectile p = (domain.models.entity.Projectile) e;
+                    boolean isHeroOwned = (p.getOwner() instanceof domain.models.entity.Hero);
                     state.projectiles.add(new GameState.ProjectileRecord(
-                            p.getX(), p.getY(), p.getExactX(), p.getExactY(), p.getDeltaX(), p.getDeltaY(), p.getDamage()
+                            p.getX(), p.getY(), p.getExactX(), p.getExactY(),
+                            p.getDeltaX(), p.getDeltaY(), p.getDamage(),
+                            p.getType(), isHeroOwned
                     ));
                 }
             }

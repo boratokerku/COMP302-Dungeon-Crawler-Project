@@ -278,6 +278,11 @@ public class DemoRunner {
                 () -> {
                     if (logicRef[0] != null)  logicRef[0].stop();
                     if (renderRef[0] != null) renderRef[0].stop();
+                    startGame(frame, mainPanel, cardLayout);
+                },
+                () -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
                     cardLayout.show(mainPanel, "Menu");
                 }
         );

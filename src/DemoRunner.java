@@ -184,6 +184,12 @@ public class DemoRunner {
         switch (type) {
             case "PotionItem":        return new domain.models.item.PotionItem(x, y);
             case "SwordItem":         return new domain.models.item.SwordItem(x, y);
+            case "AxeItem":           return new domain.models.item.AxeItem(x, y);
+            case "WoodenSwordItem":   return new domain.models.item.WoodenSwordItem(x, y);
+            case "SamuraiSwordItem":  return new domain.models.item.SamuraiSwordItem(x, y);
+            case "DiamondSwordItem":  return new domain.models.item.DiamondSwordItem(x, y);
+            case "BowItem":           return new domain.models.item.BowItem(x, y);
+            case "FireWandItem":      return new domain.models.item.FireWandItem(x, y);
             case "KeyItem":           return new domain.models.staticObjects.KeyItem(x, y);
             case "Column":            return new domain.models.entity.Column(displayName, x, y);
             case "Crate":             return new domain.models.entity.Crate(displayName, x, y);
@@ -368,24 +374,60 @@ public class DemoRunner {
             }
             entities.addAll(newProjectiles);
 
-            // Tüm aktif mermileri ilerlet ve Hero/Clone çarpışmasını kontrol et
+            // Tüm aktif mermileri ilerlet ve Hero/Clone/Enemy çarpışmasını kontrol et
             for (domain.models.entity.Entity en : entities) {
                 if (en instanceof domain.models.entity.Projectile && en.isAlive()) {
                     domain.models.entity.Projectile proj = (domain.models.entity.Projectile) en;
                     proj.step(map);
-                    // Design doc §2.5.2: "if it hits the hero it causes 8HP damage (some absorbed by DEF)"
                     
-                    // Hedef kontrolü
-                    ShadowClone activeClone = inputHandler.getShadowClone();
-                    Entity target = (activeClone != null && activeClone.isAlive()) ? activeClone : hero;
-                    
-                    if (proj.isAlive() && proj.getX() == target.getX() && proj.getY() == target.getY()) {
-                        int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
-                        int damage = Math.max(0, proj.getDamage() - def);
-                        target.takeDamage(damage);
-                        view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
-                        proj.setHp(0); // Mermi yok ol
-                        System.out.println("Target hit by projectile! Damage: " + damage + " | Target HP: " + target.getHp());
+                    if (proj.getOwner() == hero) {
+                        // Hero fırlattığı mermilerin düşmanlara çarpma kontrolü
+                        for (domain.models.entity.Entity enemy : entities) {
+                            if (enemy.isAlive() && enemy != hero && !(enemy instanceof ShadowClone) && !(enemy instanceof domain.models.entity.Projectile)) {
+                                if (proj.getX() == enemy.getX() && proj.getY() == enemy.getY()) {
+                                    int def = 0;
+                                    if (enemy instanceof domain.models.entity.Knight) {
+                                        def = 1; // Knight armor reduces damage by 1
+                                    }
+                                    int damage = Math.max(0, proj.getDamage() - def);
+                                    enemy.takeDamage(damage);
+                                    view.GameView.addFloatingText(enemy.getX(), enemy.getY(), "-" + damage + " HP", new java.awt.Color(255, 60, 60));
+                                    proj.setHp(0); // destroy projectile
+                                    System.out.println("Enemy hit by player projectile! Damage: " + damage + " | Enemy HP: " + enemy.getHp());
+                                    
+                                    // Handle enemy defeat & loot drop
+                                    if (!enemy.isAlive()) {
+                                        System.out.println("Enemy defeated by projectile!");
+                                        java.util.Random rand = new java.util.Random();
+                                        int dropType = rand.nextInt(3);
+                                        domain.models.entity.GameObject loot = null;
+                                        if (dropType == 0) {
+                                            loot = domain.models.item.MapItem.createRandomWeapon(enemy.getX(), enemy.getY());
+                                        } else if (dropType == 1) {
+                                            loot = new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
+                                        } else {
+                                            loot = new domain.models.staticObjects.KeyItem(enemy.getX(), enemy.getY());
+                                        }
+                                        map.placeObject(loot, enemy.getX(), enemy.getY());
+                                        System.out.println("Loot dropped: " + loot.getName());
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        // Düşman mermisinin Hero veya Clone'a çarpma kontrolü
+                        ShadowClone activeClone = inputHandler.getShadowClone();
+                        Entity target = (activeClone != null && activeClone.isAlive()) ? activeClone : hero;
+                        
+                        if (proj.isAlive() && proj.getX() == target.getX() && proj.getY() == target.getY()) {
+                            int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
+                            int damage = Math.max(0, proj.getDamage() - def);
+                            target.takeDamage(damage);
+                            view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
+                            proj.setHp(0); // Mermi yok ol
+                            System.out.println("Target hit by projectile! Damage: " + damage + " | Target HP: " + target.getHp());
+                        }
                     }
                 }
             }

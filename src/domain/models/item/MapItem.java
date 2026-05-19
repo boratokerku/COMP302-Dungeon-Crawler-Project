@@ -39,4 +39,38 @@ public abstract class MapItem extends GameObject {
     public double getWeaponAngleOffset() { return 0.0; }
     public int getHandOffsetX() { return 0; }
     public int getHandOffsetY() { return 0; }
+    
+    // Ranged weapon metadata
+    public boolean isRanged() { return false; }
+    public int getManaCost() { return 0; }
+    public String getProjectileType() { return "ARROW"; }
+
+    /**
+     * Weighted random weapon drop based on rarity tiers:
+     * - Wooden Sword (Common, 40%)
+     * - Knight Sword (Common, 30%)
+     * - Battle Axe (Rare, 15%)
+     * - Hunting Bow (Rare, 10%)
+     * - Fire Wand (Epic, 3%)
+     * - Samurai Katana (Epic, 1.5%)
+     * - Diamond Sword (Legendary, 0.5%)
+     */
+    public static MapItem createRandomWeapon(int x, int y) {
+        double roll = Math.random() * 100.0;
+        if (roll < 40.0) {
+            return new WoodenSwordItem(x, y);
+        } else if (roll < 70.0) {
+            return new SwordItem(x, y);
+        } else if (roll < 85.0) {
+            return new AxeItem(x, y);
+        } else if (roll < 95.0) {
+            return new BowItem(x, y);
+        } else if (roll < 98.0) {
+            return new FireWandItem(x, y);
+        } else if (roll < 99.5) {
+            return new SamuraiSwordItem(x, y);
+        } else {
+            return new DiamondSwordItem(x, y);
+        }
+    }
 }

@@ -5,6 +5,7 @@ public class Projectile extends Entity {
     private double exactX, exactY;
     private int damage;
     private Entity owner;
+    private String type = "SPELL"; // Default type for compatibility
 
     public Projectile(int x, int y, double exactX, double exactY, double deltaX, double deltaY, int damage, Entity owner) {
         super(x, y, 1);
@@ -14,6 +15,15 @@ public class Projectile extends Entity {
         this.deltaY = deltaY;
         this.damage = damage;
         this.owner = owner;
+    }
+
+    public Projectile(int x, int y, double exactX, double exactY, double deltaX, double deltaY, int damage, Entity owner, String type) {
+        this(x, y, exactX, exactY, deltaX, deltaY, damage, owner);
+        this.type = type;
+    }
+
+    public String getType() {
+        return type;
     }
 
     /**

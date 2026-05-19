@@ -67,6 +67,50 @@ public class InputHandler implements KeyListener {
             moveCloneOpposite(Direction.RIGHT);
         }
         else if (code == KeyEvent.VK_SPACE) {
+            if (hero.getEquippedWeapon() instanceof domain.models.item.MapItem) {
+                domain.models.item.MapItem weapon = (domain.models.item.MapItem) hero.getEquippedWeapon();
+                if (weapon.isRanged()) {
+                    if (hero.getMana() < weapon.getManaCost()) {
+                        System.out.println("Büyü atmak için yeterli mana yok!");
+                        view.GameView.addFloatingText(hero.getX(), hero.getY(), "No Mana!", java.awt.Color.CYAN);
+                        return;
+                    }
+                    if (hero.getEnergy() < 10) {
+                        System.out.println("Saldırı için yeterli enerji yok!");
+                        return;
+                    }
+                    
+                    // Consume stats
+                    hero.setEnergy(Math.max(0, hero.getEnergy() - 10));
+                    hero.setMana(Math.max(0, hero.getMana() - weapon.getManaCost()));
+                    hero.setAnimationState(AnimationState.ATTACK);
+                    
+                    // Firing direction
+                    double dx = 0.0, dy = 0.0;
+                    switch (hero.getDirection()) {
+                        case UP:    dy = -0.5; break;
+                        case DOWN:  dy = 0.5;  break;
+                        case LEFT:  dx = -0.5; break;
+                        case RIGHT: dx = 0.5;  break;
+                    }
+                    
+                    int dmg = hero.calculateDamage(hero.getWeaponAtk());
+                    domain.models.entity.Projectile proj = new domain.models.entity.Projectile(
+                        hero.getX(), hero.getY(),
+                        hero.getX(), hero.getY(),
+                        dx, dy,
+                        dmg, hero,
+                        weapon.getProjectileType()
+                    );
+                    
+                    entities.add(proj);
+                    System.out.println("Hero fired ranged projectile! Type: " + weapon.getProjectileType() + " | Damage: " + dmg);
+                    if (gameView != null) gameView.repaint();
+                    return;
+                }
+            }
+            
+            // Melee fallback
             if (hero.getEnergy() >= 10) {
                 hero.setAnimationState(AnimationState.ATTACK);
             }

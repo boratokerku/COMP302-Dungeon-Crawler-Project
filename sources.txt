@@ -50,9 +50,15 @@ src/domain/models/staticObjects/Decoration.java
 src/domain/models/map/Grid.java
 src/domain/models/map/GameMap.java
 src/domain/models/item/Potion.java
+src/domain/models/item/WoodenSwordItem.java
 src/domain/models/item/SwordItem.java
+src/domain/models/item/FireWandItem.java
+src/domain/models/item/BowItem.java
+src/domain/models/item/AxeItem.java
 src/domain/models/item/MapItem.java
 src/domain/models/item/PotionItem.java
+src/domain/models/item/DiamondSwordItem.java
+src/domain/models/item/SamuraiSwordItem.java
 src/domain/models/item/ShadowCloneScroll.java
 src/domain/models/item/Item.java
 src/domain/models/item/Weapon.java

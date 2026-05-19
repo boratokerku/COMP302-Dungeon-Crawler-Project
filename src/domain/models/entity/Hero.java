@@ -14,7 +14,7 @@ public class Hero extends Entity {
     private AnimationState currentAnimationState = AnimationState.IDLE;
     private domain.models.inventory.Inventory inventory;
     private int weaponAtk = 0;
-    private domain.models.item.SwordItem equippedWeapon;
+    private domain.models.item.MapItem equippedWeapon;
 
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
@@ -58,14 +58,22 @@ public class Hero extends Entity {
             this.hp = 17;
     }
 
+    public void equipWeapon(domain.models.item.MapItem weapon) {
+        this.equippedWeapon = weapon;
+        this.weaponAtk = 5; // Default ATK
+    }
+
+    public void equipWeapon(domain.models.item.MapItem weapon, int atk) {
+        this.equippedWeapon = weapon;
+        this.weaponAtk = atk; // Real weapon ATK
+    }
+
     public void equipWeapon(domain.models.item.SwordItem sword) {
-        this.equippedWeapon = sword;
-        this.weaponAtk = 5; // Default ATK (save/load için geriye dönük uyumluluk)
+        equipWeapon((domain.models.item.MapItem) sword);
     }
 
     public void equipWeapon(domain.models.item.SwordItem sword, int atk) {
-        this.equippedWeapon = sword;
-        this.weaponAtk = atk; // Silahın gerçek ATK değeri
+        equipWeapon((domain.models.item.MapItem) sword, atk);
     }
 
     public void unequipWeapon() {
@@ -191,7 +199,7 @@ public class Hero extends Entity {
                     int dropType = rand.nextInt(3);
                     domain.models.entity.GameObject loot = null;
                     if (dropType == 0) {
-                        loot = new domain.models.item.SwordItem(target.getX(), target.getY());
+                        loot = domain.models.item.MapItem.createRandomWeapon(target.getX(), target.getY());
                     } else if (dropType == 1) {
                         loot = new domain.models.item.PotionItem(target.getX(), target.getY());
                     } else {
@@ -204,6 +212,10 @@ public class Hero extends Entity {
                 System.out.println("Saldırı için yeterli enerji yok!");
             }
         }
+    }
+
+    public int getWeaponAtk() {
+        return this.weaponAtk;
     }
 
     // Getters

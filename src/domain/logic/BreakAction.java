@@ -35,11 +35,15 @@ public class BreakAction implements Action {
                 if (loot != null) {
                     map.placeObject(loot, tx, ty);
                     System.out.println("Broke container open! Dropped " + loot.getName() + " at (" + tx + ", " + ty + ")");
-                } else {
-                    System.out.println("Broke container open, but it was empty.");
                 }
+                
+                // Show floating text feedback!
+                view.GameView.addFloatingText(tx, ty, "BROKEN!", java.awt.Color.GREEN);
             }
         } else {
+            if (target != null) {
+                view.GameView.addFloatingText(target.getX(), target.getY(), "FAILED!", java.awt.Color.RED);
+            }
             System.out.println("Failed to break container! (Need more STR)");
         }
     }

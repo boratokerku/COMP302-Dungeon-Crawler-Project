@@ -54,9 +54,13 @@ public class SaveManager {
                     state.mapItems.add(new GameState.ItemRecord(
                             obj.getClass().getSimpleName(), x, y
                     ));
+                } else if (obj instanceof domain.models.entity.Chest) {
+                    domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                    state.mapItems.add(new GameState.ItemRecord(
+                            "Chest", chest.getName(), x, y, chest.isLocked()
+                    ));
                 } else if (obj instanceof domain.models.entity.Column
                         || obj instanceof domain.models.entity.Crate
-                        || obj instanceof domain.models.entity.Chest
                         || obj instanceof domain.models.entity.SearchableObject
                         || obj instanceof domain.models.staticObjects.Decoration) {
                     // Static nesneleri ismiyle birlikte kaydet

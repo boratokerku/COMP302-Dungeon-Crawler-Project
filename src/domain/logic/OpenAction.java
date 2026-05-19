@@ -23,6 +23,17 @@ public class OpenAction implements Action {
 
     @Override
     public boolean isAvailable(Hero hero, GameObject target) {
+        if (target instanceof domain.models.entity.Chest) {
+            domain.models.entity.Chest chest = (domain.models.entity.Chest) target;
+            if (chest.isLocked()) {
+                for (GameObject item : hero.getInventory().getItems()) {
+                    if (item instanceof domain.models.staticObjects.KeyItem) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
         return true;
     }
 
@@ -32,6 +43,28 @@ public class OpenAction implements Action {
             int tx = target.getX();
             int ty = target.getY();
             domain.models.map.GameMap map = target.getMap();
+            
+            if (target instanceof domain.models.entity.Chest) {
+                domain.models.entity.Chest chest = (domain.models.entity.Chest) target;
+                if (chest.isLocked()) {
+                    domain.models.staticObjects.KeyItem keyToUse = null;
+                    for (GameObject item : hero.getInventory().getItems()) {
+                        if (item instanceof domain.models.staticObjects.KeyItem) {
+                            keyToUse = (domain.models.staticObjects.KeyItem) item;
+                            break;
+                        }
+                    }
+                    if (keyToUse != null) {
+                        if (keyToUse.isSingleUse()) {
+                            hero.getInventory().removeItem(keyToUse);
+                        }
+                        System.out.println("Unlocked chest using key!");
+                    } else {
+                        System.out.println("Chest is locked! Need a key!");
+                        return;
+                    }
+                }
+            }
             
             // Remove the chest from the map
             map.removeObject(target);
@@ -58,6 +91,10 @@ public class OpenAction implements Action {
                     System.out.println("Opened chest, but it was empty.");
                 }
             }
+            
+            // Show floating text feedback!
+            view.GameView.addFloatingText(tx, ty, "OPENED!", java.awt.Color.YELLOW);
+            
             contents.clear();
         }
     }

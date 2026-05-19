@@ -40,6 +40,9 @@ public class UseAction implements Action {
                                     door.open();
                                     unlockedAny = true;
                                     System.out.println("Door unlocked and opened at (" + nx + ", " + ny + ")!");
+                                    
+                                    // Show floating text feedback!
+                                    view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
                                 }
                             }
                         }

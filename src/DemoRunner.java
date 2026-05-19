@@ -232,7 +232,7 @@ public class DemoRunner {
             case "KeyItem":           return new domain.models.staticObjects.KeyItem(x, y);
             case "Column":            return new domain.models.entity.Column(displayName, x, y);
             case "Crate":             return new domain.models.entity.Crate(displayName, x, y);
-            case "Chest":             return new domain.models.entity.Chest(displayName, x, y);
+            case "Chest":             return new domain.models.entity.Chest(displayName, x, y, isLocked);
             case "SearchableObject":  return new domain.models.entity.SearchableObject(displayName, x, y);
             case "Decoration":        return new domain.models.staticObjects.Decoration(displayName, x, y, "torch/torch_1");
             case "Door":

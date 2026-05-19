@@ -211,6 +211,18 @@ public class Hero extends Entity {
             System.out.println("Hero moving " + dir + " to (" + this.x + ", " + this.y + ") Energy: " + this.energy);
             return true;
         } else if (!occupied) {
+            if (map != null) {
+                GameObject obj = map.getObjectAt(nextX, nextY);
+                if (obj instanceof domain.models.entity.Crate || obj instanceof domain.models.entity.Chest) {
+                    for (domain.logic.Action act : obj.getActions()) {
+                        if ("Break".equals(act.getName()) && act.isAvailable(this, obj)) {
+                            System.out.println("Hero auto-striking " + obj.getName() + " to break it!");
+                            act.execute(this, obj);
+                            return false;
+                        }
+                    }
+                }
+            }
             System.out.println("Hero blocked at (" + nextX + ", " + nextY + ")");
             return false;
         }

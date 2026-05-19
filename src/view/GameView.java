@@ -335,7 +335,7 @@ public class GameView extends JPanel {
         java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
         
         // Exact pixel tuning based on hero sprites (hand locations)
-        int weaponX = x + (dir == Direction.RIGHT ? 36 : 8);
+        int weaponX = x + (dir == Direction.RIGHT ? 28 : 4);
         int weaponY = y + tileSize / 3; // hand vertical height
         
         g2d.translate(weaponX + wSize / 2, weaponY + wSize / 2);

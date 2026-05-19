@@ -19,6 +19,29 @@ public class GameView extends JPanel {
     private InventoryView inventoryView;
     private boolean inventoryVisible = false;
 
+    // Floating text structure for high-quality damage visual effects
+    public static class FloatingText {
+        public double x, y;
+        public String text;
+        public Color color;
+        public int duration = 30; // 30 frames duration
+        public double dy = -0.04; // slowly moves up
+        public float alpha = 1.0f;
+    }
+
+    private static final java.util.List<FloatingText> floatingTexts = new java.util.ArrayList<>();
+
+    public static void addFloatingText(double x, double y, String text, Color color) {
+        FloatingText ft = new FloatingText();
+        ft.x = x;
+        ft.y = y;
+        ft.text = text;
+        ft.color = color;
+        synchronized (floatingTexts) {
+            floatingTexts.add(ft);
+        }
+    }
+
     public GameView(Hero hero, AssetManager assetManager) {
         this.hero = hero;
         this.assetManager = assetManager;
@@ -154,8 +177,42 @@ public class GameView extends JPanel {
         // 5. Inventory Çiz
         drawInventory(g2d);
 
+        // 5.5 Süzülen Hasar Efektlerini Çiz (Floating Texts)
+        drawFloatingTexts(g2d);
+
         // Kaynakları temizle
         g2d.dispose();
+    }
+
+    private void drawFloatingTexts(Graphics2D g2d) {
+        synchronized (floatingTexts) {
+            java.util.Iterator<FloatingText> it = floatingTexts.iterator();
+            while (it.hasNext()) {
+                FloatingText ft = it.next();
+                
+                // Fade out effect using alpha channel
+                int alphaVal = (int) (ft.alpha * 255);
+                if (alphaVal < 0) alphaVal = 0;
+                if (alphaVal > 255) alphaVal = 255;
+                
+                g2d.setColor(new Color(ft.color.getRed(), ft.color.getGreen(), ft.color.getBlue(), alphaVal));
+                g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 22));
+                
+                int px = offsetX + (int) (ft.x * tileSize) + tileSize / 4;
+                int py = offsetY + (int) (ft.y * tileSize) - 10;
+                
+                g2d.drawString(ft.text, px, py);
+                
+                // Advance animation states
+                ft.y += ft.dy;
+                ft.alpha = Math.max(0.0f, ft.alpha - 0.035f);
+                ft.duration--;
+                
+                if (ft.duration <= 0) {
+                    it.remove();
+                }
+            }
+        }
     }
 
     private void drawHUD(Graphics2D g) {
@@ -213,6 +270,126 @@ public class GameView extends JPanel {
         return inventoryView.getClickedItem(screenX, screenY);
     }
 
+    private final java.util.Map<String, BufferedImage> weaponImageCache = new java.util.HashMap<>();
+
+    private BufferedImage getWeaponImage(String imageName) {
+        if (imageName == null) return null;
+        if (weaponImageCache.containsKey(imageName)) {
+            return weaponImageCache.get(imageName);
+        }
+        try {
+            // Robust multi-path lookup
+            String[] pathsToTry = {
+                "resources/" + imageName,
+                "../resources/" + imageName,
+                imageName,
+                "../" + imageName,
+                "src/resources/" + imageName
+            };
+            java.io.File f = null;
+            for (String p : pathsToTry) {
+                java.io.File test = new java.io.File(p);
+                if (test.exists()) {
+                    f = test;
+                    break;
+                }
+            }
+            if (f != null) {
+                System.out.println("[DEBUG] Weapon image loaded successfully from: " + f.getPath());
+                BufferedImage img = javax.imageio.ImageIO.read(f);
+                weaponImageCache.put(imageName, img);
+                return img;
+            } else {
+                System.out.println("[DEBUG] WEAPON IMAGE NOT FOUND: " + imageName);
+            }
+        } catch (Exception e) {
+            System.err.println("[DEBUG] Error loading weapon image: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private String lastLoggedWeapon = null;
+
+    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir) {
+        if (hero.getEquippedWeapon() == null) {
+            if (lastLoggedWeapon != null) {
+                System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL");
+                lastLoggedWeapon = null;
+            }
+            return;
+        }
+        
+        String path = hero.getEquippedWeapon().getImageName();
+        if (!path.equals(lastLoggedWeapon)) {
+            System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon changed to: " + hero.getEquippedWeapon().getName() + " (path: " + path + ")");
+            lastLoggedWeapon = path;
+        }
+        
+        BufferedImage weaponImg = getWeaponImage(path);
+        if (weaponImg == null) {
+            System.out.println("[DEBUG] drawEquippedWeapon: weaponImg is null for path: " + path);
+            return;
+        }
+        
+        int wSize = tileSize / 2; // 32x32 size
+        
+        // Dynamically fetch weapon metadata (or use defaults)
+        double pivotX = 0.5;
+        double pivotY = 0.5;
+        double angleOffset = 0.0;
+        int customHandX = 0;
+        int customHandY = 0;
+        
+        domain.models.entity.GameObject equipped = hero.getEquippedWeapon();
+        if (equipped instanceof domain.models.item.MapItem) {
+            domain.models.item.MapItem item = (domain.models.item.MapItem) equipped;
+            pivotX = item.getWeaponPivotX();
+            pivotY = item.getWeaponPivotY();
+            angleOffset = item.getWeaponAngleOffset();
+            customHandX = item.getHandOffsetX();
+            customHandY = item.getHandOffsetY();
+        }
+        
+        java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
+        
+        // 1. Translate to the center of the dynamic tileSize grid cell
+        g2d.translate(x + tileSize / 2, y + tileSize / 2);
+        
+        // 2. If facing LEFT, mirror the entire horizontal transformation context!
+        if (dir == Direction.LEFT) {
+            g2d.scale(-1, 1);
+        }
+        
+        // 3. Convert absolute standard hand joint coordinates (23, 8) to standard-relative ratios (based on 64px tileSize)
+        double ratioX = 23.0 / 64.0;
+        double ratioY = 8.0 / 64.0;
+        double customRatioX = (double) customHandX / 64.0;
+        double customRatioY = (double) customHandY / 64.0;
+        
+        // Scale offsets dynamically with the current tileSize
+        int handX = (int) (ratioX * tileSize) + (int) (customRatioX * tileSize);
+        int handY = (int) (ratioY * tileSize) + (int) (customRatioY * tileSize);
+        
+        g2d.translate(handX, handY);
+        
+        // 4. Calculate dynamic rotation angle (melee swing angle defaults to 45 deg, or customized per weapon)
+        double swingAngle = Math.toRadians(45);
+        if (equipped instanceof domain.models.item.MapItem) {
+            swingAngle = ((domain.models.item.MapItem) equipped).getBaseRotationAngle();
+        }
+        double totalAngle = swingAngle + angleOffset;
+        g2d.rotate(totalAngle);
+        
+        // 5. Calculate offset based on weapon pivot points
+        int px = (int) (pivotX * wSize);
+        int py = (int) (pivotY * wSize);
+        
+        // 6. Draw the weapon icon such that the pivot (px, py) aligns exactly with hand (0,0)
+        g2d.drawImage(weaponImg, -px, -py, wSize, wSize, null);
+        
+        g2d.setTransform(oldTransform);
+    }
+
     private void drawHero(Graphics2D g2d) {
         BufferedImage frame = assetManager.getHeroSprite(hero.getAnimationState());
 
@@ -223,8 +400,10 @@ public class GameView extends JPanel {
             if (hero.getDirection() == Direction.LEFT) {
                 // Resmi yatayda aynalayarak çiziyoruz
                 g2d.drawImage(frame, x + tileSize, y, -tileSize, tileSize, null);
+                drawEquippedWeapon(g2d, x, y, Direction.LEFT);
             } else {
                 g2d.drawImage(frame, x, y, tileSize, tileSize, null);
+                drawEquippedWeapon(g2d, x, y, Direction.RIGHT);
             }
         }
     }
@@ -240,7 +419,54 @@ public class GameView extends JPanel {
 
                 BufferedImage frame = null;
 
-                if (e instanceof domain.models.entity.ShadowClone) {
+                if (e instanceof domain.models.entity.Projectile) {
+                    domain.models.entity.Projectile proj = (domain.models.entity.Projectile) e;
+                    
+                    if ("ARROW".equalsIgnoreCase(proj.getType())) {
+                        BufferedImage arrowImg = assetManager.getProjectileArrow();
+                        if (arrowImg != null) {
+                            double px = offsetX + (proj.getExactX() * tileSize);
+                            double py = offsetY + (proj.getExactY() * tileSize);
+                            
+                            // atan2 0 açısını Sağa (Right) doğru kabul eder.
+                            // Ok görseli orijinalinde YUKARI (Up) bakıyor. 
+                            // Bu yüzden +90 derece (Math.PI / 2) offset ekliyoruz.
+                            double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) + (Math.PI / 2.0);
+                            
+                            java.awt.geom.AffineTransform old = g2d.getTransform();
+                            g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
+                            g2d.rotate(angle);
+                            g2d.drawImage(arrowImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
+                            g2d.setTransform(old);
+                        } else {
+                            // Fallback if arrow image fails
+                            int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                            int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                            int size = tileSize / 2;
+                            g2d.setColor(new java.awt.Color(200, 150, 100, 200));
+                            g2d.fillOval(px, py, size, size);
+                        }
+                    } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
+                        // Blazing Fireball (Orange-Red glowing orb)
+                        int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    } else {
+                        // Purple Mage Spell
+                        int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    }
+                    continue;
+                } else if (e instanceof domain.models.entity.ShadowClone) {
                     // Klon: hero sprite'ı %50 saydamlıkla (görsel ayrım)
                     frame = assetManager.getHeroSprite(domain.models.AnimationState.IDLE);
                     if (frame != null) {
@@ -268,6 +494,7 @@ public class GameView extends JPanel {
                             tileSize, tileSize, null);
                 }
             }
+
         } else {
             // entityList yoksa: sadece başlangıç knight ve sorcerer'ı çiz (geriye dönük
             // uyumluluk)

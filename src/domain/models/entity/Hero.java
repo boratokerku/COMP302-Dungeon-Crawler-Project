@@ -14,7 +14,18 @@ public class Hero extends Entity {
     private AnimationState currentAnimationState = AnimationState.IDLE;
     private domain.models.inventory.Inventory inventory;
     private int weaponAtk = 0;
-    private domain.models.item.SwordItem equippedWeapon;
+    private domain.models.item.MapItem equippedWeapon;
+    private domain.models.item.MapItem equippedArmor = null;
+    private domain.models.item.MapItem equippedRing = null;
+    private domain.models.map.GameMap currentMap = null;
+
+    public void setCurrentMap(domain.models.map.GameMap map) {
+        this.currentMap = map;
+    }
+
+    public domain.models.map.GameMap getCurrentMap() {
+        return this.currentMap;
+    }
 
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
@@ -38,13 +49,14 @@ public class Hero extends Entity {
         int energyCost = 10;
         if (this.energy >= energyCost) {
             this.energy -= energyCost;
-            return new Random().nextInt(20) < this.str;
+            return new Random().nextInt(20) < getStr();
         }
         return false;
     }
 
     public int calculateDamage(int weaponAtk) {
-        return 5 + weaponAtk;
+        // Döküman §3: Hasar = f(STR, ATK) — sadece sabit değil, istatistiğe dayalı
+        return (getStr() / 2) + weaponAtk;
     }
 
     public void consumeEnergyForMove() {
@@ -57,9 +69,22 @@ public class Hero extends Entity {
             this.hp = 17;
     }
 
+    public void equipWeapon(domain.models.item.MapItem weapon) {
+        this.equippedWeapon = weapon;
+        this.weaponAtk = 5; // Default ATK
+    }
+
+    public void equipWeapon(domain.models.item.MapItem weapon, int atk) {
+        this.equippedWeapon = weapon;
+        this.weaponAtk = atk; // Real weapon ATK
+    }
+
     public void equipWeapon(domain.models.item.SwordItem sword) {
-        this.equippedWeapon = sword;
-        this.weaponAtk = 5;
+        equipWeapon((domain.models.item.MapItem) sword);
+    }
+
+    public void equipWeapon(domain.models.item.SwordItem sword, int atk) {
+        equipWeapon((domain.models.item.MapItem) sword, atk);
     }
 
     public void unequipWeapon() {
@@ -94,7 +119,8 @@ public class Hero extends Entity {
     }
 
     public int getStr() {
-        return str;
+        int bonus = (equippedRing != null) ? equippedRing.getStrBonus() : 0;
+        return this.str + bonus;
     }
 
     public void setStr(int str) {
@@ -106,11 +132,36 @@ public class Hero extends Entity {
     }
 
     public int getDef() {
-        return this.def;
+        int bonus = (equippedArmor != null) ? equippedArmor.getDefBonus() : 0;
+        return this.def + bonus;
     }
 
     public void setDef(int def) {
         this.def = def;
+    }
+
+    public domain.models.item.MapItem getEquippedArmor() {
+        return this.equippedArmor;
+    }
+
+    public void equipArmor(domain.models.item.MapItem armor) {
+        this.equippedArmor = armor;
+    }
+
+    public void unequipArmor() {
+        this.equippedArmor = null;
+    }
+
+    public domain.models.item.MapItem getEquippedRing() {
+        return this.equippedRing;
+    }
+
+    public void equipRing(domain.models.item.MapItem ring) {
+        this.equippedRing = ring;
+    }
+
+    public void unequipRing() {
+        this.equippedRing = null;
     }
 
     public GameObject getEquippedWeapon() {
@@ -175,6 +226,7 @@ public class Hero extends Entity {
             if (this.energy >= attackCost) {
                 int damage = calculateDamage(this.weaponAtk);
                 target.takeDamage(damage);
+                view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 60, 60));
                 this.energy -= attackCost; // Saldırı maliyeti
                 System.out.println("Hero attacked target! Damage: " + damage + " Energy: " + this.energy);
 
@@ -184,7 +236,7 @@ public class Hero extends Entity {
                     int dropType = rand.nextInt(3);
                     domain.models.entity.GameObject loot = null;
                     if (dropType == 0) {
-                        loot = new domain.models.item.SwordItem(target.getX(), target.getY());
+                        loot = domain.models.item.MapItem.createRandomItem(target.getX(), target.getY());
                     } else if (dropType == 1) {
                         loot = new domain.models.item.PotionItem(target.getX(), target.getY());
                     } else {
@@ -197,6 +249,10 @@ public class Hero extends Entity {
                 System.out.println("Saldırı için yeterli enerji yok!");
             }
         }
+    }
+
+    public int getWeaponAtk() {
+        return this.weaponAtk;
     }
 
     // Getters

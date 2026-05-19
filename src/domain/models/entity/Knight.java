@@ -30,15 +30,20 @@ public class Knight extends Entity implements Renderable {
 
         int distance = (int) Math.ceil(distanceTo(target));
 
-        if (distance > 5) {
-            // ROAMING: Hedef çok uzakta → rastgele yürür
-            System.out.println("Knight: Roaming");
-            roam(map, entities);
-        } else {
+        if (distance <= 1) {
+            // ATTACK: Hedefe bitişik — saldır (design doc §2.5.1)
+            String label = (target instanceof Hero) ? "Hero" : "Shadow Clone";
+            System.out.println("Knight: Attacking " + label);
+            attackTarget(target);
+        } else if (distance <= 5) {
             // CHASING: Hedef algılama mesafesinde → hedefe doğru hareket et
             String label = (target instanceof Hero) ? "Hero" : "Shadow Clone";
             System.out.println("Knight: Chasing " + label);
             chaseTarget(target, map, entities);
+        } else {
+            // ROAMING: Hedef çok uzakta → rastgele yürür
+            System.out.println("Knight: Roaming");
+            roam(map, entities);
         }
     }
 
@@ -63,6 +68,16 @@ public class Knight extends Entity implements Renderable {
         double dx = this.x - target.getX();
         double dy = this.y - target.getY();
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Design doc §2.5.1: "4HP damage, some absorbed by DEF stat of hero"
+    private void attackTarget(Entity target) {
+        int baseDamage = 4;
+        int def = (target instanceof Hero) ? ((Hero) target).getDef() : 0;
+        int damage = Math.max(1, baseDamage - def); // Minimum 1 damage to prevent complete invincibility
+        target.takeDamage(damage);
+        view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
+        System.out.println("Knight dealt " + damage + " dmg | Target HP: " + target.getHp());
     }
 
     // Herhangi bir Entity hedefine doğru bir adım atar (Hero veya ShadowClone)

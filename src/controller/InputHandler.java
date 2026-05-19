@@ -15,6 +15,8 @@ public class InputHandler implements KeyListener {
 
     // Aktif shadow clone (null ise henüz çağrılmamış veya süresi dolmuş)
     private ShadowClone shadowClone;
+    
+    private boolean inputEnabled = true;
 
     public InputHandler(Hero hero, domain.models.map.GameMap map,
             java.util.List<domain.models.entity.Entity> entities, view.GameView gameView) {
@@ -28,12 +30,18 @@ public class InputHandler implements KeyListener {
         this.shadowClone = clone;
     }
 
+    public void disableInput() {
+        this.inputEnabled = false;
+    }
+
     public ShadowClone getShadowClone() {
         return shadowClone;
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (!inputEnabled) return;
+        
         int code = e.getKeyCode();
 
         // Hareket ve Yön Mantığı
@@ -59,6 +67,50 @@ public class InputHandler implements KeyListener {
             moveCloneOpposite(Direction.RIGHT);
         }
         else if (code == KeyEvent.VK_SPACE) {
+            if (hero.getEquippedWeapon() instanceof domain.models.item.MapItem) {
+                domain.models.item.MapItem weapon = (domain.models.item.MapItem) hero.getEquippedWeapon();
+                if (weapon.isRanged()) {
+                    if (hero.getMana() < weapon.getManaCost()) {
+                        System.out.println("Büyü atmak için yeterli mana yok!");
+                        view.GameView.addFloatingText(hero.getX(), hero.getY(), "No Mana!", java.awt.Color.CYAN);
+                        return;
+                    }
+                    if (hero.getEnergy() < 10) {
+                        System.out.println("Saldırı için yeterli enerji yok!");
+                        return;
+                    }
+                    
+                    // Consume stats
+                    hero.setEnergy(Math.max(0, hero.getEnergy() - 10));
+                    hero.setMana(Math.max(0, hero.getMana() - weapon.getManaCost()));
+                    hero.setAnimationState(AnimationState.ATTACK);
+                    
+                    // Firing direction
+                    double dx = 0.0, dy = 0.0;
+                    switch (hero.getDirection()) {
+                        case UP:    dy = -0.5; break;
+                        case DOWN:  dy = 0.5;  break;
+                        case LEFT:  dx = -0.5; break;
+                        case RIGHT: dx = 0.5;  break;
+                    }
+                    
+                    int dmg = hero.calculateDamage(hero.getWeaponAtk());
+                    domain.models.entity.Projectile proj = new domain.models.entity.Projectile(
+                        hero.getX(), hero.getY(),
+                        hero.getX(), hero.getY(),
+                        dx, dy,
+                        dmg, hero,
+                        weapon.getProjectileType()
+                    );
+                    
+                    entities.add(proj);
+                    System.out.println("Hero fired ranged projectile! Type: " + weapon.getProjectileType() + " | Damage: " + dmg);
+                    if (gameView != null) gameView.repaint();
+                    return;
+                }
+            }
+            
+            // Melee fallback
             if (hero.getEnergy() >= 10) {
                 hero.setAnimationState(AnimationState.ATTACK);
             }
@@ -68,20 +120,105 @@ public class InputHandler implements KeyListener {
                 gameView.repaint();
             }
         } else if (code == KeyEvent.VK_E) {
-            // Take action for adjacent items
+            // Çevredeki tüm nesnelerle (3x3 çevre karesi) etkileşime gir
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
+                    if (dx == 0 && dy == 0) continue; // Kendini pas geç
                     int nx = hero.getX() + dx;
                     int ny = hero.getY() + dy;
                     if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
                         domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
-                        if (obj instanceof domain.models.item.MapItem) {
-                            for (domain.logic.Action action : obj.getActions()) {
-                                if (action.getName().equals("Take") && action.isAvailable(hero, obj)) {
-                                    action.execute(hero, obj);
-                                    System.out.println("Take executed on " + obj.getName() + " via E key");
+                        if (obj != null) {
+                            java.util.List<domain.logic.Action> actions = obj.getActions();
+                            if (actions != null && !actions.isEmpty()) {
+                                // Kullanılabilir eylemleri filtrele
+                                java.util.List<domain.logic.Action> available = new java.util.ArrayList<>();
+                                for (domain.logic.Action action : actions) {
+                                    if (action.isAvailable(hero, obj)) {
+                                        available.add(action);
+                                    }
+                                }
+                                
+                                if (available.size() == 1 && !(obj instanceof domain.models.entity.Crate) && !(obj instanceof domain.models.entity.Chest)) {
+                                    available.get(0).execute(hero, obj);
+                                    System.out.println(available.get(0).getName() + " executed on " + obj.getName() + " via E key");
                                     if (gameView != null) gameView.repaint();
-                                    return; // Sadece bir item al
+                                    return; // Bir etkileşim yetti, döngüden çık
+                                } else if (available.size() >= 1) {
+                                    // Oyuncuya butonlu dialog penceresi sun (maliyetler dahil)
+                                    boolean hasKey = false;
+                                    for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                                        if (item instanceof domain.models.staticObjects.KeyItem) {
+                                            hasKey = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    String[] options;
+                                    if (obj instanceof domain.models.entity.Crate) {
+                                        options = new String[]{"Break (-10 Energy)", "Cancel"};
+                                    } else if (obj instanceof domain.models.entity.Chest) {
+                                        domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                                        if (chest.isLocked()) {
+                                            options = new String[available.size() + 1];
+                                            for (int i = 0; i < available.size(); i++) {
+                                                domain.logic.Action act = available.get(i);
+                                                if (act instanceof domain.logic.BreakAction) {
+                                                    options[i] = "Break (-10 Energy)";
+                                                } else if (act instanceof domain.logic.OpenAction) {
+                                                    options[i] = hasKey ? "Open (Uses Key)" : "Open (Need Key)";
+                                                } else {
+                                                    options[i] = act.getName();
+                                                }
+                                            }
+                                            options[available.size()] = "Cancel";
+                                        } else {
+                                            options = new String[]{"Open (Unlocked)", "Cancel"};
+                                        }
+                                    } else {
+                                        options = new String[available.size()];
+                                        for (int i = 0; i < available.size(); i++) {
+                                            options[i] = available.get(i).getName();
+                                        }
+                                    }
+                                    
+                                    int choice = javax.swing.JOptionPane.showOptionDialog(
+                                            gameView,
+                                            "What would you like to do with " + obj.getName() + "?",
+                                            "Select Interaction",
+                                            javax.swing.JOptionPane.DEFAULT_OPTION,
+                                            javax.swing.JOptionPane.QUESTION_MESSAGE,
+                                            null,
+                                            options,
+                                            options[0]
+                                    );
+                                    
+                                    if (obj instanceof domain.models.entity.Crate) {
+                                        if (choice == 0) { // Break (-10 Energy) selected
+                                            available.get(0).execute(hero, obj);
+                                            if (gameView != null) gameView.repaint();
+                                        }
+                                    } else if (obj instanceof domain.models.entity.Chest) {
+                                        domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                                        if (chest.isLocked()) {
+                                            if (choice >= 0 && choice < available.size()) {
+                                                available.get(choice).execute(hero, obj);
+                                                if (gameView != null) gameView.repaint();
+                                            }
+                                        } else {
+                                            if (choice == 0) { // Open (Unlocked) selected
+                                                available.get(0).execute(hero, obj);
+                                                if (gameView != null) gameView.repaint();
+                                            }
+                                        }
+                                    } else {
+                                        if (choice >= 0 && choice < available.size()) {
+                                            available.get(choice).execute(hero, obj);
+                                            System.out.println(available.get(choice).getName() + " executed on " + obj.getName() + " via E dialog choice");
+                                            if (gameView != null) gameView.repaint();
+                                        }
+                                    }
+                                    return; // Etkileşim tamamlandı, çık
                                 }
                             }
                         }
@@ -93,6 +230,8 @@ public class InputHandler implements KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
+        if (!inputEnabled) return;
+        
         int code = e.getKeyCode();
         if (isMovementKey(code)) {
             hero.setAnimationState(AnimationState.IDLE);

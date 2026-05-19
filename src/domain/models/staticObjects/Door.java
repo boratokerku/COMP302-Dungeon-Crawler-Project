@@ -10,6 +10,14 @@ public class Door extends GameObject {
         this.isLocked = isLocked;
     }
 
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public void unlock() {
+        this.isLocked = false;
+    }
+
     public void open() {
         if (!isLocked) {
             this.passable = true;

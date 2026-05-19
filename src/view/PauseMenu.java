@@ -22,17 +22,19 @@ public class PauseMenu extends JPanel {
     private final domain.logic.EnemySpawner enemySpawner;
     private final domain.logic.ScrollSpawner scrollSpawner;
     private final Runnable onResume;
+    private final Runnable onRestart;
     private final Runnable onMainMenu;
 
     public PauseMenu(Hero hero, List<Entity> entities, GameMap map,
                      domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner,
-                     Runnable onResume, Runnable onMainMenu) {
+                     Runnable onResume, Runnable onRestart, Runnable onMainMenu) {
         this.hero = hero;
         this.entities = entities;
         this.map = map;
         this.enemySpawner = enemySpawner;
         this.scrollSpawner = scrollSpawner;
         this.onResume = onResume;
+        this.onRestart = onRestart;
         this.onMainMenu = onMainMenu;
 
         setOpaque(false); // Arka planı saydam tut
@@ -44,20 +46,26 @@ public class PauseMenu extends JPanel {
 
     private void initButtons() {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(3, 1, 0, 12)); // 3 satır, aralıklı
+        panel.setLayout(new GridLayout(4, 1, 0, 12)); // 4 satır, aralıklı
         panel.setBackground(new Color(30, 20, 10, 220)); // Koyu kahve, yarı saydam
         panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(180, 140, 60), 2),
                 BorderFactory.createEmptyBorder(20, 40, 20, 40)
         ));
 
-        JButton resumeBtn = createMenuButton("Resume");
-        JButton saveBtn   = createMenuButton("Save Game");
-        JButton menuBtn   = createMenuButton("Main Menu");
+        JButton resumeBtn  = createMenuButton("Resume");
+        JButton restartBtn = createMenuButton("Restart Game");
+        JButton saveBtn    = createMenuButton("Save Game");
+        JButton menuBtn    = createMenuButton("Main Menu");
 
         resumeBtn.addActionListener(e -> {
             setVisible(false);
             if (onResume != null) onResume.run();
+        });
+
+        restartBtn.addActionListener(e -> {
+            setVisible(false);
+            if (onRestart != null) onRestart.run();
         });
 
         saveBtn.addActionListener(e -> {
@@ -102,6 +110,7 @@ public class PauseMenu extends JPanel {
         });
 
         panel.add(resumeBtn);
+        panel.add(restartBtn);
         panel.add(saveBtn);
         panel.add(menuBtn);
 

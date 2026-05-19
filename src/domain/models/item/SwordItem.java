@@ -26,7 +26,7 @@ public class SwordItem extends MapItem {
 
     @Override
     public double getWeaponAngleOffset() {
-        return 0.0; // Naturally vertical
+        return Math.toRadians(15.0); // Beautiful 15-degree tilt in hand
     }
 
     @Override

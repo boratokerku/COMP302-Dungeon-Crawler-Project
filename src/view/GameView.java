@@ -310,11 +310,6 @@ public class GameView extends JPanel {
 
     private String lastLoggedWeapon = null;
 
-    // Public static variables for Live Offset Tuning Mode
-    public static int debugHandX = 4;
-    public static int debugHandY = -2;
-    public static double debugAngleOffsetDegrees = 0.0;
-
     private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir) {
         if (hero.getEquippedWeapon() == null) {
             if (lastLoggedWeapon != null) {
@@ -357,23 +352,29 @@ public class GameView extends JPanel {
         
         java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
         
-        // 1. Translate to the center of the 64x64 grid cell
-        g2d.translate(x + 32, y + 32);
+        // 1. Translate to the center of the dynamic tileSize grid cell
+        g2d.translate(x + tileSize / 2, y + tileSize / 2);
         
         // 2. If facing LEFT, mirror the entire horizontal transformation context!
         if (dir == Direction.LEFT) {
             g2d.scale(-1, 1);
         }
         
-        // 3. Local hand joint coordinates relative to center (32, 32). Tuned live!
-        int handX = debugHandX + customHandX;
-        int handY = debugHandY + customHandY;
+        // 3. Convert absolute standard hand joint coordinates (23, 8) to standard-relative ratios (based on 64px tileSize)
+        double ratioX = 23.0 / 64.0;
+        double ratioY = 8.0 / 64.0;
+        double customRatioX = (double) customHandX / 64.0;
+        double customRatioY = (double) customHandY / 64.0;
+        
+        // Scale offsets dynamically with the current tileSize
+        int handX = (int) (ratioX * tileSize) + (int) (customRatioX * tileSize);
+        int handY = (int) (ratioY * tileSize) + (int) (customRatioY * tileSize);
         
         g2d.translate(handX, handY);
         
         // 4. Calculate dynamic rotation angle (swing angle is 45 deg clockwise in local space)
         double swingAngle = Math.toRadians(45);
-        double totalAngle = swingAngle + angleOffset + Math.toRadians(debugAngleOffsetDegrees);
+        double totalAngle = swingAngle + angleOffset;
         g2d.rotate(totalAngle);
         
         // 5. Calculate offset based on weapon pivot points

@@ -11,6 +11,8 @@ import domain.logic.SaveManager;
 
 public class MainMenuView extends JPanel {
 
+
+
     private Runnable onStartGame;
     private java.util.function.Consumer<GameState> onLoadGame;
     private Image backgroundImage;
@@ -35,7 +37,7 @@ public class MainMenuView extends JPanel {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Arka plan resmi yuklenemedi: " + e.getMessage());
+            System.err.println("Resim yuklenemedi: " + e.getMessage());
         }
 
         try {
@@ -62,15 +64,9 @@ public class MainMenuView extends JPanel {
         startBtn = new ScaledImageButton("resources/images/MainMenuImages/start_game_button.png");
         helpBtn  = new ScaledImageButton("resources/images/MainMenuImages/help_button.png");
         quitBtn  = new ScaledImageButton("resources/images/MainMenuImages/quit_button.png");
+        loadBtn = new ScaledImageButton("resources/images/MainMenuImages/load_game_button.png");
 
-        // Load Game butonu (resim yok, text-based)
-        loadBtn = new JButton("Load Game");
-        loadBtn.setFont(new Font("Arial", Font.BOLD, 16));
-        loadBtn.setForeground(new Color(255, 220, 100));
-        loadBtn.setBackground(new Color(60, 40, 20));
-        loadBtn.setFocusPainted(false);
-        loadBtn.setBorder(BorderFactory.createLineBorder(new Color(180, 140, 60), 2));
-        loadBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
 
         startBtn.addActionListener(e -> {
             if (onStartGame != null) onStartGame.run();
@@ -194,80 +190,7 @@ public class MainMenuView extends JPanel {
         if (quitBtn  != null) quitBtn.setBounds(startX, startY + 3 * (btnH + gap), btnW, btnH);
     }
 
-    private class ScaledImageButton extends JButton {
-        private BufferedImage img;
 
-        public ScaledImageButton(String imagePath) {
-            try {
-                BufferedImage originalImg = ImageIO.read(new File(imagePath));
-                img = trimImage(originalImg);
-            } catch (Exception e) {
-                System.err.println("Buton resmi yuklenemedi: " + imagePath);
-            }
-            setFocusPainted(false);
-            setBorderPainted(false);
-            setContentAreaFilled(false);
-            setOpaque(false);
-            setCursor(new Cursor(Cursor.HAND_CURSOR));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            if (img != null) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                // Resmin pürüzsüz ve orantılı bir şekilde butonun güncel boyutuna çizilmesi
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2.drawImage(img, 0, 0, getWidth(), getHeight(), null);
-                g2.dispose();
-            }
-            super.paintComponent(g);
-        }
-    }
-
-    private BufferedImage trimImage(BufferedImage img) {
-        int width = img.getWidth();
-        int height = img.getHeight();
-        int top = height / 2, bottom = height / 2, left = width / 2, right = width / 2;
-        boolean found = false;
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
-                    top = y; found = true; break;
-                }
-            }
-            if (found) break;
-        }
-        found = false;
-        for (int y = height - 1; y >= 0; y--) {
-            for (int x = 0; x < width; x++) {
-                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
-                    bottom = y; found = true; break;
-                }
-            }
-            if (found) break;
-        }
-        found = false;
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
-                    left = x; found = true; break;
-                }
-            }
-            if (found) break;
-        }
-        found = false;
-        for (int x = width - 1; x >= 0; x--) {
-            for (int y = 0; y < height; y++) {
-                if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
-                    right = x; found = true; break;
-                }
-            }
-            if (found) break;
-        }
-        if (right <= left || bottom <= top) return img;
-        return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
-    }
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -323,5 +246,55 @@ public class MainMenuView extends JPanel {
                 g2.dispose();
             }
         }
+    }
+
+    // --- İç sınıf: resim tabanlı buton ---
+    private class ScaledImageButton extends JButton {
+        private BufferedImage img;
+
+        public ScaledImageButton(String imagePath) {
+            try {
+                File f = new File(imagePath);
+                if (!f.exists()) f = new File("../" + imagePath);
+                if (f.exists()) {
+                    BufferedImage raw = ImageIO.read(f);
+                    if (raw != null) img = trimImage(raw);
+                }
+            } catch (Exception ignored) {}
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setContentAreaFilled(false);
+            setOpaque(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            if (img != null) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2.drawImage(img, 0, 0, getWidth(), getHeight(), null);
+                g2.dispose();
+            }
+            super.paintComponent(g);
+        }
+    }
+
+    // --- Yardımcı: şeffaf kenarlıkları kırp ---
+    private BufferedImage trimImage(BufferedImage img) {
+        int w = img.getWidth(), h = img.getHeight();
+        int top = 0, bottom = h - 1, left = 0, right = w - 1;
+        try {
+            outer: for (int y = 0; y < h; y++) for (int x = 0; x < w; x++)
+                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { top = y; break outer; }
+            outer: for (int y = h-1; y >= 0; y--) for (int x = 0; x < w; x++)
+                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { bottom = y; break outer; }
+            outer: for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
+                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { left = x; break outer; }
+            outer: for (int x = w-1; x >= 0; x--) for (int y = 0; y < h; y++)
+                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { right = x; break outer; }
+        } catch (Exception e) { return img; }
+        if (right <= left || bottom <= top) return img;
+        return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
     }
 }

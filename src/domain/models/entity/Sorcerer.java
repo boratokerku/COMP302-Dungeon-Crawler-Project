@@ -5,14 +5,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Sorcerer extends Entity {
+public class Sorcerer extends Entity implements Renderable {
 
-    private long lastTeleportTime; // Son ışınlanma zamanı (milisaniye)
+    @Override
+    public String getSpriteKey() { return "sorcerer"; }
+
+    private long lastTeleportTime;
+    private long lastProjectileTime; // Döküman §2.5.2: Her 5 sn'de bir mermi
+    private Projectile pendingProjectile = null; // ConcurrentModification önlemek için
     private final Random random = new Random();
 
     public Sorcerer(int x, int y) {
-        super(x, y, 10); // Design doc §2.5.2: "only has 10HP of health"
-        this.lastTeleportTime = System.currentTimeMillis();
+        super(x, y, 10);
+        long now = System.currentTimeMillis();
+        this.lastTeleportTime = now;
+        this.lastProjectileTime = now;
     }
 
     public long getTimeLeft() {
@@ -21,6 +28,14 @@ public class Sorcerer extends Entity {
 
     public void setTimeLeft(long timeLeft) {
         this.lastTeleportTime = System.currentTimeMillis() - (7000 - timeLeft);
+    }
+
+    public long getProjectileTimeLeft() {
+        return Math.max(0, 5000 - (System.currentTimeMillis() - lastProjectileTime));
+    }
+
+    public void setProjectileTimeLeft(long timeLeft) {
+        this.lastProjectileTime = System.currentTimeMillis() - (5000 - timeLeft);
     }
 
     /**
@@ -40,13 +55,65 @@ public class Sorcerer extends Entity {
 
         long currentTime = System.currentTimeMillis();
 
-        // 7 saniyede bir teleport dene (design doc §2.5.2)
+        // En yakın hedefi bul (Hero veya ShadowClone)
+        Entity target = findNearestTarget(hero, entities);
+
+        // Her 7 sn'de teleport (design doc §2.5.2)
         if (currentTime - lastTeleportTime >= 7000) {
             lastTeleportTime = currentTime;
             attemptTeleport(map, entities);
         }
 
-        // Sorcerer yürümez — buraya başka bir şey eklenmez (design doc §2.5.2)
+        // Her 5 sn'de mermi fırlat (design doc §2.5.2)
+        if (currentTime - lastProjectileTime >= 5000) {
+            lastProjectileTime = currentTime;
+            pendingProjectile = createProjectile(target);
+        }
+    }
+
+    // Hero veya hayatta olan ShadowClone'dan hangisi daha yakınsa onu döndür
+    private Entity findNearestTarget(Hero hero, java.util.List<Entity> entities) {
+        Entity nearest = hero;
+        double minDist = Math.sqrt(Math.pow(this.x - hero.getX(), 2) + Math.pow(this.y - hero.getY(), 2));
+
+        if (entities != null) {
+            for (Entity e : entities) {
+                if (e instanceof ShadowClone && e.isAlive()) {
+                    double d = Math.sqrt(Math.pow(this.x - e.getX(), 2) + Math.pow(this.y - e.getY(), 2));
+                    if (d < minDist) {
+                        minDist = d;
+                        nearest = e;
+                    }
+                }
+            }
+        }
+        return nearest;
+    }
+
+    /** DemoRunner tarafından her tick sonunda çağrılır, mermiyi alır ve sıfırlar */
+    public Projectile pollPendingProjectile() {
+        Projectile p = pendingProjectile;
+        pendingProjectile = null;
+        return p;
+    }
+
+    /** Hero'ya doğru yönelmiş bir Projectile oluşturur */
+    private Projectile createProjectile(Entity hero) {
+        double diffX = hero.getX() - this.x;
+        double diffY = hero.getY() - this.y;
+        double dist = Math.sqrt(diffX*diffX + diffY*diffY);
+
+        if (dist == 0) return null; // Aynı konumda ise ates etme
+
+        // Pürüzsüz vektörel yönelim (Tam isabet)
+        // GameView artık getExactX/Y kullandığı için zigzag yapmadan hedefe dümdüz uçar.
+        double speed = 0.5;
+        double dx = (diffX / dist) * speed;
+        double dy = (diffY / dist) * speed;
+
+        System.out.println("Sorcerer fired projectile! Direction: (" + dx + ", " + dy + ")");
+        // Design doc §2.5.2: 8 HP damage
+        return new Projectile(this.x, this.y, this.x, this.y, dx, dy, 8, this);
     }
 
     /**

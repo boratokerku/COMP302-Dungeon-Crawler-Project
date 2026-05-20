@@ -28,20 +28,77 @@ public class OpenAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        List<String> itemNames = new ArrayList<>();
-        
-        for (GameObject item : new ArrayList<>(contents)) {
-            if (hero.getInventory() != null && !hero.getInventory().isFull()) {
-                hero.getInventory().addItem(item);
-                itemNames.add(item.getName());
+        if (target != null && target.getMap() != null) {
+            int tx = target.getX();
+            int ty = target.getY();
+            domain.models.map.GameMap map = target.getMap();
+            
+            boolean wasLocked = false;
+            if (target instanceof domain.models.entity.Chest) {
+                domain.models.entity.Chest chest = (domain.models.entity.Chest) target;
+                if (chest.isLocked()) {
+                    wasLocked = true;
+                    domain.models.staticObjects.KeyItem keyToUse = null;
+                    for (GameObject item : hero.getInventory().getItems()) {
+                        if (item instanceof domain.models.staticObjects.KeyItem) {
+                            keyToUse = (domain.models.staticObjects.KeyItem) item;
+                            break;
+                        }
+                    }
+                    if (keyToUse != null) {
+                        if (keyToUse.isSingleUse()) {
+                            hero.getInventory().removeItem(keyToUse);
+                        }
+                        chest.setLocked(false);
+                        System.out.println("Unlocked chest using key!");
+                        view.GameView.addFloatingText(tx, ty, "UNLOCKED!", java.awt.Color.GREEN);
+                    } else {
+                        // Show warning dialog for locked chest without key!
+                        javax.swing.JOptionPane.showMessageDialog(
+                                null,
+                                "This chest is locked! You need a Key to open it.",
+                                "Chest Locked",
+                                javax.swing.JOptionPane.WARNING_MESSAGE
+                        );
+                        System.out.println("Chest is locked! Need a key!");
+                        view.GameView.addFloatingText(tx, ty, "LOCKED!", java.awt.Color.RED);
+                        return; // Stop execution
+                    }
+                }
             }
-        }
-        contents.clear();
-        
-        if (!itemNames.isEmpty()) {
-            System.out.println("Opened! Got: " + String.join(", ", itemNames));
-        } else {
-            System.out.println("Opened! Got: nothing (or inventory full)");
+            
+            String containerType = wasLocked ? "Locked Chest" : "Unlocked Chest";
+            
+            // Remove the chest from the map
+            map.removeObject(target);
+            
+            boolean dropped = false;
+            for (GameObject item : new ArrayList<>(contents)) {
+                if (item instanceof domain.models.item.MapItem) {
+                    domain.models.item.MapItem mi = (domain.models.item.MapItem) item;
+                    mi.setPosition(tx, ty);
+                    map.placeObject(mi, tx, ty);
+                    System.out.println("Opened " + containerType + "! Dropped " + mi.getName() + " on the floor.");
+                    dropped = true;
+                    break;
+                }
+            }
+            
+            // Fallback: If chest contents are empty, drop a random loot item
+            if (!dropped) {
+                domain.models.item.MapItem loot = domain.models.item.MapItem.createRandomItem(tx, ty);
+                if (loot != null) {
+                    map.placeObject(loot, tx, ty);
+                    System.out.println("Opened " + containerType + "! Dropped " + loot.getName() + " on the floor.");
+                } else {
+                    System.out.println("Opened " + containerType + ", but it was empty.");
+                }
+            }
+            
+            // Show floating text feedback!
+            view.GameView.addFloatingText(tx, ty, "OPENED!", java.awt.Color.YELLOW);
+            
+            contents.clear();
         }
     }
 }

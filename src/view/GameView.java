@@ -15,10 +15,32 @@ public class GameView extends JPanel {
     private Hero hero;
     private AssetManager assetManager;
 
-    // Sabitler (TA sunumunda "Magic Numbers" kullanmadığını göstermek için önemli)
-    private final int TILE_SIZE = 32; // Her bir kare 32x32 piksel
-    private final int SCALE = 2; // Görseli x2 büyütmek istersen (isteğe bağlı)
-    private final int ACTUAL_SIZE = TILE_SIZE * SCALE;
+    // Inventory rendering is fully delegated to InventoryView
+    private InventoryView inventoryView;
+    private boolean inventoryVisible = false;
+
+    // Floating text structure for high-quality damage visual effects
+    public static class FloatingText {
+        public double x, y;
+        public String text;
+        public Color color;
+        public int duration = 30; // 30 frames duration
+        public double dy = -0.04; // slowly moves up
+        public float alpha = 1.0f;
+    }
+
+    private static final java.util.List<FloatingText> floatingTexts = new java.util.ArrayList<>();
+
+    public static void addFloatingText(double x, double y, String text, Color color) {
+        FloatingText ft = new FloatingText();
+        ft.x = x;
+        ft.y = y;
+        ft.text = text;
+        ft.color = color;
+        synchronized (floatingTexts) {
+            floatingTexts.add(ft);
+        }
+    }
 
     public GameView(Hero hero, AssetManager assetManager) {
         this.hero = hero;
@@ -28,6 +50,8 @@ public class GameView extends JPanel {
         this.setPreferredSize(new Dimension(800, 600)); // Pencere boyutu
         this.setBackground(new Color(91, 48, 80)); // Arka plan (Koyu mor — referans görsel)
         this.setDoubleBuffered(true); // Titremeyi önleyen teknik (Double Buffering)
+
+        this.inventoryView = new InventoryView(hero);
     }
 
     private domain.models.map.GameMap gameMap;
@@ -43,8 +67,6 @@ public class GameView extends JPanel {
     private int tileSize = 64;
     private int offsetX = 0;
     private int offsetY = 0;
-
-    private boolean inventoryVisible = false;
 
     public void setGameMap(domain.models.map.GameMap map) {
         this.gameMap = map;
@@ -67,6 +89,7 @@ public class GameView extends JPanel {
 
     public void setTileManager(TileManager tileManager) {
         this.tileManager = tileManager;
+        this.inventoryView.setTileManager(tileManager);
     }
 
     public int getTileSize() {
@@ -87,8 +110,8 @@ public class GameView extends JPanel {
         if (gameMap != null) {
             int hudReserve = 80; // Üstteki HUD barı için ayrılan piksel
 
-            int usableWidth = (int)(getWidth() * 0.90);
-            int usableHeight = (int)((getHeight() - hudReserve) * 0.90);
+            int usableWidth = (int) (getWidth() * 0.90);
+            int usableHeight = (int) ((getHeight() - hudReserve) * 0.90);
 
             int tileW = usableWidth / gameMap.getWidth();
             int tileH = usableHeight / gameMap.getHeight();
@@ -102,11 +125,14 @@ public class GameView extends JPanel {
 
     // Haritanın dışındaki boş alanı wall_1 tile'ı ile döşer (düz renk yerine)
     private void drawBackground(Graphics2D g2d) {
-        if (tileManager == null) return;
+        if (tileManager == null)
+            return;
         BufferedImage bgTile = tileManager.getTile("floor");
-        if (bgTile == null) return;
+        if (bgTile == null)
+            return;
 
-        // Tüm ekranı tileSize'lık karelerle doldur (harita altında kalsa da sorun değil, üzerine çizilecek)
+        // Tüm ekranı tileSize'lık karelerle doldur (harita altında kalsa da sorun
+        // değil, üzerine çizilecek)
         for (int px = 0; px < getWidth(); px += tileSize) {
             for (int py = 0; py < getHeight(); py += tileSize) {
                 g2d.drawImage(bgTile, px, py, tileSize, tileSize, null);
@@ -151,8 +177,42 @@ public class GameView extends JPanel {
         // 5. Inventory Çiz
         drawInventory(g2d);
 
+        // 5.5 Süzülen Hasar Efektlerini Çiz (Floating Texts)
+        drawFloatingTexts(g2d);
+
         // Kaynakları temizle
         g2d.dispose();
+    }
+
+    private void drawFloatingTexts(Graphics2D g2d) {
+        synchronized (floatingTexts) {
+            java.util.Iterator<FloatingText> it = floatingTexts.iterator();
+            while (it.hasNext()) {
+                FloatingText ft = it.next();
+                
+                // Fade out effect using alpha channel
+                int alphaVal = (int) (ft.alpha * 255);
+                if (alphaVal < 0) alphaVal = 0;
+                if (alphaVal > 255) alphaVal = 255;
+                
+                g2d.setColor(new Color(ft.color.getRed(), ft.color.getGreen(), ft.color.getBlue(), alphaVal));
+                g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 22));
+                
+                int px = offsetX + (int) (ft.x * tileSize) + tileSize / 4;
+                int py = offsetY + (int) (ft.y * tileSize) - 10;
+                
+                g2d.drawString(ft.text, px, py);
+                
+                // Advance animation states
+                ft.y += ft.dy;
+                ft.alpha = Math.max(0.0f, ft.alpha - 0.035f);
+                ft.duration--;
+                
+                if (ft.duration <= 0) {
+                    it.remove();
+                }
+            }
+        }
     }
 
     private void drawHUD(Graphics2D g) {
@@ -196,101 +256,138 @@ public class GameView extends JPanel {
         g.drawString("Energy: " + hero.getEnergy(), hudX + barWidth + 5, hudY + 12);
     }
 
-    private int invStartX;
-    private int invStartY;
-    private int invSlotSize = 40;
-    private int invPadding = 5;
-    private int invSlotsX = 4;
-    private int invSlotsY = 2;
-
+    /** Delegates inventory drawing to InventoryView. */
     private void drawInventory(Graphics2D g) {
-        if (!inventoryVisible || hero == null || hero.getInventory() == null)
+        if (!inventoryVisible)
             return;
-
-        // Position it at the bottom right corner
-        int invWidth = invSlotsX * invSlotSize + (invSlotsX + 1) * invPadding;
-        int invHeight = invSlotsY * invSlotSize + (invSlotsY + 1) * invPadding;
-
-        invStartX = getWidth() - invWidth - 20;
-        invStartY = getHeight() - invHeight - 20;
-
-        // Draw inventory background
-        g.setColor(new Color(0, 0, 0, 180));
-        g.fillRoundRect(invStartX, invStartY, invWidth, invHeight, 10, 10);
-        g.setColor(new Color(200, 200, 200));
-        g.drawRoundRect(invStartX, invStartY, invWidth, invHeight, 10, 10);
-
-        // Draw title
-        g.setColor(Color.WHITE);
-        g.drawString("Inventory", invStartX + invPadding, invStartY - 5);
-
-        domain.models.inventory.Inventory inv = hero.getInventory();
-        java.util.List<domain.models.entity.GameObject> items = inv.getItems();
-
-        int itemIndex = 0;
-        for (int y = 0; y < invSlotsY; y++) {
-            for (int x = 0; x < invSlotsX; x++) {
-                int slotX = invStartX + invPadding + x * (invSlotSize + invPadding);
-                int slotY = invStartY + invPadding + y * (invSlotSize + invPadding);
-
-                // Draw slot background
-                g.setColor(new Color(50, 50, 50, 200));
-                g.fillRect(slotX, slotY, invSlotSize, invSlotSize);
-                g.setColor(new Color(100, 100, 100));
-                g.drawRect(slotX, slotY, invSlotSize, invSlotSize);
-
-                // Draw item if exists
-                if (itemIndex < items.size()) {
-                    domain.models.entity.GameObject item = items.get(itemIndex);
-                    if (item instanceof domain.models.item.MapItem) {
-                        java.awt.image.BufferedImage sprite = ((domain.models.item.MapItem) item).getSprite();
-                        if (sprite != null) {
-                            g.drawImage(sprite, slotX + 2, slotY + 2, invSlotSize - 4, invSlotSize - 4, null);
-                        } else {
-                            // Sprite yok — placeholder
-                            if (item instanceof domain.models.item.ShadowCloneScroll) {
-                                g.setColor(new Color(150, 50, 255)); // Mor — scroll
-                            } else {
-                                g.setColor(new Color(255, 220, 50)); // Sarı — bilinmeyen
-                            }
-                            g.fillOval(slotX + 5, slotY + 5, invSlotSize - 10, invSlotSize - 10);
-                        }
-                    } else if (item.getImageName() != null && tileManager != null) {
-                        java.awt.image.BufferedImage sprite = tileManager.getTile(item.getImageName());
-                        if (sprite != null) {
-                            g.drawImage(sprite, slotX + 2, slotY + 2, invSlotSize - 4, invSlotSize - 4, null);
-                        }
-                    }
-                }
-                itemIndex++;
-            }
-        }
+        inventoryView.draw(g, getWidth(), getHeight());
     }
 
+    /** Returns the inventory item clicked at the given screen position. */
     public domain.models.entity.GameObject getClickedInventoryItem(int screenX, int screenY) {
-        if (!inventoryVisible || hero == null || hero.getInventory() == null)
+        if (!inventoryVisible)
             return null;
+        return inventoryView.getClickedItem(screenX, screenY);
+    }
 
-        domain.models.inventory.Inventory inv = hero.getInventory();
-        java.util.List<domain.models.entity.GameObject> items = inv.getItems();
+    private final java.util.Map<String, BufferedImage> weaponImageCache = new java.util.HashMap<>();
 
-        int itemIndex = 0;
-        for (int y = 0; y < invSlotsY; y++) {
-            for (int x = 0; x < invSlotsX; x++) {
-                int slotX = invStartX + invPadding + x * (invSlotSize + invPadding);
-                int slotY = invStartY + invPadding + y * (invSlotSize + invPadding);
-
-                // Check if screenX, screenY is inside this slot
-                if (screenX >= slotX && screenX <= slotX + invSlotSize &&
-                        screenY >= slotY && screenY <= slotY + invSlotSize) {
-                    if (itemIndex < items.size()) {
-                        return items.get(itemIndex);
-                    }
+    private BufferedImage getWeaponImage(String imageName) {
+        if (imageName == null) return null;
+        if (weaponImageCache.containsKey(imageName)) {
+            return weaponImageCache.get(imageName);
+        }
+        try {
+            // Robust multi-path lookup
+            String[] pathsToTry = {
+                "resources/" + imageName,
+                "../resources/" + imageName,
+                imageName,
+                "../" + imageName,
+                "src/resources/" + imageName
+            };
+            java.io.File f = null;
+            for (String p : pathsToTry) {
+                java.io.File test = new java.io.File(p);
+                if (test.exists()) {
+                    f = test;
+                    break;
                 }
-                itemIndex++;
             }
+            if (f != null) {
+                System.out.println("[DEBUG] Weapon image loaded successfully from: " + f.getPath());
+                BufferedImage img = javax.imageio.ImageIO.read(f);
+                weaponImageCache.put(imageName, img);
+                return img;
+            } else {
+                System.out.println("[DEBUG] WEAPON IMAGE NOT FOUND: " + imageName);
+            }
+        } catch (Exception e) {
+            System.err.println("[DEBUG] Error loading weapon image: " + e.getMessage());
         }
         return null;
+    }
+
+    private String lastLoggedWeapon = null;
+
+    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir) {
+        if (hero.getEquippedWeapon() == null) {
+            if (lastLoggedWeapon != null) {
+                System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL");
+                lastLoggedWeapon = null;
+            }
+            return;
+        }
+        
+        String path = hero.getEquippedWeapon().getImageName();
+        if (!path.equals(lastLoggedWeapon)) {
+            System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon changed to: " + hero.getEquippedWeapon().getName() + " (path: " + path + ")");
+            lastLoggedWeapon = path;
+        }
+        
+        BufferedImage weaponImg = getWeaponImage(path);
+        if (weaponImg == null) {
+            System.out.println("[DEBUG] drawEquippedWeapon: weaponImg is null for path: " + path);
+            return;
+        }
+        
+        int wSize = tileSize / 2; // 32x32 size
+        
+        // Dynamically fetch weapon metadata (or use defaults)
+        double pivotX = 0.5;
+        double pivotY = 0.5;
+        double angleOffset = 0.0;
+        int customHandX = 0;
+        int customHandY = 0;
+        
+        domain.models.entity.GameObject equipped = hero.getEquippedWeapon();
+        if (equipped instanceof domain.models.item.MapItem) {
+            domain.models.item.MapItem item = (domain.models.item.MapItem) equipped;
+            pivotX = item.getWeaponPivotX();
+            pivotY = item.getWeaponPivotY();
+            angleOffset = item.getWeaponAngleOffset();
+            customHandX = item.getHandOffsetX();
+            customHandY = item.getHandOffsetY();
+        }
+        
+        java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
+        
+        // 1. Translate to the center of the dynamic tileSize grid cell
+        g2d.translate(x + tileSize / 2, y + tileSize / 2);
+        
+        // 2. If facing LEFT, mirror the entire horizontal transformation context!
+        if (dir == Direction.LEFT) {
+            g2d.scale(-1, 1);
+        }
+        
+        // 3. Convert absolute standard hand joint coordinates (23, 8) to standard-relative ratios (based on 64px tileSize)
+        double ratioX = 23.0 / 64.0;
+        double ratioY = 8.0 / 64.0;
+        double customRatioX = (double) customHandX / 64.0;
+        double customRatioY = (double) customHandY / 64.0;
+        
+        // Scale offsets dynamically with the current tileSize
+        int handX = (int) (ratioX * tileSize) + (int) (customRatioX * tileSize);
+        int handY = (int) (ratioY * tileSize) + (int) (customRatioY * tileSize);
+        
+        g2d.translate(handX, handY);
+        
+        // 4. Calculate dynamic rotation angle (melee swing angle defaults to 45 deg, or customized per weapon)
+        double swingAngle = Math.toRadians(45);
+        if (equipped instanceof domain.models.item.MapItem) {
+            swingAngle = ((domain.models.item.MapItem) equipped).getBaseRotationAngle();
+        }
+        double totalAngle = swingAngle + angleOffset;
+        g2d.rotate(totalAngle);
+        
+        // 5. Calculate offset based on weapon pivot points
+        int px = (int) (pivotX * wSize);
+        int py = (int) (pivotY * wSize);
+        
+        // 6. Draw the weapon icon such that the pivot (px, py) aligns exactly with hand (0,0)
+        g2d.drawImage(weaponImg, -px, -py, wSize, wSize, null);
+        
+        g2d.setTransform(oldTransform);
     }
 
     private void drawHero(Graphics2D g2d) {
@@ -303,8 +400,10 @@ public class GameView extends JPanel {
             if (hero.getDirection() == Direction.LEFT) {
                 // Resmi yatayda aynalayarak çiziyoruz
                 g2d.drawImage(frame, x + tileSize, y, -tileSize, tileSize, null);
+                drawEquippedWeapon(g2d, x, y, Direction.LEFT);
             } else {
                 g2d.drawImage(frame, x, y, tileSize, tileSize, null);
+                drawEquippedWeapon(g2d, x, y, Direction.RIGHT);
             }
         }
     }
@@ -320,7 +419,54 @@ public class GameView extends JPanel {
 
                 BufferedImage frame = null;
 
-                if (e instanceof domain.models.entity.ShadowClone) {
+                if (e instanceof domain.models.entity.Projectile) {
+                    domain.models.entity.Projectile proj = (domain.models.entity.Projectile) e;
+                    
+                    if ("ARROW".equalsIgnoreCase(proj.getType())) {
+                        BufferedImage arrowImg = assetManager.getProjectileArrow();
+                        if (arrowImg != null) {
+                            double px = offsetX + (proj.getExactX() * tileSize);
+                            double py = offsetY + (proj.getExactY() * tileSize);
+                            
+                            // atan2 0 açısını Sağa (Right) doğru kabul eder.
+                            // Ok görseli orijinalinde YUKARI (Up) bakıyor. 
+                            // Bu yüzden +90 derece (Math.PI / 2) offset ekliyoruz.
+                            double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) + (Math.PI / 2.0);
+                            
+                            java.awt.geom.AffineTransform old = g2d.getTransform();
+                            g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
+                            g2d.rotate(angle);
+                            g2d.drawImage(arrowImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
+                            g2d.setTransform(old);
+                        } else {
+                            // Fallback if arrow image fails
+                            int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                            int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                            int size = tileSize / 2;
+                            g2d.setColor(new java.awt.Color(200, 150, 100, 200));
+                            g2d.fillOval(px, py, size, size);
+                        }
+                    } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
+                        // Blazing Fireball (Orange-Red glowing orb)
+                        int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    } else {
+                        // Purple Mage Spell
+                        int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    }
+                    continue;
+                } else if (e instanceof domain.models.entity.ShadowClone) {
                     // Klon: hero sprite'ı %50 saydamlıkla (görsel ayrım)
                     frame = assetManager.getHeroSprite(domain.models.AnimationState.IDLE);
                     if (frame != null) {
@@ -348,6 +494,7 @@ public class GameView extends JPanel {
                             tileSize, tileSize, null);
                 }
             }
+
         } else {
             // entityList yoksa: sadece başlangıç knight ve sorcerer'ı çiz (geriye dönük
             // uyumluluk)
@@ -377,13 +524,14 @@ public class GameView extends JPanel {
                 domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
                 if (obj != null) {
                     if (obj instanceof domain.models.item.MapItem ||
-                        obj instanceof domain.models.entity.Column ||
-                        obj instanceof domain.models.entity.Chest ||
-                        obj instanceof domain.models.entity.Crate ||
-                        obj instanceof domain.models.staticObjects.Door ||
-                        obj instanceof domain.models.staticObjects.Decoration ||
-                        obj instanceof domain.models.entity.SearchableObject) {
-                        // Eğer hücrede bir eşya veya statik obje varsa, altını delik bırakmamak için Zemin (FloorTile)
+                            obj instanceof domain.models.entity.Column ||
+                            obj instanceof domain.models.entity.Chest ||
+                            obj instanceof domain.models.entity.Crate ||
+                            obj instanceof domain.models.staticObjects.Door ||
+                            obj instanceof domain.models.staticObjects.Decoration ||
+                            obj instanceof domain.models.entity.SearchableObject) {
+                        // Eğer hücrede bir eşya veya statik obje varsa, altını delik bırakmamak için
+                        // Zemin (FloorTile)
                         // çiziyoruz
                         BufferedImage floor = tileManager.getTile("floor");
                         if (floor != null) {
@@ -391,7 +539,7 @@ public class GameView extends JPanel {
                                     null);
                         }
                     } else if (obj instanceof domain.models.tile.WallTile &&
-                               "wall/wall_side".equals(obj.getImageName())) {
+                            "wall/wall_side".equals(obj.getImageName())) {
                         // Yan duvarlar: ince çiz (tile genişliğinin 1/3'ü)
                         BufferedImage tileImage = tileManager.getTile(obj.getImageName());
                         if (tileImage != null) {
@@ -497,17 +645,18 @@ public class GameView extends JPanel {
             for (int y = 0; y < gameMap.getHeight(); y++) {
                 domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
                 if (obj instanceof domain.models.entity.Column ||
-                    obj instanceof domain.models.entity.Chest ||
-                    obj instanceof domain.models.entity.Crate ||
-                    obj instanceof domain.models.staticObjects.Door ||
-                    obj instanceof domain.models.staticObjects.Decoration ||
-                    obj instanceof domain.models.entity.SearchableObject) {
+                        obj instanceof domain.models.entity.Chest ||
+                        obj instanceof domain.models.entity.Crate ||
+                        obj instanceof domain.models.staticObjects.Door ||
+                        obj instanceof domain.models.staticObjects.Decoration ||
+                        obj instanceof domain.models.entity.SearchableObject) {
 
                     boolean inZone = hero != null && Math.abs(x - hero.getX()) <= 1
                             && Math.abs(y - hero.getY()) <= 1;
 
                     if (!inZone) {
-                        java.awt.AlphaComposite ac = java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f);
+                        java.awt.AlphaComposite ac = java.awt.AlphaComposite
+                                .getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f);
                         g2d.setComposite(ac);
                     }
 
@@ -524,10 +673,14 @@ public class GameView extends JPanel {
                     } else {
                         // Placeholder fallback
                         Color color = Color.MAGENTA;
-                        if (obj instanceof domain.models.entity.Column) color = Color.GRAY;
-                        else if (obj instanceof domain.models.entity.Chest) color = new Color(139, 69, 19);
-                        else if (obj instanceof domain.models.entity.Crate) color = new Color(101, 67, 33);
-                        else if (obj instanceof domain.models.entity.SearchableObject) color = Color.DARK_GRAY;
+                        if (obj instanceof domain.models.entity.Column)
+                            color = Color.GRAY;
+                        else if (obj instanceof domain.models.entity.Chest)
+                            color = new Color(139, 69, 19);
+                        else if (obj instanceof domain.models.entity.Crate)
+                            color = new Color(101, 67, 33);
+                        else if (obj instanceof domain.models.entity.SearchableObject)
+                            color = Color.DARK_GRAY;
 
                         g2d.setColor(color);
                         g2d.fillRect(drawX, drawY, tileSize, tileSize);
@@ -540,67 +693,11 @@ public class GameView extends JPanel {
         }
     }
 
-    private void drawInventory(Graphics2D g) {
-        if (!inventoryVisible || hero == null || hero.getInventory() == null) return;
-
-        int slotsX = 4;
-        int slotsY = 2;
-        int slotSize = 40;
-        int padding = 5;
-
-        // Position it at the bottom right corner
-        int invWidth = slotsX * slotSize + (slotsX + 1) * padding;
-        int invHeight = slotsY * slotSize + (slotsY + 1) * padding;
-
-        int startX = getWidth() - invWidth - 20;
-        int startY = getHeight() - invHeight - 20;
-
-        // Draw inventory background
-        g.setColor(new Color(0, 0, 0, 180));
-        g.fillRoundRect(startX, startY, invWidth, invHeight, 10, 10);
-        g.setColor(new Color(200, 200, 200));
-        g.drawRoundRect(startX, startY, invWidth, invHeight, 10, 10);
-
-        // Draw title
-        g.setColor(Color.WHITE);
-        g.drawString("Inventory", startX + padding, startY - 5);
-
-        domain.models.inventory.Inventory inv = hero.getInventory();
-        java.util.List<domain.models.entity.GameObject> items = inv.getItems();
-
-        int itemIndex = 0;
-        for (int y = 0; y < slotsY; y++) {
-            for (int x = 0; x < slotsX; x++) {
-                int slotX = startX + padding + x * (slotSize + padding);
-                int slotY = startY + padding + y * (slotSize + padding);
-
-                // Draw slot background
-                g.setColor(new Color(50, 50, 50, 200));
-                g.fillRect(slotX, slotY, slotSize, slotSize);
-                g.setColor(new Color(100, 100, 100));
-                g.drawRect(slotX, slotY, slotSize, slotSize);
-
-                // Draw item if exists
-                if (itemIndex < items.size()) {
-                    domain.models.entity.GameObject item = items.get(itemIndex);
-                    if (item instanceof domain.models.item.MapItem) {
-                        java.awt.image.BufferedImage sprite = ((domain.models.item.MapItem) item).getSprite();
-                        if (sprite != null) {
-                            g.drawImage(sprite, slotX + 2, slotY + 2, slotSize - 4, slotSize - 4, null);
-                        }
-                    } else if (item.getImageName() != null && tileManager != null) {
-                        java.awt.image.BufferedImage sprite = tileManager.getTile(item.getImageName());
-                        if (sprite != null) {
-                            g.drawImage(sprite, slotX + 2, slotY + 2, slotSize - 4, slotSize - 4, null);
-                        }
-                    }
-                }
-                itemIndex++;
-            }
-        }
-    }
-
     public void toggleInventory() {
         this.inventoryVisible = !this.inventoryVisible;
+    }
+
+    public boolean isInventoryVisible() {
+        return inventoryVisible;
     }
 }

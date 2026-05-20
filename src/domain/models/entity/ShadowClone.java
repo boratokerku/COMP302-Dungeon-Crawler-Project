@@ -5,7 +5,14 @@ import domain.models.map.GameMap;
 
 import java.util.List;
 
-public class ShadowClone extends Entity {
+public class ShadowClone extends Entity implements Renderable {
+
+    @Override
+    public String getSpriteKey() { return "hero"; }
+
+    /** Rendered at 50% opacity to visually distinguish the clone from the hero. */
+    @Override
+    public float getRenderAlpha() { return 0.5f; }
 
     private static final long LIFETIME_MS = 7_000; // 7 saniye sonra yok olur
     private long birthTime;

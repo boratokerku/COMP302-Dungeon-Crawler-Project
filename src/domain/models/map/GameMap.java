@@ -1,6 +1,5 @@
 package domain.models.map;
 
-import domain.models.tile.Tile;
 import domain.models.entity.GameObject;
 
 public class GameMap extends Grid {

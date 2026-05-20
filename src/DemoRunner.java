@@ -13,13 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import java.awt.CardLayout;
+import java.awt.Color;
 import javax.swing.JPanel;
 
 public class DemoRunner {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("COMP302 Dungeon Crawler Demo");
+            JFrame frame = new JFrame("COMP302 Dungeon Crawler");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             CardLayout cardLayout = new CardLayout();
@@ -31,10 +32,15 @@ public class DemoRunner {
             );
             menuView.setPreferredSize(new java.awt.Dimension(1250, 1000));
 
+            mainPanel.setBackground(Color.BLACK);
             mainPanel.add(menuView, "Menu");
+            cardLayout.show(mainPanel, "Menu"); 
             frame.add(mainPanel);
 
+            frame.setSize(832, 640);
             frame.pack();
+            frame.revalidate();
+            frame.repaint();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
@@ -44,6 +50,7 @@ public class DemoRunner {
     private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         GameMap map = new GameMap(25, 20);
         Hero hero = new Hero(4, 4);
+        hero.setCurrentMap(map);
         Knight knight = new Knight(12, 10);
         Sorcerer sorcerer = new Sorcerer(18, 5);
 
@@ -54,7 +61,7 @@ public class DemoRunner {
         map.placeObject(new domain.models.entity.Crate("Crate", 2, 17), 2, 17);
 
         // Sandıklar (Chests) uzak köşelerde
-        map.placeObject(new domain.models.entity.Chest("Main Chest", 22, 2), 22, 2);
+        map.placeObject(new domain.models.entity.Chest("Main Chest", 22, 2, true), 22, 2);
         map.placeObject(new domain.models.entity.Chest("Hidden Chest", 2, 18), 2, 18);
 
         // Sütunlar (Columns) geniş alanın ortasında bir ana salon oluşturacak şekilde
@@ -68,11 +75,28 @@ public class DemoRunner {
         map.placeObject(new domain.models.staticObjects.KeyItem(12, 10), 12, 10);
         map.placeObject(new domain.models.item.SwordItem(14, 10), 14, 10);
 
+        // =====================================================================
+        // TODO: TEMPORARY DEVELOPMENT TEST DROPS - GEÇİCİ GELİŞTİRİCİ TEST SİLAHLARI VE EŞYALARI
+        // Bu blok sadece test aşamasında tüm yeni silahları ve giyilebilir eşyaları kolayca denemek için eklenmiştir.
+        // Yay, Balta, Asa, Katana, Elmas Kılıç, Çelik Zırh ve Güç Yüzüğü kahramanın etrafında yer alır.
+        map.placeObject(new domain.models.item.WoodenSwordItem(4, 5), 4, 5);
+        map.placeObject(new domain.models.item.AxeItem(5, 4), 5, 4);
+        map.placeObject(new domain.models.item.BowItem(5, 5), 5, 5);
+        map.placeObject(new domain.models.item.FireWandItem(3, 4), 3, 4);
+        map.placeObject(new domain.models.item.SamuraiSwordItem(3, 5), 3, 5);
+        map.placeObject(new domain.models.item.DiamondSwordItem(5, 3), 5, 3);
+        map.placeObject(new domain.models.item.ArmorItem(4, 3), 4, 3);
+        map.placeObject(new domain.models.item.RingItem(3, 3), 3, 3);
+        // =====================================================================
+
 
 
         // Dekorasyonlar (Torches)
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 6, 1, "torch/torch_1"), 6, 1);
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 18, 1, "torch/torch_1"), 18, 1);
+
+        // Çıkış Kapısı (Exit Door) - Kilitli olarak yerleştirildi!
+        map.placeObject(new domain.models.staticObjects.Door("Exit Door", 22, 10, true), 22, 10);
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 1, 10, "torch/torch_1"), 1, 10);
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 23, 10, "torch/torch_1"), 23, 10);
 
@@ -93,14 +117,32 @@ public class DemoRunner {
 
         // Hero oluştur ve durumunu yükle
         Hero hero = new Hero(state.hero.x, state.hero.y);
+        hero.setCurrentMap(map);
         hero.setHp(state.hero.hp);
         hero.setMana(state.hero.mana);
         hero.setEnergy(state.hero.energy);
         if (state.hero.str > 0) hero.setStr(state.hero.str); // str bilgisini yükle
 
-        // Kılıcı takılıysa ayarla
-        if ("SwordItem".equals(state.hero.equippedWeaponType)) {
-            hero.equipWeapon(new domain.models.item.SwordItem(0, 0));
+        // Kılıcı veya kuşanılmış silahı takılıysa ayarla
+        if (state.hero.equippedWeaponType != null && !state.hero.equippedWeaponType.isEmpty()) {
+            domain.models.entity.GameObject weapon = createItem(state.hero.equippedWeaponType, 0, 0);
+            if (weapon instanceof domain.models.item.MapItem) {
+                hero.equipWeapon((domain.models.item.MapItem) weapon);
+            }
+        }
+        // Kuşanılmış zırhı takılıysa ayarla
+        if (state.hero.equippedArmorType != null && !state.hero.equippedArmorType.isEmpty()) {
+            domain.models.entity.GameObject armor = createItem(state.hero.equippedArmorType, 0, 0);
+            if (armor instanceof domain.models.item.MapItem) {
+                hero.equipArmor((domain.models.item.MapItem) armor);
+            }
+        }
+        // Kuşanılmış yüzüğü takılıysa ayarla
+        if (state.hero.equippedRingType != null && !state.hero.equippedRingType.isEmpty()) {
+            domain.models.entity.GameObject ring = createItem(state.hero.equippedRingType, 0, 0);
+            if (ring instanceof domain.models.item.MapItem) {
+                hero.equipRing((domain.models.item.MapItem) ring);
+            }
         }
 
         // Düşmanları yeniden oluştur
@@ -118,7 +160,8 @@ public class DemoRunner {
             } else if ("Sorcerer".equals(rec.type)) {
                 Sorcerer s = new Sorcerer(rec.x, rec.y);
                 s.setHp(rec.hp);
-                s.setTimeLeft(rec.timeLeft); // Sorcerer ışınlanma timer'ı yükle
+                s.setTimeLeft(rec.timeLeft);                    // Işınlanma timer'ı
+                s.setProjectileTimeLeft(rec.projectileTimeLeft); // Mermi timer'ı
                 if (!rec.alive) s.takeDamage(999);
                 entities.add(s);
                 sorcerer = s;
@@ -134,6 +177,16 @@ public class DemoRunner {
         if (knight == null)   { knight   = new Knight(12, 10);  entities.add(knight); }
         if (sorcerer == null) { sorcerer = new Sorcerer(18, 5); entities.add(sorcerer); }
 
+        // Kaydedilmiş uçan mermileri yeniden oluştur
+        if (state.projectiles != null) {
+            for (GameState.ProjectileRecord pr : state.projectiles) {
+                Entity owner = pr.heroOwned ? hero : sorcerer;
+                entities.add(new domain.models.entity.Projectile(
+                        pr.x, pr.y, pr.exactX, pr.exactY, pr.deltaX, pr.deltaY, pr.damage, owner, pr.type
+                ));
+            }
+        }
+
         // Harita itemlarını ayır: scroll'lar ayrı tutulur (inputHandler gerektirir)
         List<GameState.ItemRecord> scrollItems = new ArrayList<>();
 
@@ -142,7 +195,7 @@ public class DemoRunner {
                 // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
                 scrollItems.add(rec);
             } else {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y);
+                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked);
                 if (item != null) map.placeObject(item, rec.x, rec.y);
             }
         }
@@ -163,25 +216,42 @@ public class DemoRunner {
     }
 
     // Item tip ismine göre nesne oluşturur — scroll hariç (scroll setupGameView'da oluşur)
-    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y) {
+    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y, boolean isLocked) {
         String displayName = (name != null && !name.isEmpty()) ? name : type;
         switch (type) {
             case "PotionItem":        return new domain.models.item.PotionItem(x, y);
             case "SwordItem":         return new domain.models.item.SwordItem(x, y);
+            case "AxeItem":           return new domain.models.item.AxeItem(x, y);
+            case "WoodenSwordItem":   return new domain.models.item.WoodenSwordItem(x, y);
+            case "SamuraiSwordItem":  return new domain.models.item.SamuraiSwordItem(x, y);
+            case "DiamondSwordItem":  return new domain.models.item.DiamondSwordItem(x, y);
+            case "BowItem":           return new domain.models.item.BowItem(x, y);
+            case "FireWandItem":      return new domain.models.item.FireWandItem(x, y);
+            case "ArmorItem":         return new domain.models.item.ArmorItem(x, y);
+            case "RingItem":          return new domain.models.item.RingItem(x, y);
             case "KeyItem":           return new domain.models.staticObjects.KeyItem(x, y);
             case "Column":            return new domain.models.entity.Column(displayName, x, y);
             case "Crate":             return new domain.models.entity.Crate(displayName, x, y);
-            case "Chest":             return new domain.models.entity.Chest(displayName, x, y);
+            case "Chest":             return new domain.models.entity.Chest(displayName, x, y, isLocked);
             case "SearchableObject":  return new domain.models.entity.SearchableObject(displayName, x, y);
+            case "Decoration":        return new domain.models.staticObjects.Decoration(displayName, x, y, "torch/torch_1");
+            case "Door":
+                domain.models.staticObjects.Door door = new domain.models.staticObjects.Door(displayName, x, y, isLocked);
+                if (!isLocked) door.open(); // Eğer kilitli değilse açık görseline geç
+                return door;
             default:
                 System.err.println("Bilinmeyen item tipi: " + type);
                 return null;
         }
     }
 
+    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y) {
+        return createItem(type, name, x, y, false);
+    }
+
     // Eski imza — envanter için (name yok)
     private static domain.models.entity.GameObject createItem(String type, int x, int y) {
-        return createItem(type, null, x, y);
+        return createItem(type, null, x, y, false);
     }
 
     // startGame ve loadGame tarafından ortak kullanılan view/timer/input kurulum
@@ -262,10 +332,34 @@ public class DemoRunner {
                 () -> {
                     if (logicRef[0] != null)  logicRef[0].stop();
                     if (renderRef[0] != null) renderRef[0].stop();
+                    startGame(frame, mainPanel, cardLayout);
+                },
+                () -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
                     cardLayout.show(mainPanel, "Menu");
                 }
         );
         frame.setGlassPane(pauseMenu);
+
+        // GameOverMenu — JFrame glass pane olarak Hero ölünce bindirilecek
+        view.GameOverMenu gameOverMenu = new view.GameOverMenu(
+                () -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    startGame(frame, mainPanel, cardLayout);
+                },
+                (loadedState) -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    loadGame(frame, mainPanel, cardLayout, loadedState);
+                },
+                () -> {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    cardLayout.show(mainPanel, "Menu");
+                }
+        );
 
         // ESC tuşu — pause/resume toggle
         gameView.getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW)
@@ -273,6 +367,8 @@ public class DemoRunner {
         gameView.getActionMap().put("togglePause", new javax.swing.AbstractAction() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (gameOverMenu.isVisible()) return; // Game over aktifken ESC basılamaz
+                
                 boolean paused = pauseMenu.isVisible();
                 if (paused) {
                     pauseMenu.setVisible(false);
@@ -290,6 +386,52 @@ public class DemoRunner {
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         logicRef[0] = new javax.swing.Timer(120, (e) -> {
+            // ZAFER (WIN) KONTROLÜ
+            boolean allEnemiesDefeated = true;
+            for (domain.models.entity.Entity entity : entities) {
+                if ((entity instanceof domain.models.entity.Knight || entity instanceof domain.models.entity.Sorcerer) && entity.isAlive()) {
+                    allEnemiesDefeated = false;
+                    break;
+                }
+            }
+            
+            boolean exitReached = false;
+            for (int x = 0; x < map.getWidth(); x++) {
+                for (int y = 0; y < map.getHeight(); y++) {
+                    domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                    if (obj instanceof domain.models.staticObjects.Door && "Exit Door".equals(obj.getName())) {
+                        domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
+                        if (!door.isLocked() && Math.abs(hero.getX() - x) <= 1 && Math.abs(hero.getY() - y) <= 1) {
+                            exitReached = true;
+                        }
+                    }
+                }
+            }
+
+            if (allEnemiesDefeated && exitReached) {
+                if (logicRef[0] != null)  logicRef[0].stop();
+                if (renderRef[0] != null) renderRef[0].stop();
+                inputHandler.disableInput();
+                
+                javax.swing.JOptionPane.showMessageDialog(frame,
+                        "🌟 TEBRİKLER! 🌟\n\nTüm düşmanları yendin ve Çıkış Kapısı'nı açarak COMP302 Zindanından başarıyla kaçtın!\nPhase I başarıyla tamamlandı!",
+                        "Zafer!",
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // GAME OVER KONTROLÜ
+            if (!hero.isAlive()) {
+                if (logicRef[0] != null)  logicRef[0].stop(); // Oyun motorunu (hareketleri) durdur
+                if (renderRef[0] != null) renderRef[0].stop(); // FPS motorunu durdur
+                inputHandler.disableInput(); // Oyuncunun tuş basmalarını engelle
+                
+                // Game Over ekranını JFrame'in en üst katmanına (GlassPane) bas
+                frame.setGlassPane(gameOverMenu);
+                gameOverMenu.setVisible(true);
+                return;
+            }
+
             hero.update();
 
             knight.followHero(hero, map, entities);
@@ -304,11 +446,80 @@ public class DemoRunner {
                 if (s.isAlive()) s.followHero(hero, map, entities);
             }
 
+            // Tüm Sorcerer'lardan bekleyen mermileri topla (ConcurrentModification önlemi)
+            java.util.List<domain.models.entity.Projectile> newProjectiles = new java.util.ArrayList<>();
+            domain.models.entity.Projectile sp = sorcerer.pollPendingProjectile();
+            if (sp != null) newProjectiles.add(sp);
+            for (Sorcerer s : spawner.getSpawnedSorcerers()) {
+                domain.models.entity.Projectile p = s.pollPendingProjectile();
+                if (p != null) newProjectiles.add(p);
+            }
+            entities.addAll(newProjectiles);
+
+            // Tüm aktif mermileri ilerlet ve Hero/Clone/Enemy çarpışmasını kontrol et
+            for (domain.models.entity.Entity en : entities) {
+                if (en instanceof domain.models.entity.Projectile && en.isAlive()) {
+                    domain.models.entity.Projectile proj = (domain.models.entity.Projectile) en;
+                    proj.step(map);
+                    
+                    if (proj.getOwner() == hero) {
+                        // Hero fırlattığı mermilerin düşmanlara çarpma kontrolü
+                        for (domain.models.entity.Entity enemy : entities) {
+                            if (enemy.isAlive() && enemy != hero && !(enemy instanceof ShadowClone) && !(enemy instanceof domain.models.entity.Projectile)) {
+                                if (proj.getX() == enemy.getX() && proj.getY() == enemy.getY()) {
+                                    int def = 0;
+                                    if (enemy instanceof domain.models.entity.Knight) {
+                                        def = 1; // Knight armor reduces damage by 1
+                                    }
+                                    int damage = Math.max(0, proj.getDamage() - def);
+                                    enemy.takeDamage(damage);
+                                    view.GameView.addFloatingText(enemy.getX(), enemy.getY(), "-" + damage + " HP", new java.awt.Color(255, 60, 60));
+                                    proj.setHp(0); // destroy projectile
+                                    System.out.println("Enemy hit by player projectile! Damage: " + damage + " | Enemy HP: " + enemy.getHp());
+                                    
+                                    // Handle enemy defeat & loot drop
+                                    if (!enemy.isAlive()) {
+                                        System.out.println("Enemy defeated by projectile!");
+                                        java.util.Random rand = new java.util.Random();
+                                        int dropType = rand.nextInt(3);
+                                        domain.models.entity.GameObject loot = null;
+                                        if (dropType == 0) {
+                                            loot = domain.models.item.MapItem.createRandomItem(enemy.getX(), enemy.getY());
+                                        } else if (dropType == 1) {
+                                            loot = new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
+                                        } else {
+                                            loot = new domain.models.staticObjects.KeyItem(enemy.getX(), enemy.getY());
+                                        }
+                                        map.placeObject(loot, enemy.getX(), enemy.getY());
+                                        System.out.println("Loot dropped: " + loot.getName());
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        // Düşman mermisinin Hero veya Clone'a çarpma kontrolü
+                        ShadowClone activeClone = inputHandler.getShadowClone();
+                        Entity target = (activeClone != null && activeClone.isAlive()) ? activeClone : hero;
+                        
+                        if (proj.isAlive() && proj.getX() == target.getX() && proj.getY() == target.getY()) {
+                            int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
+                            int damage = Math.max(1, proj.getDamage() - def); // Minimum 1 damage to prevent complete invincibility
+                            target.takeDamage(damage);
+                            view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
+                            proj.setHp(0); // Mermi yok ol
+                            System.out.println("Target hit by projectile! Damage: " + damage + " | Target HP: " + target.getHp());
+                        }
+                    }
+                }
+            }
+
             scrollSpawner.trySpawn();
 
-            ShadowClone activeClone = inputHandler.getShadowClone();
-            if (activeClone != null) activeClone.update();
+            ShadowClone activeCloneForUpdate = inputHandler.getShadowClone();
+            if (activeCloneForUpdate != null) activeCloneForUpdate.update();
         });
+
         logicRef[0].start();
 
         // Render Loop (Saniyede 60 Kare - 60 FPS Çizim Motoru)

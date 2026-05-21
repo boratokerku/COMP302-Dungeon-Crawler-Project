@@ -560,12 +560,14 @@ public class DesignModeView extends JPanel {
         }
     }
 
-    // ── 5. Clear Map ─────────────────────────────────────────────────────────
     private void doClear() {
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Tüm yerleştirilen nesneler silinecek. Emin misiniz?",
-                "Haritayı Temizle", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+
+        ClearMapDialog dialog = new ClearMapDialog(parentFrame);
+        dialog.setVisible(true);
+
+        if (!dialog.isConfirmed()) return;
 
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {

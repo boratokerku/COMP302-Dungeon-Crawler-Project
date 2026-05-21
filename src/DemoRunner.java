@@ -18,11 +18,108 @@ import java.awt.Color;
 import javax.swing.JPanel;
 
 public class DemoRunner {
+    private static GameMap initialDesignedMap = null;
+    private static domain.models.GameMode activeGameMode = domain.models.GameMode.ADVENTURE;
+
+    private static GameMap cloneMap(GameMap original) {
+        if (original == null) return null;
+        int w = original.getWidth();
+        int h = original.getHeight();
+        GameMap copy = new GameMap(w, h);
+        
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                domain.models.entity.GameObject obj = original.getObjectAt(x, y);
+                if (obj == null) continue;
+                if (obj instanceof domain.models.tile.WallTile) {
+                    copy.placeObject(new domain.models.tile.WallTile(obj.getImageName()), x, y);
+                } else if (obj instanceof domain.models.tile.FloorTile) {
+                    copy.placeObject(new domain.models.tile.FloorTile(), x, y);
+                } else if (obj instanceof domain.models.entity.Chest) {
+                    domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                    copy.placeObject(new domain.models.entity.Chest(chest.getName(), x, y, chest.isLocked()), x, y);
+                } else if (obj instanceof domain.models.entity.DoubleCrate) {
+                    copy.placeObject(new domain.models.entity.DoubleCrate(obj.getName(), x, y), x, y);
+                } else if (obj instanceof domain.models.entity.Crate) {
+                    copy.placeObject(new domain.models.entity.Crate(obj.getName(), x, y), x, y);
+                } else if (obj instanceof domain.models.entity.Column) {
+                    copy.placeObject(new domain.models.entity.Column(obj.getName(), x, y, obj.getImageName()), x, y);
+                } else if (obj instanceof domain.models.entity.Sign) {
+                    copy.placeObject(new domain.models.entity.Sign(obj.getName(), x, y, obj.getImageName()), x, y);
+                } else if (obj instanceof domain.models.staticObjects.Door) {
+                    domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
+                    copy.placeObject(new domain.models.staticObjects.Door(door.getName(), x, y, door.isLocked()), x, y);
+                } else if (obj instanceof domain.models.staticObjects.Decoration) {
+                    copy.placeObject(new domain.models.staticObjects.Decoration(obj.getName(), x, y, obj.getImageName()), x, y);
+                } else if (obj instanceof domain.models.staticObjects.KeyItem) {
+                    copy.placeObject(new domain.models.staticObjects.KeyItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.PotionItem) {
+                    copy.placeObject(new domain.models.item.PotionItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.SwordItem) {
+                    copy.placeObject(new domain.models.item.SwordItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.WoodenSwordItem) {
+                    copy.placeObject(new domain.models.item.WoodenSwordItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.AxeItem) {
+                    copy.placeObject(new domain.models.item.AxeItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.BowItem) {
+                    copy.placeObject(new domain.models.item.BowItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.FireWandItem) {
+                    copy.placeObject(new domain.models.item.FireWandItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.SamuraiSwordItem) {
+                    copy.placeObject(new domain.models.item.SamuraiSwordItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.DiamondSwordItem) {
+                    copy.placeObject(new domain.models.item.DiamondSwordItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.ArmorItem) {
+                    copy.placeObject(new domain.models.item.ArmorItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.RingItem) {
+                    copy.placeObject(new domain.models.item.RingItem(x, y), x, y);
+                } else if (obj instanceof domain.models.entity.SearchableObject) {
+                    copy.placeObject(new domain.models.entity.SearchableObject(obj.getName(), x, y), x, y);
+                } else {
+                    copy.placeObject(obj, x, y);
+                }
+            }
+        }
+        return copy;
+    }
+
+    private static void restartGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
+        if (initialDesignedMap != null) {
+            GameMap cleanMap = cloneMap(initialDesignedMap);
+            startGameWithMap(frame, mainPanel, cardLayout, cleanMap, activeGameMode);
+        } else {
+            startGame(frame, mainPanel, cardLayout);
+        }
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("COMP302 Dungeon Crawler");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+            // Set window icon
+            try {
+                java.io.File iconFile = new java.io.File("resources/images/icon.png");
+                if (iconFile.exists()) {
+                    java.awt.image.BufferedImage rawIcon = javax.imageio.ImageIO.read(iconFile);
+                    java.awt.image.BufferedImage processedIcon = processIcon(rawIcon);
+                    frame.setIconImage(processedIcon);
+                    
+                    // Set macOS Dock icon if supported
+                    try {
+                        if (java.awt.Taskbar.isTaskbarSupported()) {
+                            java.awt.Taskbar taskbar = java.awt.Taskbar.getTaskbar();
+                            if (taskbar.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) {
+                                taskbar.setIconImage(processedIcon);
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Ignore if Taskbar is not supported or throws exceptions in some environments
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Icon could not be loaded: " + e.getMessage());
+            }
 
             CardLayout cardLayout = new CardLayout();
             JPanel mainPanel = new JPanel(cardLayout);
@@ -85,6 +182,9 @@ public class DemoRunner {
 
     /** Tasarımlanan map ile hero + enemies ekleyerek oyunu başlatır */
     private static void startGameWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map, domain.models.GameMode mode) {
+        initialDesignedMap = cloneMap(map);
+        activeGameMode = mode;
+
         if (mode == domain.models.GameMode.TEAM_MATCH) {
             startTeamMatchWithMap(frame, mainPanel, cardLayout, map);
             return;
@@ -182,6 +282,8 @@ public class DemoRunner {
 
     // Yeni oyun — tüm nesneler rastgele oluşturulur
     private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
+        initialDesignedMap = null;
+        activeGameMode = domain.models.GameMode.ADVENTURE;
         GameMap map = new GameMap(25, 20);
         Hero hero = new Hero(4, 4);
         hero.setCurrentMap(map);
@@ -247,6 +349,8 @@ public class DemoRunner {
 
     // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
     private static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
+        initialDesignedMap = null;
+        activeGameMode = domain.models.GameMode.ADVENTURE;
         GameMap map = new GameMap(25, 20);
 
         // Hero oluştur ve durumunu yükle
@@ -474,7 +578,7 @@ public class DemoRunner {
                 () -> {
                     if (logicRef[0] != null)  logicRef[0].stop();
                     if (renderRef[0] != null) renderRef[0].stop();
-                    startGame(frame, mainPanel, cardLayout);
+                    restartGame(frame, mainPanel, cardLayout);
                 },
                 () -> {
                     if (logicRef[0] != null)  logicRef[0].stop();
@@ -489,7 +593,7 @@ public class DemoRunner {
                 () -> {
                     if (logicRef[0] != null)  logicRef[0].stop();
                     if (renderRef[0] != null) renderRef[0].stop();
-                    startGame(frame, mainPanel, cardLayout);
+                    restartGame(frame, mainPanel, cardLayout);
                 },
                 (loadedState) -> {
                     if (logicRef[0] != null)  logicRef[0].stop();
@@ -545,10 +649,14 @@ public class DemoRunner {
                     if (renderRef[0] != null) renderRef[0].stop();
                     inputHandler.disableInput();
                     
-                    String title = !cyanAlive ? "Game Over" : "You win";
-                    String msg = !cyanAlive ? "Cyan Team has been defeated. Game Over!" : "Orange Team has been defeated. You win!";
+                    boolean isVictory = cyanAlive;
+                    String headingText = isVictory ? "YOU WIN" : "GAME OVER";
+                    String subHeadingText = isVictory ? "Orange Team has been defeated. You win!" : "Cyan Team has been defeated. Game Over!";
                     
-                    javax.swing.JOptionPane.showMessageDialog(frame, msg, title, javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    gameOverMenu.setupGameOverMenu(headingText, subHeadingText, false, isVictory);
+                    
+                    frame.setGlassPane(gameOverMenu);
+                    gameOverMenu.setVisible(true);
                     return;
                 }
             } else {
@@ -591,6 +699,9 @@ public class DemoRunner {
                     if (logicRef[0] != null)  logicRef[0].stop(); // Oyun motorunu (hareketleri) durdur
                     if (renderRef[0] != null) renderRef[0].stop(); // FPS motorunu durdur
                     inputHandler.disableInput(); // Oyuncunun tuş basmalarını engelle
+                    
+                    // Reset to default Adventure mode style
+                    gameOverMenu.setupGameOverMenu("GAME OVER", "You have succumbed to your fate.", true, false);
                     
                     // Game Over ekranını JFrame'in en üst katmanına (GlassPane) bas
                     frame.setGlassPane(gameOverMenu);
@@ -756,5 +867,94 @@ public class DemoRunner {
                 placed = true;
             }
         }
+    }
+
+    private static java.awt.image.BufferedImage processIcon(java.awt.image.BufferedImage img) {
+        int w = img.getWidth(), h = img.getHeight();
+        int top = 0, bottom = h - 1, left = 0, right = w - 1;
+        try {
+            // Top border
+            outer: for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    int rgb = img.getRGB(x, y);
+                    int alpha = (rgb >> 24) & 0xff;
+                    int r = (rgb >> 16) & 0xff;
+                    int g = (rgb >> 8) & 0xff;
+                    int b = rgb & 0xff;
+                    if (alpha > 10 && !(r > 240 && g > 240 && b > 240)) {
+                        top = y;
+                        break outer;
+                    }
+                }
+            }
+            // Bottom border
+            outer: for (int y = h - 1; y >= 0; y--) {
+                for (int x = 0; x < w; x++) {
+                    int rgb = img.getRGB(x, y);
+                    int alpha = (rgb >> 24) & 0xff;
+                    int r = (rgb >> 16) & 0xff;
+                    int g = (rgb >> 8) & 0xff;
+                    int b = rgb & 0xff;
+                    if (alpha > 10 && !(r > 240 && g > 240 && b > 240)) {
+                        bottom = y;
+                        break outer;
+                    }
+                }
+            }
+            // Left border
+            outer: for (int x = 0; x < w; x++) {
+                for (int y = 0; y < h; y++) {
+                    int rgb = img.getRGB(x, y);
+                    int alpha = (rgb >> 24) & 0xff;
+                    int r = (rgb >> 16) & 0xff;
+                    int g = (rgb >> 8) & 0xff;
+                    int b = rgb & 0xff;
+                    if (alpha > 10 && !(r > 240 && g > 240 && b > 240)) {
+                        left = x;
+                        break outer;
+                    }
+                }
+            }
+            // Right border
+            outer: for (int x = w - 1; x >= 0; x--) {
+                for (int y = 0; y < h; y++) {
+                    int rgb = img.getRGB(x, y);
+                    int alpha = (rgb >> 24) & 0xff;
+                    int r = (rgb >> 16) & 0xff;
+                    int g = (rgb >> 8) & 0xff;
+                    int b = rgb & 0xff;
+                    if (alpha > 10 && !(r > 240 && g > 240 && b > 240)) {
+                        right = x;
+                        break outer;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return img;
+        }
+
+        if (right <= left || bottom <= top) return img;
+
+        // Extract the subimage and make white background transparent
+        int subW = right - left + 1;
+        int subH = bottom - top + 1;
+        java.awt.image.BufferedImage processed = new java.awt.image.BufferedImage(subW, subH, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+
+        for (int y = 0; y < subH; y++) {
+            for (int x = 0; x < subW; x++) {
+                int rgb = img.getRGB(left + x, top + y);
+                int alpha = (rgb >> 24) & 0xff;
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = rgb & 0xff;
+
+                if (alpha < 10 || (r > 240 && g > 240 && b > 240)) {
+                    processed.setRGB(x, y, 0x00000000);
+                } else {
+                    processed.setRGB(x, y, rgb);
+                }
+            }
+        }
+        return processed;
     }
 }

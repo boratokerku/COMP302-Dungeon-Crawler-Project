@@ -18,6 +18,13 @@ public class GameOverMenu extends JPanel {
     private final java.util.function.Consumer<GameState> onLoadGame;
     private final Runnable onMainMenu;
 
+    private JPanel containerPanel;
+    private JLabel heading;
+    private JLabel subHeading;
+    private JButton restartBtn;
+    private JButton loadBtn;
+    private JButton menuBtn;
+
     public GameOverMenu(Runnable onRestart, java.util.function.Consumer<GameState> onLoadGame, Runnable onMainMenu) {
         this.onRestart = onRestart;
         this.onLoadGame = onLoadGame;
@@ -31,7 +38,7 @@ public class GameOverMenu extends JPanel {
     }
 
     private void initUI() {
-        JPanel containerPanel = new JPanel();
+        containerPanel = new JPanel();
         containerPanel.setLayout(new BoxLayout(containerPanel, BoxLayout.Y_AXIS));
         containerPanel.setBackground(new Color(40, 10, 10, 230)); // Deep red-black transparent tint
         containerPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -40,7 +47,7 @@ public class GameOverMenu extends JPanel {
         ));
 
         // Heading: GAME OVER
-        JLabel heading = new JLabel("GAME OVER");
+        heading = new JLabel("GAME OVER");
         heading.setFont(new Font("Arial", Font.BOLD, 48));
         heading.setForeground(new Color(255, 60, 60)); // Bright crimson
         heading.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -49,7 +56,7 @@ public class GameOverMenu extends JPanel {
         containerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // Subheading
-        JLabel subHeading = new JLabel("You have succumbed to your fate.");
+        subHeading = new JLabel("You have succumbed to your fate.");
         subHeading.setFont(new Font("Arial", Font.PLAIN, 18));
         subHeading.setForeground(Color.LIGHT_GRAY);
         subHeading.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -62,9 +69,9 @@ public class GameOverMenu extends JPanel {
         btnPanel.setLayout(new GridLayout(3, 1, 0, 15));
         btnPanel.setOpaque(false);
 
-        JButton restartBtn = createMenuButton("Restart Game");
-        JButton loadBtn    = createMenuButton("Load Save");
-        JButton menuBtn    = createMenuButton("Main Menu");
+        restartBtn = createMenuButton("Restart Game");
+        loadBtn    = createMenuButton("Load Save");
+        menuBtn    = createMenuButton("Main Menu");
 
         restartBtn.addActionListener(e -> {
             setVisible(false);
@@ -86,6 +93,46 @@ public class GameOverMenu extends JPanel {
         containerPanel.add(btnPanel);
 
         add(containerPanel);
+    }
+
+    public void setupGameOverMenu(String headingText, String subHeadingText, boolean showLoad, boolean isVictory) {
+        heading.setText(headingText);
+        subHeading.setText(subHeadingText);
+        loadBtn.setVisible(showLoad);
+
+        if (isVictory) {
+            containerPanel.setBackground(new Color(10, 35, 30, 230)); // Deep emerald-black transparent tint
+            containerPanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(50, 220, 180), 3), // Emerald border
+                    BorderFactory.createEmptyBorder(30, 50, 30, 50)
+            ));
+            heading.setForeground(new Color(255, 215, 0)); // Gold
+
+            // Style buttons for victory
+            styleButton(restartBtn, new Color(200, 255, 230), new Color(20, 80, 60), new Color(60, 200, 150));
+            styleButton(menuBtn, new Color(200, 255, 230), new Color(20, 80, 60), new Color(60, 200, 150));
+        } else {
+            containerPanel.setBackground(new Color(40, 10, 10, 230)); // Deep red-black transparent tint
+            containerPanel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(220, 50, 50), 3), // Crimson border
+                    BorderFactory.createEmptyBorder(30, 50, 30, 50)
+            ));
+            heading.setForeground(new Color(255, 60, 60)); // Crimson
+
+            // Style buttons for defeat
+            styleButton(restartBtn, new Color(255, 200, 200), new Color(80, 20, 20), new Color(200, 60, 60));
+            styleButton(menuBtn, new Color(255, 200, 200), new Color(80, 20, 20), new Color(200, 60, 60));
+            styleButton(loadBtn, new Color(255, 200, 200), new Color(80, 20, 20), new Color(200, 60, 60));
+        }
+
+        containerPanel.revalidate();
+        containerPanel.repaint();
+    }
+
+    private void styleButton(JButton btn, Color fg, Color bg, Color border) {
+        btn.setForeground(fg);
+        btn.setBackground(bg);
+        btn.setBorder(BorderFactory.createLineBorder(border, 1));
     }
 
     private JButton createMenuButton(String text) {

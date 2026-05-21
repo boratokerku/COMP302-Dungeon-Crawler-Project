@@ -132,9 +132,7 @@ public class Sorcerer extends Entity implements Renderable {
         double dx = (diffX / dist) * speed;
         double dy = (diffY / dist) * speed;
 
-        System.out.println("Sorcerer fired projectile! Direction: (" + dx + ", " + dy + ")");
-        // Design doc §2.5.2: 8 HP damage
-        return new Projectile(this.x, this.y, this.x, this.y, dx, dy, 8, this);
+        return new Projectile(this.x, this.y, this.x, this.y, dx, dy, 8, this, "SORCERER_FIREBALL");
     }
 
     /**

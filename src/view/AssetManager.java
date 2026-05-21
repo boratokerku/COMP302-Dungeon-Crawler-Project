@@ -16,6 +16,7 @@ public class AssetManager {
     private SpriteAnimation sorcererWalk;
     private BufferedImage projectileArrow;
     private BufferedImage projectileFireball;
+    private BufferedImage projectileSorcererFireball;
 
     private AssetManager() {
         heroWalkRight = new SpriteAnimation(120);
@@ -43,9 +44,33 @@ public class AssetManager {
 
             File f2 = findFile("resources/images/weapons/fireball.png");
             if (f2 != null) projectileFireball = ImageIO.read(f2);
+
+            File f3 = findFile("resources/images/weapons/sorcerer_fire_ball.png");
+            if (f3 != null) projectileSorcererFireball = makeWhiteTransparent(ImageIO.read(f3));
         } catch (Exception e) {
             System.err.println("Error loading item sprites: " + e.getMessage());
         }
+    }
+
+    private BufferedImage makeWhiteTransparent(BufferedImage img) {
+        if (img == null) return null;
+        int w = img.getWidth();
+        int h = img.getHeight();
+        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                int rgb = img.getRGB(x, y);
+                int r = (rgb >> 16) & 0xff;
+                int g = (rgb >> 8) & 0xff;
+                int b = rgb & 0xff;
+                if (r > 240 && g > 240 && b > 240) {
+                    out.setRGB(x, y, 0x00000000); // transparent
+                } else {
+                    out.setRGB(x, y, rgb);
+                }
+            }
+        }
+        return out;
     }
 
     private void loadHeroAnimations() {
@@ -134,5 +159,9 @@ public class AssetManager {
 
     public BufferedImage getProjectileFireball() {
         return projectileFireball;
+    }
+
+    public BufferedImage getProjectileSorcererFireball() {
+        return projectileSorcererFireball;
     }
 }

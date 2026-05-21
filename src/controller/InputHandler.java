@@ -46,6 +46,7 @@ public class InputHandler implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         if (!inputEnabled) return;
+        if (!hero.isAlive()) return;
         
         int code = e.getKeyCode();
 
@@ -236,6 +237,7 @@ public class InputHandler implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         if (!inputEnabled) return;
+        if (!hero.isAlive()) return;
         
         int code = e.getKeyCode();
         if (isMovementKey(code)) {

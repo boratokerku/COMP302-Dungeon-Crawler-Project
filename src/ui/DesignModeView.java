@@ -36,6 +36,7 @@ public class DesignModeView extends JPanel {
     // ── Callbacks ────────────────────────────────────────────────────────────
     private final Runnable onBackToMenu;
     private final java.util.function.Consumer<GameMap> onPlayMap;
+    private final java.util.function.Consumer<GameMap> onPlayTeamMatchMap;
 
     // ── Core ─────────────────────────────────────────────────────────────────
     private final GameMap map;
@@ -65,6 +66,47 @@ public class DesignModeView extends JPanel {
     private final List<PaletteItem> palette = new ArrayList<>();
     private int selectedPaletteIdx = -1;   // seçili item (-1 = hiçbiri)
 
+    private static class PaletteLayout {
+        int iconSize;
+        int step;
+        int cols;
+        int startX;
+        int startY;
+    }
+
+    private PaletteLayout getPaletteLayout() {
+        PaletteLayout l = new PaletteLayout();
+        int total = palette.size();
+        if (total == 0) return l;
+        l.cols = (int) Math.ceil(total / (double) TOOLBAR_ROWS);
+        
+        l.iconSize = ICON_SIZE;
+        int gap = ICON_GAP;
+        l.step = l.iconSize + gap;
+        
+        int mapW = tileSize * map.getWidth();
+        int totalW = l.cols * l.step - gap;
+        int usableW = mapW - TOOLBAR_PAD * 2;
+        
+        if (totalW > usableW && l.cols > 0) {
+            l.step = (usableW + gap) / l.cols;
+            l.iconSize = l.step - gap;
+            totalW = l.cols * l.step - gap;
+        }
+        
+        l.startX = mapOffsetX + TOOLBAR_PAD + Math.max(0, (usableW - totalW) / 2);
+        l.startY = TOOLBAR_VPAD + 8;
+        
+        // Vertically center smaller icons in the fixed height toolbar
+        int drawnH = TOOLBAR_ROWS * l.iconSize + (TOOLBAR_ROWS - 1) * gap;
+        int expectedH = TOOLBAR_ROWS * ICON_SIZE + (TOOLBAR_ROWS - 1) * ICON_GAP;
+        if (drawnH < expectedH) {
+            l.startY += (expectedH - drawnH) / 2;
+        }
+        
+        return l;
+    }
+
     // ── Hover ────────────────────────────────────────────────────────────────
     private int hoverTileX = -1;
     private int hoverTileY = -1;
@@ -84,11 +126,13 @@ public class DesignModeView extends JPanel {
 
     public DesignModeView(GameMap map, TileManager tileManager,
                           Runnable onBackToMenu,
-                          java.util.function.Consumer<GameMap> onPlayMap) {
+                          java.util.function.Consumer<GameMap> onPlayMap,
+                          java.util.function.Consumer<GameMap> onPlayTeamMatchMap) {
         this.map         = map;
         this.tileManager = tileManager;
         this.onBackToMenu = onBackToMenu;
         this.onPlayMap    = onPlayMap;
+        this.onPlayTeamMatchMap = onPlayTeamMatchMap;
 
         setBackground(new Color(42, 22, 38));
         setLayout(null);
@@ -179,6 +223,7 @@ public class DesignModeView extends JPanel {
 
     private void buildActionButtons() {
         actionBtns.add(new ActionBtn("▶  Play",          new Color(60, 140, 60),   "images/DesignModeImages/DesignModeButtons/PlayButton.png",          this::doPlay));
+        actionBtns.add(new ActionBtn("▶  Team Match",    new Color(60, 100, 160),  "images/DesignModeImages/DesignModeButtons/PlayTeamMatchButton.png", this::doPlayTeamMatch));
         actionBtns.add(new ActionBtn("⚄  +5 Random",     new Color(80, 60, 130),   "images/DesignModeImages/DesignModeButtons/PlusFiveRandomButton.png", this::doAddRandom));
         actionBtns.add(new ActionBtn("🎲  Gen Map",      new Color(110, 50, 130),  "images/DesignModeImages/DesignModeButtons/GenerateRandomMapButton.png", this::doGenerateRandomMap));
         actionBtns.add(new ActionBtn("💾  Save Map",      new Color(50, 90, 150),   "images/DesignModeImages/DesignModeButtons/SaveMapButton.png",       this::doSave));
@@ -303,23 +348,15 @@ public class DesignModeView extends JPanel {
 
     /** Toolbar'da verilen (mx,my) koordinatındaki palette item'ını döndürür */
     private PaletteItem getPaletteItemAt(int mx, int my) {
-        int total   = palette.size();
-        int step    = ICON_SIZE + ICON_GAP;
-        int cols    = (int) Math.ceil(total / (double) TOOLBAR_ROWS);
-        int totalW  = cols * step - ICON_GAP;
-        // Toolbar haritanin x ofseti ve genisligi ile hizalidir
-        int mapW    = tileSize * map.getWidth();
-        int toolbarX = mapOffsetX;
-        int usableW = mapW - TOOLBAR_PAD * 2;
-        int startX  = toolbarX + TOOLBAR_PAD + Math.max(0, (usableW - totalW) / 2);
-        int startY  = TOOLBAR_VPAD + 8;
+        if (palette.isEmpty()) return null;
+        PaletteLayout layout = getPaletteLayout();
 
-        for (int i = 0; i < total; i++) {
-            int col = i % cols;
-            int row = i / cols;
-            int ix  = startX + col * step;
-            int iy  = startY + row * (ICON_SIZE + ICON_GAP);
-            if (mx >= ix && mx <= ix + ICON_SIZE && my >= iy && my <= iy + ICON_SIZE) {
+        for (int i = 0; i < palette.size(); i++) {
+            int col = i % layout.cols;
+            int row = i / layout.cols;
+            int ix  = layout.startX + col * layout.step;
+            int iy  = layout.startY + row * (layout.iconSize + ICON_GAP);
+            if (mx >= ix && mx <= ix + layout.iconSize && my >= iy && my <= iy + layout.iconSize) {
                 return palette.get(i);
             }
         }
@@ -343,6 +380,10 @@ public class DesignModeView extends JPanel {
     // ── 1. Play ──────────────────────────────────────────────────────────────
     private void doPlay() {
         if (onPlayMap != null) onPlayMap.accept(map);
+    }
+
+    private void doPlayTeamMatch() {
+        if (onPlayTeamMatchMap != null) onPlayTeamMatchMap.accept(map);
     }
 
     // ── 2. Add 5 Random Items + 1 Hidden ─────────────────────────────────────
@@ -803,26 +844,20 @@ public class DesignModeView extends JPanel {
         g.setStroke(new BasicStroke(1));
 
         // 3. İkon grid — 2 satır, aspect-ratio korunarak
-        int total   = palette.size();
-        int step    = ICON_SIZE + ICON_GAP;
-        int cols    = (int) Math.ceil(total / (double) TOOLBAR_ROWS);
-        int totalW  = cols * step - ICON_GAP;
-        int usableW = W - TOOLBAR_PAD * 2;
-        int startX  = toolbarX + TOOLBAR_PAD + Math.max(0, (usableW - totalW) / 2);
-        int startY  = TOOLBAR_VPAD + 8;
-
-        for (int i = 0; i < total; i++) {
+        PaletteLayout layout = getPaletteLayout();
+        
+        for (int i = 0; i < palette.size(); i++) {
             PaletteItem item = palette.get(i);
-            int col = i % cols;
-            int row = i / cols;
-            int ix  = startX + col * step;
-            int iy  = startY + row * (ICON_SIZE + ICON_GAP);
+            int col = i % layout.cols;
+            int row = i / layout.cols;
+            int ix  = layout.startX + col * layout.step;
+            int iy  = layout.startY + row * (layout.iconSize + ICON_GAP);
 
             boolean selected = (i == selectedPaletteIdx);
 
             if (selected) {
                 g.setColor(new Color(255, 215, 0, 180));
-                g.fillRoundRect(ix - 2, iy - 2, ICON_SIZE + 4, ICON_SIZE + 4, 6, 6);
+                g.fillRoundRect(ix - 2, iy - 2, layout.iconSize + 4, layout.iconSize + 4, 6, 6);
             }
 
             // Aspect-ratio koruyarak çiz
@@ -834,12 +869,12 @@ public class DesignModeView extends JPanel {
                 icon = tileManager.getTile("torch/torch_" + frame);
             }
             int slotPad = selected ? 3 : 1;
-            drawIconFit(g, icon, ix + slotPad, iy + slotPad, ICON_SIZE - slotPad * 2);
+            drawIconFit(g, icon, ix + slotPad, iy + slotPad, layout.iconSize - slotPad * 2);
 
             if (selected) {
                 g.setColor(new Color(255, 230, 50));
                 g.setStroke(new BasicStroke(2.5f));
-                g.drawRoundRect(ix - 2, iy - 2, ICON_SIZE + 4, ICON_SIZE + 4, 6, 6);
+                g.drawRoundRect(ix - 2, iy - 2, layout.iconSize + 4, layout.iconSize + 4, 6, 6);
                 g.setStroke(new BasicStroke(1));
             }
         }

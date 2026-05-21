@@ -5,11 +5,21 @@ import java.awt.Point;
 public abstract class Entity extends GameObject {
     protected int hp;
     protected boolean alive = true;
+    protected domain.models.Team team = domain.models.Team.NONE;
 
     public Entity(int x, int y, int hp) {
         super(x, y, "entity", true); 
         this.hp = hp;
     }
+
+    public domain.models.Team getTeam() {
+        return team;
+    }
+
+    public void setTeam(domain.models.Team team) {
+        this.team = team;
+    }
+
 
     public Point getPosition() {
         return new Point(this.x, this.y);

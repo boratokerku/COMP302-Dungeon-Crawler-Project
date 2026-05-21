@@ -55,8 +55,14 @@ public class Sorcerer extends Entity implements Renderable {
 
         long currentTime = System.currentTimeMillis();
 
-        // En yakın hedefi bul (Hero veya ShadowClone)
-        Entity target = findNearestTarget(hero, entities);
+        Entity target;
+        if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
+            target = findNearestEnemyTeamMatch(entities);
+        } else {
+            target = findNearestTarget(hero, entities);
+        }
+        
+        if (target == null) return;
 
         // Her 7 sn'de teleport (design doc §2.5.2)
         if (currentTime - lastTeleportTime >= 7000) {
@@ -69,6 +75,21 @@ public class Sorcerer extends Entity implements Renderable {
             lastProjectileTime = currentTime;
             pendingProjectile = createProjectile(target);
         }
+    }
+
+    private Entity findNearestEnemyTeamMatch(java.util.List<Entity> entities) {
+        Entity nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for (Entity e : entities) {
+            if (e != this && e.isAlive() && e.getTeam() != domain.models.Team.NONE && e.getTeam() != this.getTeam()) {
+                double d = Math.sqrt(Math.pow(this.x - e.getX(), 2) + Math.pow(this.y - e.getY(), 2));
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = e;
+                }
+            }
+        }
+        return nearest;
     }
 
     // Hero veya hayatta olan ShadowClone'dan hangisi daha yakınsa onu döndür

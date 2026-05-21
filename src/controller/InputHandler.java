@@ -16,7 +16,12 @@ public class InputHandler implements KeyListener {
     // Aktif shadow clone (null ise henüz çağrılmamış veya süresi dolmuş)
     private ShadowClone shadowClone;
     
+    private domain.models.GameMode gameMode = domain.models.GameMode.ADVENTURE;
     private boolean inputEnabled = true;
+
+    public void setGameMode(domain.models.GameMode mode) {
+        this.gameMode = mode;
+    }
 
     public InputHandler(Hero hero, domain.models.map.GameMap map,
             java.util.List<domain.models.entity.Entity> entities, view.GameView gameView) {

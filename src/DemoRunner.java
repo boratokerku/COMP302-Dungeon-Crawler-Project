@@ -57,12 +57,17 @@ public class DemoRunner {
                 tileManager,
                 // onBackToMenu
                 () -> cardLayout.show(mainPanel, "Menu"),
-                // onPlayMap — tasarımlanan map ile oyunu başlat
+                // onPlayMap — tasarımlanan map ile oyunu başlat (Adventure)
                 (designedMap) -> {
-                    // Tasarım modundaki mevcut design panelini kaldır
                     mainPanel.remove(mainPanel.getComponentCount() > 0
                             ? getComponentByName(mainPanel, "Design") : null);
-                    startGameWithMap(frame, mainPanel, cardLayout, designedMap);
+                    startGameWithMap(frame, mainPanel, cardLayout, designedMap, domain.models.GameMode.ADVENTURE);
+                },
+                // onPlayTeamMatchMap - Team Match başlat
+                (designedMap) -> {
+                    mainPanel.remove(mainPanel.getComponentCount() > 0
+                            ? getComponentByName(mainPanel, "Design") : null);
+                    startGameWithMap(frame, mainPanel, cardLayout, designedMap, domain.models.GameMode.TEAM_MATCH);
                 }
         );
         designView.setPreferredSize(new java.awt.Dimension(832, 700));
@@ -79,7 +84,11 @@ public class DemoRunner {
     }
 
     /** Tasarımlanan map ile hero + enemies ekleyerek oyunu başlatır */
-    private static void startGameWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map) {
+    private static void startGameWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map, domain.models.GameMode mode) {
+        if (mode == domain.models.GameMode.TEAM_MATCH) {
+            startTeamMatchWithMap(frame, mainPanel, cardLayout, map);
+            return;
+        }
         Hero hero = new Hero(4, 4);
         hero.setCurrentMap(map);
         Knight knight = new Knight(12, 10);
@@ -93,7 +102,73 @@ public class DemoRunner {
         List<GameState.ItemRecord> scrollItems = new ArrayList<>();
         List<String> inventoryScrollTypes = new ArrayList<>();
         setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer,
-                scrollItems, inventoryScrollTypes, null);
+                scrollItems, inventoryScrollTypes, null, mode);
+    }
+    
+    private static void startTeamMatchWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map) {
+        List<Entity> entities = new ArrayList<>();
+        
+        // Split map into left and right halves (ignore walls on borders)
+        int w = map.getWidth();
+        int h = map.getHeight();
+        
+        java.util.List<int[]> leftTiles = new ArrayList<>();
+        java.util.List<int[]> rightTiles = new ArrayList<>();
+        
+        for (int x = 1; x < w - 1; x++) {
+            for (int y = 1; y < h - 1; y++) {
+                if (map.isWalkable(x, y)) {
+                    if (x < w / 2) {
+                        leftTiles.add(new int[]{x, y});
+                    } else {
+                        rightTiles.add(new int[]{x, y});
+                    }
+                }
+            }
+        }
+        
+        java.util.Collections.shuffle(leftTiles);
+        java.util.Collections.shuffle(rightTiles);
+        
+        // Spawn Orange Team (Team 1) on Left Half: 1 Sorcerer, 3 Knights
+        Sorcerer s1 = new Sorcerer(leftTiles.get(0)[0], leftTiles.get(0)[1]);
+        s1.setTeam(domain.models.Team.ORANGE);
+        entities.add(s1);
+        for(int i = 0; i < 3; i++) {
+            Knight k = new Knight(leftTiles.get(i+1)[0], leftTiles.get(i+1)[1]);
+            k.setTeam(domain.models.Team.ORANGE);
+            entities.add(k);
+        }
+        
+        // Spawn Cyan Team (Team 2) on Right Half: 1 Sorcerer, 2 Knights, 1 Hero
+        Hero hero = new Hero(rightTiles.get(0)[0], rightTiles.get(0)[1]);
+        hero.setCurrentMap(map);
+        hero.setTeam(domain.models.Team.CYAN);
+        entities.add(hero);
+        
+        Sorcerer s2 = new Sorcerer(rightTiles.get(1)[0], rightTiles.get(1)[1]);
+        s2.setTeam(domain.models.Team.CYAN);
+        entities.add(s2);
+        
+        for(int i = 0; i < 2; i++) {
+            Knight k = new Knight(rightTiles.get(i+2)[0], rightTiles.get(i+2)[1]);
+            k.setTeam(domain.models.Team.CYAN);
+            entities.add(k);
+        }
+        
+        // Spawn 6 Random Weapons
+        java.util.List<int[]> allTiles = new ArrayList<>(leftTiles);
+        allTiles.addAll(rightTiles);
+        java.util.Collections.shuffle(allTiles);
+        for (int i = 0; i < 6; i++) {
+            domain.models.item.MapItem weapon = domain.models.item.MapItem.createRandomWeapon(allTiles.get(i)[0], allTiles.get(i)[1]);
+            map.placeObject(weapon, allTiles.get(i)[0], allTiles.get(i)[1]);
+        }
+        
+        List<GameState.ItemRecord> scrollItems = new ArrayList<>();
+        List<String> inventoryScrollTypes = new ArrayList<>();
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, null, null,
+                scrollItems, inventoryScrollTypes, null, domain.models.GameMode.TEAM_MATCH);
     }
 
     /** Adına göre panel bul (null-safe) */
@@ -167,7 +242,7 @@ public class DemoRunner {
         // Yeni oyunda haritada ve envantertde scroll yok — boş listeler
         List<GameState.ItemRecord> scrollItems = new ArrayList<>();
         List<String> inventoryScrollTypes = new ArrayList<>();
-        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes, null);
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes, null, domain.models.GameMode.ADVENTURE);
     }
 
     // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
@@ -271,7 +346,7 @@ public class DemoRunner {
             }
         }
 
-        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes, state);
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems, inventoryScrollTypes, state, domain.models.GameMode.ADVENTURE);
     }
 
     // Item tip ismine göre nesne oluşturur — scroll hariç (scroll setupGameView'da oluşur)
@@ -322,15 +397,20 @@ public class DemoRunner {
                                       Knight knight, Sorcerer sorcerer,
                                       List<GameState.ItemRecord> scrollItems,
                                       List<String> inventoryScrollTypes,
-                                      GameState state) {
+                                      GameState state,
+                                      domain.models.GameMode mode) {
         AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();
 
         GameView gameView = new GameView(hero, assetManager);
+        gameView.setGameMode(mode);
         gameView.setPreferredSize(new java.awt.Dimension(832, 640));
         gameView.setGameMap(map);
         gameView.setTileManager(tileManager);
-        gameView.setEnemies(knight, sorcerer);
+        // Only set single enemies for backwards compatibility in adventure mode
+        if (mode == domain.models.GameMode.ADVENTURE && knight != null && sorcerer != null) {
+            gameView.setEnemies(knight, sorcerer);
+        }
         gameView.setEntityList(entities);
 
         mainPanel.add(gameView, "Game");
@@ -341,6 +421,7 @@ public class DemoRunner {
         gameView.addMouseListener(mouseHandler);
 
         controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);
+        inputHandler.setGameMode(mode);
         gameView.setFocusable(true);
         gameView.addKeyListener(inputHandler);
         gameView.requestFocusInWindow();
@@ -447,73 +528,120 @@ public class DemoRunner {
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         logicRef[0] = new javax.swing.Timer(120, (e) -> {
-            // ZAFER (WIN) KONTROLÜ
-            boolean allEnemiesDefeated = true;
-            for (domain.models.entity.Entity entity : entities) {
-                if ((entity instanceof domain.models.entity.Knight || entity instanceof domain.models.entity.Sorcerer) && entity.isAlive()) {
-                    allEnemiesDefeated = false;
-                    break;
-                }
-            }
             
-            boolean exitReached = false;
-            for (int x = 0; x < map.getWidth(); x++) {
-                for (int y = 0; y < map.getHeight(); y++) {
-                    domain.models.entity.GameObject obj = map.getObjectAt(x, y);
-                    if (obj instanceof domain.models.staticObjects.Door && "Exit Door".equals(obj.getName())) {
-                        domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
-                        if (!door.isLocked() && Math.abs(hero.getX() - x) <= 1 && Math.abs(hero.getY() - y) <= 1) {
-                            exitReached = true;
+            if (mode == domain.models.GameMode.TEAM_MATCH) {
+                // TEAM MATCH WIN/LOSS CONDITION
+                boolean cyanAlive = false;
+                boolean orangeAlive = false;
+                for (domain.models.entity.Entity ent : entities) {
+                    if (ent.isAlive()) {
+                        if (ent.getTeam() == domain.models.Team.CYAN) cyanAlive = true;
+                        if (ent.getTeam() == domain.models.Team.ORANGE) orangeAlive = true;
+                    }
+                }
+                
+                if (!cyanAlive || !orangeAlive) {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    inputHandler.disableInput();
+                    
+                    String title = !cyanAlive ? "Game Over" : "You win";
+                    String msg = !cyanAlive ? "Cyan Team has been defeated. Game Over!" : "Orange Team has been defeated. You win!";
+                    
+                    javax.swing.JOptionPane.showMessageDialog(frame, msg, title, javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+            } else {
+                // ADVENTURE WIN KONTROLÜ
+                boolean allEnemiesDefeated = true;
+                for (domain.models.entity.Entity entity : entities) {
+                    if ((entity instanceof domain.models.entity.Knight || entity instanceof domain.models.entity.Sorcerer) && entity.isAlive()) {
+                        allEnemiesDefeated = false;
+                        break;
+                    }
+                }
+                
+                boolean exitReached = false;
+                for (int x = 0; x < map.getWidth(); x++) {
+                    for (int y = 0; y < map.getHeight(); y++) {
+                        domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                        if (obj instanceof domain.models.staticObjects.Door && "Exit Door".equals(obj.getName())) {
+                            domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
+                            if (!door.isLocked() && Math.abs(hero.getX() - x) <= 1 && Math.abs(hero.getY() - y) <= 1) {
+                                exitReached = true;
+                            }
                         }
                     }
                 }
-            }
 
-            if (allEnemiesDefeated && exitReached) {
-                if (logicRef[0] != null)  logicRef[0].stop();
-                if (renderRef[0] != null) renderRef[0].stop();
-                inputHandler.disableInput();
-                
-                javax.swing.JOptionPane.showMessageDialog(frame,
-                        "🌟 TEBRİKLER! 🌟\n\nTüm düşmanları yendin ve Çıkış Kapısı'nı açarak COMP302 Zindanından başarıyla kaçtın!\nPhase I başarıyla tamamlandı!",
-                        "Zafer!",
-                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
+                if (allEnemiesDefeated && exitReached) {
+                    if (logicRef[0] != null)  logicRef[0].stop();
+                    if (renderRef[0] != null) renderRef[0].stop();
+                    inputHandler.disableInput();
+                    
+                    javax.swing.JOptionPane.showMessageDialog(frame,
+                            "🌟 TEBRİKLER! 🌟\n\nTüm düşmanları yendin ve Çıkış Kapısı'nı açarak COMP302 Zindanından başarıyla kaçtın!\nPhase I başarıyla tamamlandı!",
+                            "Zafer!",
+                            javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
 
-            // GAME OVER KONTROLÜ
-            if (!hero.isAlive()) {
-                if (logicRef[0] != null)  logicRef[0].stop(); // Oyun motorunu (hareketleri) durdur
-                if (renderRef[0] != null) renderRef[0].stop(); // FPS motorunu durdur
-                inputHandler.disableInput(); // Oyuncunun tuş basmalarını engelle
-                
-                // Game Over ekranını JFrame'in en üst katmanına (GlassPane) bas
-                frame.setGlassPane(gameOverMenu);
-                gameOverMenu.setVisible(true);
-                return;
+                // GAME OVER KONTROLÜ (Sadece Adventure)
+                if (!hero.isAlive()) {
+                    if (logicRef[0] != null)  logicRef[0].stop(); // Oyun motorunu (hareketleri) durdur
+                    if (renderRef[0] != null) renderRef[0].stop(); // FPS motorunu durdur
+                    inputHandler.disableInput(); // Oyuncunun tuş basmalarını engelle
+                    
+                    // Game Over ekranını JFrame'in en üst katmanına (GlassPane) bas
+                    frame.setGlassPane(gameOverMenu);
+                    gameOverMenu.setVisible(true);
+                    return;
+                }
             }
 
             hero.update();
 
-            knight.followHero(hero, map, entities);
-            sorcerer.followHero(hero, map, entities);
+            if (mode == domain.models.GameMode.TEAM_MATCH) {
+                // Team match update logic (everyone in entities)
+                for (domain.models.entity.Entity ent : entities) {
+                    if (ent instanceof domain.models.entity.Knight && ent.isAlive()) {
+                        ((domain.models.entity.Knight) ent).followHero(hero, map, entities);
+                    } else if (ent instanceof domain.models.entity.Sorcerer && ent.isAlive()) {
+                        ((domain.models.entity.Sorcerer) ent).followHero(hero, map, entities);
+                    }
+                }
+            } else {
+                if (knight != null) knight.followHero(hero, map, entities);
+                if (sorcerer != null) sorcerer.followHero(hero, map, entities);
 
-            spawner.trySpawn(entities);
+                spawner.trySpawn(entities);
 
-            for (Knight k : spawner.getSpawnedKnights()) {
-                if (k.isAlive()) k.followHero(hero, map, entities);
+                for (domain.models.entity.Knight k : spawner.getSpawnedKnights()) {
+                    if (k.isAlive()) k.followHero(hero, map, entities);
+                }
+                for (domain.models.entity.Sorcerer s : spawner.getSpawnedSorcerers()) {
+                    if (s.isAlive()) s.followHero(hero, map, entities);
+                }
             }
-            for (Sorcerer s : spawner.getSpawnedSorcerers()) {
-                if (s.isAlive()) s.followHero(hero, map, entities);
-            }
 
-            // Tüm Sorcerer'lardan bekleyen mermileri topla (ConcurrentModification önlemi)
+            // Tüm Sorcerer'lardan bekleyen mermileri topla
             java.util.List<domain.models.entity.Projectile> newProjectiles = new java.util.ArrayList<>();
-            domain.models.entity.Projectile sp = sorcerer.pollPendingProjectile();
-            if (sp != null) newProjectiles.add(sp);
-            for (Sorcerer s : spawner.getSpawnedSorcerers()) {
-                domain.models.entity.Projectile p = s.pollPendingProjectile();
-                if (p != null) newProjectiles.add(p);
+            if (mode == domain.models.GameMode.TEAM_MATCH) {
+                for (domain.models.entity.Entity ent : entities) {
+                    if (ent instanceof domain.models.entity.Sorcerer) {
+                        domain.models.entity.Projectile p = ((domain.models.entity.Sorcerer) ent).pollPendingProjectile();
+                        if (p != null) newProjectiles.add(p);
+                    }
+                }
+            } else {
+                if (sorcerer != null) {
+                    domain.models.entity.Projectile sp = sorcerer.pollPendingProjectile();
+                    if (sp != null) newProjectiles.add(sp);
+                }
+                for (domain.models.entity.Sorcerer s : spawner.getSpawnedSorcerers()) {
+                    domain.models.entity.Projectile p = s.pollPendingProjectile();
+                    if (p != null) newProjectiles.add(p);
+                }
             }
             entities.addAll(newProjectiles);
 
@@ -523,53 +651,69 @@ public class DemoRunner {
                     domain.models.entity.Projectile proj = (domain.models.entity.Projectile) en;
                     proj.step(map);
                     
-                    if (proj.getOwner() == hero) {
-                        // Hero fırlattığı mermilerin düşmanlara çarpma kontrolü
-                        for (domain.models.entity.Entity enemy : entities) {
-                            if (enemy.isAlive() && enemy != hero && !(enemy instanceof ShadowClone) && !(enemy instanceof domain.models.entity.Projectile)) {
-                                if (proj.getX() == enemy.getX() && proj.getY() == enemy.getY()) {
-                                    int def = 0;
-                                    if (enemy instanceof domain.models.entity.Knight) {
-                                        def = 1; // Knight armor reduces damage by 1
-                                    }
-                                    int damage = Math.max(0, proj.getDamage() - def);
-                                    enemy.takeDamage(damage);
-                                    view.GameView.addFloatingText(enemy.getX(), enemy.getY(), "-" + damage + " HP", new java.awt.Color(255, 60, 60));
-                                    proj.setHp(0); // destroy projectile
-                                    System.out.println("Enemy hit by player projectile! Damage: " + damage + " | Enemy HP: " + enemy.getHp());
-                                    
-                                    // Handle enemy defeat & loot drop
-                                    if (!enemy.isAlive()) {
-                                        System.out.println("Enemy defeated by projectile!");
-                                        java.util.Random rand = new java.util.Random();
-                                        int dropType = rand.nextInt(3);
-                                        domain.models.entity.GameObject loot = null;
-                                        if (dropType == 0) {
-                                            loot = domain.models.item.MapItem.createRandomItem(enemy.getX(), enemy.getY());
-                                        } else if (dropType == 1) {
-                                            loot = new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
-                                        } else {
-                                            loot = new domain.models.staticObjects.KeyItem(enemy.getX(), enemy.getY());
-                                        }
-                                        map.placeObject(loot, enemy.getX(), enemy.getY());
-                                        System.out.println("Loot dropped: " + loot.getName());
-                                    }
+                    if (mode == domain.models.GameMode.TEAM_MATCH) {
+                        for (domain.models.entity.Entity target : entities) {
+                            if (target.isAlive() && target != proj.getOwner() && !(target instanceof domain.models.entity.Projectile)) {
+                                if (proj.getX() == target.getX() && proj.getY() == target.getY() && target.getTeam() != domain.models.Team.NONE && target.getTeam() != proj.getOwner().getTeam()) {
+                                    int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
+                                    if (target instanceof domain.models.entity.Knight) def = 1;
+                                    int damage = Math.max(1, proj.getDamage() - def);
+                                    target.takeDamage(damage);
+                                    view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 60, 60));
+                                    proj.setHp(0);
                                     break;
                                 }
                             }
                         }
                     } else {
-                        // Düşman mermisinin Hero veya Clone'a çarpma kontrolü
-                        ShadowClone activeClone = inputHandler.getShadowClone();
-                        Entity target = (activeClone != null && activeClone.isAlive()) ? activeClone : hero;
-                        
-                        if (proj.isAlive() && proj.getX() == target.getX() && proj.getY() == target.getY()) {
-                            int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
-                            int damage = Math.max(1, proj.getDamage() - def); // Minimum 1 damage to prevent complete invincibility
-                            target.takeDamage(damage);
-                            view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
-                            proj.setHp(0); // Mermi yok ol
-                            System.out.println("Target hit by projectile! Damage: " + damage + " | Target HP: " + target.getHp());
+                        if (proj.getOwner() == hero) {
+                            // Hero fırlattığı mermilerin düşmanlara çarpma kontrolü
+                            for (domain.models.entity.Entity enemy : entities) {
+                                if (enemy.isAlive() && enemy != hero && !(enemy instanceof ShadowClone) && !(enemy instanceof domain.models.entity.Projectile)) {
+                                    if (proj.getX() == enemy.getX() && proj.getY() == enemy.getY()) {
+                                        int def = 0;
+                                        if (enemy instanceof domain.models.entity.Knight) {
+                                            def = 1; // Knight armor reduces damage by 1
+                                        }
+                                        int damage = Math.max(0, proj.getDamage() - def);
+                                        enemy.takeDamage(damage);
+                                        view.GameView.addFloatingText(enemy.getX(), enemy.getY(), "-" + damage + " HP", new java.awt.Color(255, 60, 60));
+                                        proj.setHp(0); // destroy projectile
+                                        System.out.println("Enemy hit by player projectile! Damage: " + damage + " | Enemy HP: " + enemy.getHp());
+                                        
+                                        // Handle enemy defeat & loot drop
+                                        if (!enemy.isAlive()) {
+                                            System.out.println("Enemy defeated by projectile!");
+                                            java.util.Random rand = new java.util.Random();
+                                            int dropType = rand.nextInt(3);
+                                            domain.models.entity.GameObject loot = null;
+                                            if (dropType == 0) {
+                                                loot = domain.models.item.MapItem.createRandomItem(enemy.getX(), enemy.getY());
+                                            } else if (dropType == 1) {
+                                                loot = new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
+                                            } else {
+                                                loot = new domain.models.staticObjects.KeyItem(enemy.getX(), enemy.getY());
+                                            }
+                                            map.placeObject(loot, enemy.getX(), enemy.getY());
+                                            System.out.println("Loot dropped: " + loot.getName());
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            // Düşman mermisinin Hero veya Clone'a çarpma kontrolü
+                            ShadowClone activeClone = inputHandler.getShadowClone();
+                            Entity target = (activeClone != null && activeClone.isAlive()) ? activeClone : hero;
+                            
+                            if (proj.isAlive() && proj.getX() == target.getX() && proj.getY() == target.getY()) {
+                                int def = (target instanceof domain.models.entity.Hero) ? ((domain.models.entity.Hero) target).getDef() : 0;
+                                int damage = Math.max(1, proj.getDamage() - def); // Minimum 1 damage to prevent complete invincibility
+                                target.takeDamage(damage);
+                                view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
+                                proj.setHp(0); // Mermi yok ol
+                                System.out.println("Target hit by projectile! Damage: " + damage + " | Target HP: " + target.getHp());
+                            }
                         }
                     }
                 }

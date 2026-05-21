@@ -58,10 +58,12 @@ public class GameView extends JPanel {
     private domain.models.entity.Knight knight;
     private domain.models.entity.Sorcerer sorcerer;
     private TileManager tileManager;
-
-    // Spawn edilen dahil TÜM entity'leri tutan liste (EnemySpawner yeni ekledikçe
-    // buraya yansır)
     private java.util.List<domain.models.entity.Entity> entityList;
+    private domain.models.GameMode gameMode = domain.models.GameMode.ADVENTURE;
+
+    public void setGameMode(domain.models.GameMode mode) {
+        this.gameMode = mode;
+    }
 
     // Dinamik hesaplanan ekran değişkenleri
     private int tileSize = 64;
@@ -401,6 +403,8 @@ public class GameView extends JPanel {
             int x = offsetX + (hero.getX() * tileSize);
             int y = offsetY + (hero.getY() * tileSize) + tileSize - dh;
 
+            drawTeamAura(g2d, hero, x + dw / 2, y + dh - 5, tileSize);
+
             if (hero.getDirection() == Direction.LEFT) {
                 // Resmi yatayda aynalayarak çiziyoruz
                 g2d.drawImage(frame, x + dw, y, -dw, dh, null);
@@ -502,6 +506,9 @@ public class GameView extends JPanel {
                     int dh = (int) (ih * ((double) tileSize / iw));
                     int dx = offsetX + (e.getX() * tileSize);
                     int dy = offsetY + (e.getY() * tileSize) + tileSize - dh;
+                    
+                    drawTeamAura(g2d, e, dx + dw / 2, dy + dh - 5, tileSize);
+                    
                     g2d.drawImage(frame, dx, dy, dw, dh, null);
                 }
             }
@@ -518,6 +525,9 @@ public class GameView extends JPanel {
                     int dh = (int) (ih * ((double) tileSize / iw));
                     int dx = offsetX + (knight.getX() * tileSize);
                     int dy = offsetY + (knight.getY() * tileSize) + tileSize - dh;
+                    
+                    drawTeamAura(g2d, knight, dx + dw / 2, dy + dh - 5, tileSize);
+                    
                     g2d.drawImage(kFrame, dx, dy, dw, dh, null);
                 }
             }
@@ -530,10 +540,35 @@ public class GameView extends JPanel {
                     int dh = (int) (ih * ((double) tileSize / iw));
                     int dx = offsetX + (sorcerer.getX() * tileSize);
                     int dy = offsetY + (sorcerer.getY() * tileSize) + tileSize - dh;
+                    
+                    drawTeamAura(g2d, sorcerer, dx + dw / 2, dy + dh - 5, tileSize);
+                    
                     g2d.drawImage(sFrame, dx, dy, dw, dh, null);
                 }
             }
         }
+    }
+
+    private void drawTeamAura(Graphics2D g2d, domain.models.entity.Entity entity, int cx, int cy, int size) {
+        if (gameMode != domain.models.GameMode.TEAM_MATCH) return;
+        domain.models.Team team = entity.getTeam();
+        if (team == domain.models.Team.NONE || team == null) return;
+        
+        Color centerColor = (team == domain.models.Team.CYAN) ? new Color(0, 255, 255, 150) : new Color(255, 140, 0, 150);
+        Color edgeColor = new Color(0, 0, 0, 0);
+        
+        int radius = size / 2 + 15;
+        
+        java.awt.geom.Point2D center = new java.awt.geom.Point2D.Float(cx, cy);
+        float[] dist = {0.0f, 1.0f};
+        Color[] colors = {centerColor, edgeColor};
+        
+        java.awt.RadialGradientPaint p = new java.awt.RadialGradientPaint(center, radius, dist, colors);
+        java.awt.Paint oldPaint = g2d.getPaint();
+        g2d.setPaint(p);
+        
+        g2d.fillOval(cx - radius, cy - radius / 2, radius * 2, radius);
+        g2d.setPaint(oldPaint);
     }
 
     private void drawMap(Graphics2D g2d) {

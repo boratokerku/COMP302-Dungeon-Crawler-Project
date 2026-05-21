@@ -19,6 +19,9 @@ public abstract class MapItem extends GameObject {
     private void loadSprite(String imagePath) {
         try {
             File tileFile = new File("resources/" + imagePath);
+            if (!tileFile.exists()) {
+                tileFile = new File("../resources/" + imagePath);
+            }
             if (tileFile.exists()) {
                 this.sprite = ImageIO.read(tileFile);
             } else {

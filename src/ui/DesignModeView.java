@@ -32,6 +32,8 @@ import java.util.Random;
  * Tıkla-seç → Tile'a tıkla/sürükle yerleştir. Sağ tık siler.
  */
 public class DesignModeView extends JPanel {
+    private static final int MAX_OBSTACLES = 40;
+    private static final int MAX_ITEMS = 30;
 
     // ── Callbacks ────────────────────────────────────────────────────────────
     private final Runnable onBackToMenu;
@@ -325,6 +327,30 @@ public class DesignModeView extends JPanel {
 
         // Yerleştir
         GameObject obj = item.factory.apply(hoverTileX, hoverTileY);
+
+        boolean replacingSameCategory = false;
+        if (isItem(obj)) {
+            if (isItem(existing)) {
+                replacingSameCategory = true;
+            }
+            if (!replacingSameCategory && countItems() >= MAX_ITEMS) {
+                if (e.getID() != MouseEvent.MOUSE_DRAGGED) {
+                    showMsg("Maksimum item sınırına ulaşıldı (" + MAX_ITEMS + ")!", "Limit Uyarısı");
+                }
+                return;
+            }
+        } else if (isObstacle(obj)) {
+            if (isObstacle(existing)) {
+                replacingSameCategory = true;
+            }
+            if (!replacingSameCategory && countObstacles() >= MAX_OBSTACLES) {
+                if (e.getID() != MouseEvent.MOUSE_DRAGGED) {
+                    showMsg("Maksimum engel sınırına ulaşıldı (" + MAX_OBSTACLES + ")!", "Limit Uyarısı");
+                }
+                return;
+            }
+        }
+
         map.placeObject(obj, hoverTileX, hoverTileY);
     }
 
@@ -332,6 +358,52 @@ public class DesignModeView extends JPanel {
         GameObject existing = map.getObjectAt(tx, ty);
         if (existing == null || existing instanceof WallTile) return;
         map.placeObject(new FloorTile(), tx, ty);
+    }
+
+    private int countItems() {
+        int count = 0;
+        int w = map.getWidth();
+        int h = map.getHeight();
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj != null && isItem(obj)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private int countObstacles() {
+        int count = 0;
+        int w = map.getWidth();
+        int h = map.getHeight();
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj != null && isObstacle(obj)) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private boolean isItem(GameObject obj) {
+        if (obj == null) return false;
+        return obj instanceof domain.models.item.MapItem
+            || obj instanceof domain.models.staticObjects.KeyItem;
+    }
+
+    private boolean isObstacle(GameObject obj) {
+        if (obj == null) return false;
+        return obj instanceof domain.models.entity.Chest
+            || obj instanceof domain.models.entity.Crate
+            || obj instanceof domain.models.entity.DoubleCrate
+            || obj instanceof domain.models.entity.Column
+            || obj instanceof domain.models.entity.Sign
+            || obj instanceof domain.models.staticObjects.Decoration;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -393,11 +465,20 @@ public class DesignModeView extends JPanel {
             showMsg("Boş tile yok! Önce bazı nesneleri silin.", "Uyarı");
             return;
         }
+
+        int currentItems = countItems();
+        if (currentItems >= MAX_ITEMS) {
+            showMsg("Maksimum item sınırına ulaşıldı (" + MAX_ITEMS + ")! Daha fazla rastgele eşya eklenemez.", "Limit Uyarısı");
+            return;
+        }
+
         Random rand = new Random();
         int placed = 0;
+        int remainingSlots = MAX_ITEMS - currentItems;
+        int toPlace = Math.min(5, remainingSlots);
 
         // 5 adet rastgele item
-        while (placed < 5 && !freeTiles.isEmpty()) {
+        while (placed < toPlace && !freeTiles.isEmpty()) {
             int[] pos = freeTiles.remove(rand.nextInt(freeTiles.size()));
             GameObject item = MapItem.createRandomItem(pos[0], pos[1]);
             // Container ise içini rastgele doldur
@@ -411,7 +492,6 @@ public class DesignModeView extends JPanel {
         }
 
         repaint();
-        showMsg("5 rastgele item eklendi!", "Tamamlandı");
     }
 
     /**

@@ -345,7 +345,7 @@ public class DesignModeView extends JPanel {
             }
             if (!replacingSameCategory && countObstacles() >= MAX_OBSTACLES) {
                 if (e.getID() != MouseEvent.MOUSE_DRAGGED) {
-                    showMsg("Maksimum engel sınırına ulaşıldı (" + MAX_OBSTACLES + ")!", "Limit Uyarısı");
+                    showMaxObstacleDialog();
                 }
                 return;
             }
@@ -1378,6 +1378,13 @@ public class DesignModeView extends JPanel {
         Window parentWindow = SwingUtilities.getWindowAncestor(this);
         Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
         MaxItemDialog dialog = new MaxItemDialog(parentFrame);
+        dialog.setVisible(true);
+    }
+
+    private void showMaxObstacleDialog() {
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+        MaxObstacleDialog dialog = new MaxObstacleDialog(parentFrame);
         dialog.setVisible(true);
     }
 

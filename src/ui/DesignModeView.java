@@ -6,6 +6,7 @@ import domain.models.entity.Crate;
 import domain.models.entity.DoubleCrate;
 import domain.models.entity.GameObject;
 import domain.models.entity.SearchableObject;
+import domain.models.entity.Sign;
 import domain.models.item.*;
 import domain.models.map.GameMap;
 import domain.models.staticObjects.*;
@@ -134,6 +135,7 @@ public class DesignModeView extends JPanel {
         add("DbCrate",  "double_crate",             true,  (x,y) -> new DoubleCrate("DoubleCrate", x, y));
         add("Column",   "colon/gray_colon_whole",   true,  (x,y) -> new Column("Column", x, y, "colon/gray_colon_whole"));
         add("PurpleCol","colon/purple_colon_whole", true,  (x,y) -> new Column("Column", x, y, "colon/purple_colon_whole"));
+        add("Sign",     "sign/sign_brown",          true,  (x,y) -> new Sign("Sign", x, y, "sign/sign_brown"));
         add("Torch",    "torch/torch_1",            true,  (x,y) -> new Decoration("Torch", x, y, "torch/torch_1"));
 
         // ── Items ────────────────────────────────────────────────────────────
@@ -650,7 +652,7 @@ public class DesignModeView extends JPanel {
                   .append(",\"y\":").append(y);
                 if (obj instanceof Chest)  sb.append(",\"isLocked\":").append(((Chest)obj).isLocked());
                 if (obj instanceof Door)   sb.append(",\"isLocked\":").append(((Door)obj).isLocked());
-                if (obj instanceof Column) sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
+                if (obj instanceof Column || obj instanceof Sign) sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
                 sb.append("}");
             }
         }
@@ -674,6 +676,7 @@ public class DesignModeView extends JPanel {
         if (obj instanceof DoubleCrate)      return "DoubleCrate";
         if (obj instanceof Crate)            return "Crate";
         if (obj instanceof Column)           return "Column";
+        if (obj instanceof Sign)             return "Sign";
         if (obj instanceof Door)             return "Door";
         if (obj instanceof Decoration)       return "Decoration";
         if (obj instanceof SearchableObject) return "SearchableObject";
@@ -717,6 +720,9 @@ public class DesignModeView extends JPanel {
                 case "Column"           -> imgName != null && !imgName.isEmpty()
                                               ? new Column(name, x, y, imgName)
                                               : new Column(name, x, y);
+                case "Sign"             -> imgName != null && !imgName.isEmpty()
+                                              ? new Sign(name, x, y, imgName)
+                                              : new Sign(name, x, y);
                 case "Door"             -> new Door(name, x, y, locked);
                 case "Decoration"       -> new Decoration(name, x, y, "torch/torch_1");
                 case "SearchableObject" -> new SearchableObject(name, x, y);
@@ -885,7 +891,7 @@ public class DesignModeView extends JPanel {
                 if (obj instanceof domain.models.item.MapItem ||
                     obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
                     obj instanceof Door || obj instanceof Decoration ||
-                    obj instanceof SearchableObject) {
+                    obj instanceof SearchableObject || obj instanceof Sign) {
                     BufferedImage floor = tileManager.getTile("floor");
                     if (floor != null) g.drawImage(floor, px, py, tileSize, tileSize, null);
                 }
@@ -931,7 +937,7 @@ public class DesignModeView extends JPanel {
                         g.drawImage(tImg, drawX, drawY, dw, dh, null);
                     } else if (obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
                                obj instanceof Door || obj instanceof Decoration ||
-                               obj instanceof SearchableObject) {
+                               obj instanceof SearchableObject || obj instanceof Sign) {
                         // Fit static objects preserving aspect ratio with width scaled to tileSize, bottom-aligned
                         int iw = tImg.getWidth();
                         int ih = tImg.getHeight();
@@ -1099,7 +1105,7 @@ public class DesignModeView extends JPanel {
             g.drawImage(icon, drawX, drawY, dw, dh, null);
         } else if (dummy instanceof Column || dummy instanceof Chest || dummy instanceof Crate ||
                    dummy instanceof Door || dummy instanceof Decoration ||
-                   dummy instanceof SearchableObject) {
+                   dummy instanceof SearchableObject || dummy instanceof Sign) {
             int iw = icon.getWidth();
             int ih = icon.getHeight();
             int dw = tileSize;

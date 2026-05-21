@@ -550,7 +550,8 @@ public class GameView extends JPanel {
                             obj instanceof domain.models.entity.Crate ||
                             obj instanceof domain.models.staticObjects.Door ||
                             obj instanceof domain.models.staticObjects.Decoration ||
-                            obj instanceof domain.models.entity.SearchableObject) {
+                            obj instanceof domain.models.entity.SearchableObject ||
+                            obj instanceof domain.models.entity.Sign) {
                         // Eğer hücrede bir eşya veya statik obje varsa, altını delik bırakmamak için
                         // Zemin (FloorTile)
                         // çiziyoruz
@@ -677,7 +678,8 @@ public class GameView extends JPanel {
                         obj instanceof domain.models.entity.Crate ||
                         obj instanceof domain.models.staticObjects.Door ||
                         obj instanceof domain.models.staticObjects.Decoration ||
-                        obj instanceof domain.models.entity.SearchableObject) {
+                        obj instanceof domain.models.entity.SearchableObject ||
+                        obj instanceof domain.models.entity.Sign) {
 
                     boolean inZone = hero != null && Math.abs(x - hero.getX()) <= 1
                             && Math.abs(y - hero.getY()) <= 1;
@@ -724,6 +726,8 @@ public class GameView extends JPanel {
                             color = new Color(101, 67, 33);
                         else if (obj instanceof domain.models.entity.SearchableObject)
                             color = Color.DARK_GRAY;
+                        else if (obj instanceof domain.models.entity.Sign)
+                            color = new Color(180, 115, 60);
 
                         g2d.setColor(color);
                         g2d.fillRect(drawX, drawY, tileSize, tileSize);

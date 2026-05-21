@@ -335,7 +335,7 @@ public class DesignModeView extends JPanel {
             }
             if (!replacingSameCategory && countItems() >= MAX_ITEMS) {
                 if (e.getID() != MouseEvent.MOUSE_DRAGGED) {
-                    showMsg("Maksimum item sınırına ulaşıldı (" + MAX_ITEMS + ")!", "Limit Uyarısı");
+                    showMaxItemDialog();
                 }
                 return;
             }
@@ -468,7 +468,7 @@ public class DesignModeView extends JPanel {
 
         int currentItems = countItems();
         if (currentItems >= MAX_ITEMS) {
-            showMsg("Maksimum item sınırına ulaşıldı (" + MAX_ITEMS + ")! Daha fazla rastgele eşya eklenemez.", "Limit Uyarısı");
+            showMaxItemDialog();
             return;
         }
 
@@ -1372,6 +1372,13 @@ public class DesignModeView extends JPanel {
 
     private void showMsg(String msg, String title) {
         JOptionPane.showMessageDialog(this, msg, title, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showMaxItemDialog() {
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+        MaxItemDialog dialog = new MaxItemDialog(parentFrame);
+        dialog.setVisible(true);
     }
 
     // ── Basit JSON yardımcıları ───────────────────────────────────────────────

@@ -355,8 +355,8 @@ public class GameView extends JPanel {
         // Başlangıç noktası: main frame'in içine yatayda tam merkeze oturt
         int startX = frameX + (frameW - totalWidth) / 2;
         
-        // Y noktası: main frame'in içine dikeyde tam merkeze oturt
-        int y = frameY + (frameH - barH) / 2;
+        // Y noktası: main frame'in içine dikeyde tam merkeze oturt ve 7 piksel aşağı kaydır
+        int y = frameY + (frameH - barH) / 2 + 7;
         
         // 1. Health
         drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, startX, y, barW, barH);

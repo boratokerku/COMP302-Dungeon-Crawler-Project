@@ -1,3 +1,4 @@
+src/ui/DesignModeView.java
 src/DemoRunner.java
 src/controller/MouseHandler.java
 src/controller/InputHandler.java

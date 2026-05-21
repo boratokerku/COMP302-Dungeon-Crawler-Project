@@ -6,6 +6,7 @@ import domain.models.GameState;
 import view.AssetManager;
 import view.GameView;
 import view.TileManager;
+import ui.DesignModeView;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -27,14 +28,14 @@ public class DemoRunner {
             JPanel mainPanel = new JPanel(cardLayout);
 
             view.MainMenuView menuView = new view.MainMenuView(
-                    () -> startGame(frame, mainPanel, cardLayout),
+                    () -> startDesignMode(frame, mainPanel, cardLayout),
                     (state) -> loadGame(frame, mainPanel, cardLayout, state)
             );
             menuView.setPreferredSize(new java.awt.Dimension(1250, 1000));
 
             mainPanel.setBackground(Color.BLACK);
             mainPanel.add(menuView, "Menu");
-            cardLayout.show(mainPanel, "Menu"); 
+            cardLayout.show(mainPanel, "Menu");
             frame.add(mainPanel);
 
             frame.setSize(832, 640);
@@ -44,6 +45,64 @@ public class DemoRunner {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
+    }
+
+    // ── Design Mode ──────────────────────────────────────────────────────────
+    private static void startDesignMode(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
+        GameMap map = new GameMap(25, 20);
+        TileManager tileManager = new TileManager();
+
+        DesignModeView designView = new DesignModeView(
+                map,
+                tileManager,
+                // onBackToMenu
+                () -> cardLayout.show(mainPanel, "Menu"),
+                // onPlayMap — tasarımlanan map ile oyunu başlat
+                (designedMap) -> {
+                    // Tasarım modundaki mevcut design panelini kaldır
+                    mainPanel.remove(mainPanel.getComponentCount() > 0
+                            ? getComponentByName(mainPanel, "Design") : null);
+                    startGameWithMap(frame, mainPanel, cardLayout, designedMap);
+                }
+        );
+        designView.setPreferredSize(new java.awt.Dimension(832, 700));
+
+        // Önceki design panelini temizle (varsa)
+        for (java.awt.Component c : mainPanel.getComponents()) {
+            if ("Design".equals(c.getName())) { mainPanel.remove(c); break; }
+        }
+        designView.setName("Design");
+        mainPanel.add(designView, "Design");
+        cardLayout.show(mainPanel, "Design");
+        frame.pack();
+        designView.requestFocusInWindow();
+    }
+
+    /** Tasarımlanan map ile hero + enemies ekleyerek oyunu başlatır */
+    private static void startGameWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map) {
+        Hero hero = new Hero(4, 4);
+        hero.setCurrentMap(map);
+        Knight knight = new Knight(12, 10);
+        Sorcerer sorcerer = new Sorcerer(18, 5);
+
+        List<Entity> entities = new ArrayList<>();
+        entities.add(hero);
+        entities.add(knight);
+        entities.add(sorcerer);
+
+        List<GameState.ItemRecord> scrollItems = new ArrayList<>();
+        List<String> inventoryScrollTypes = new ArrayList<>();
+        setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer,
+                scrollItems, inventoryScrollTypes, null);
+    }
+
+    /** Adına göre panel bul (null-safe) */
+    private static java.awt.Component getComponentByName(java.awt.Container container, String name) {
+        if (name == null) return null;
+        for (java.awt.Component c : container.getComponents()) {
+            if (name.equals(c.getName())) return c;
+        }
+        return null;
     }
 
     // Yeni oyun — tüm nesneler rastgele oluşturulur

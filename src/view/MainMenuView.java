@@ -25,7 +25,7 @@ public class MainMenuView extends JPanel {
 
     public MainMenuView(Runnable onStartGame, java.util.function.Consumer<GameState> onLoadGame) {
         this.onStartGame = onStartGame;
-        this.onLoadGame = onLoadGame;
+        this.onLoadGame  = onLoadGame;
         try {
             File bgFile = new File("resources/images/MainMenuImages/main_menu_bg.png");
             if (bgFile.exists()) {
@@ -56,7 +56,7 @@ public class MainMenuView extends JPanel {
     private ScaledImageButton startBtn;
     private ScaledImageButton helpBtn;
     private ScaledImageButton quitBtn;
-    private JButton loadBtn; // Load Game — styled JButton (görselsiz)
+    private JButton loadBtn;    // Load Game
 
     private void initUI() {
         setLayout(null);
@@ -184,10 +184,10 @@ public class MainMenuView extends JPanel {
         int centerY = offsetY + (int) (400 * scale);
         int startY = centerY - totalBtnHeight / 2;
 
-        if (startBtn != null) startBtn.setBounds(startX, startY, btnW, btnH);
-        if (loadBtn  != null) loadBtn.setBounds(startX, startY + btnH + gap, btnW, btnH);
-        if (helpBtn  != null) helpBtn.setBounds(startX, startY + 2 * (btnH + gap), btnW, btnH);
-        if (quitBtn  != null) quitBtn.setBounds(startX, startY + 3 * (btnH + gap), btnW, btnH);
+        if (startBtn != null) startBtn.setBounds(startX, startY,                   btnW, btnH);
+        if (loadBtn  != null) loadBtn.setBounds(startX,  startY + (btnH + gap),    btnW, btnH);
+        if (helpBtn  != null) helpBtn.setBounds(startX,  startY + 2 * (btnH + gap), btnW, btnH);
+        if (quitBtn  != null) quitBtn.setBounds(startX,  startY + 3 * (btnH + gap), btnW, btnH);
     }
 
 

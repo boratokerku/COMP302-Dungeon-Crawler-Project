@@ -310,7 +310,7 @@ public class GameView extends JPanel {
 
     private String lastLoggedWeapon = null;
 
-    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir) {
+    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh) {
         if (hero.getEquippedWeapon() == null) {
             if (lastLoggedWeapon != null) {
                 System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL");
@@ -331,7 +331,7 @@ public class GameView extends JPanel {
             return;
         }
         
-        int wSize = tileSize / 2; // 32x32 size
+        int wSize = dw / 2; // weapon size scales with the hero's width
         
         // Dynamically fetch weapon metadata (or use defaults)
         double pivotX = 0.5;
@@ -352,23 +352,23 @@ public class GameView extends JPanel {
         
         java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
         
-        // 1. Translate to the center of the dynamic tileSize grid cell
-        g2d.translate(x + tileSize / 2, y + tileSize / 2);
+        // 1. Translate to the center of the rendered hero frame
+        g2d.translate(x + dw / 2, y + dh / 2);
         
         // 2. If facing LEFT, mirror the entire horizontal transformation context!
         if (dir == Direction.LEFT) {
             g2d.scale(-1, 1);
         }
         
-        // 3. Convert absolute standard hand joint coordinates (23, 8) to standard-relative ratios (based on 64px tileSize)
+        // 3. Convert absolute standard hand joint coordinates (23, 8) to standard-relative ratios (based on 64px standard size)
         double ratioX = 23.0 / 64.0;
         double ratioY = 8.0 / 64.0;
         double customRatioX = (double) customHandX / 64.0;
         double customRatioY = (double) customHandY / 64.0;
         
-        // Scale offsets dynamically with the current tileSize
-        int handX = (int) (ratioX * tileSize) + (int) (customRatioX * tileSize);
-        int handY = (int) (ratioY * tileSize) + (int) (customRatioY * tileSize);
+        // Scale offsets dynamically with the current rendered dimensions
+        int handX = (int) (ratioX * dw) + (int) (customRatioX * dw);
+        int handY = (int) (ratioY * dh) + (int) (customRatioY * dh);
         
         g2d.translate(handX, handY);
         
@@ -394,16 +394,20 @@ public class GameView extends JPanel {
         BufferedImage frame = assetManager.getHeroSprite(hero.getAnimationState());
 
         if (frame != null) {
+            int iw = frame.getWidth();
+            int ih = frame.getHeight();
+            int dw = tileSize;
+            int dh = (int) (ih * ((double) tileSize / iw));
             int x = offsetX + (hero.getX() * tileSize);
-            int y = offsetY + (hero.getY() * tileSize);
+            int y = offsetY + (hero.getY() * tileSize) + tileSize - dh;
 
             if (hero.getDirection() == Direction.LEFT) {
                 // Resmi yatayda aynalayarak çiziyoruz
-                g2d.drawImage(frame, x + tileSize, y, -tileSize, tileSize, null);
-                drawEquippedWeapon(g2d, x, y, Direction.LEFT);
+                g2d.drawImage(frame, x + dw, y, -dw, dh, null);
+                drawEquippedWeapon(g2d, x, y, Direction.LEFT, dw, dh);
             } else {
-                g2d.drawImage(frame, x, y, tileSize, tileSize, null);
-                drawEquippedWeapon(g2d, x, y, Direction.RIGHT);
+                g2d.drawImage(frame, x, y, dw, dh, null);
+                drawEquippedWeapon(g2d, x, y, Direction.RIGHT, dw, dh);
             }
         }
     }
@@ -470,13 +474,17 @@ public class GameView extends JPanel {
                     // Klon: hero sprite'ı %50 saydamlıkla (görsel ayrım)
                     frame = assetManager.getHeroSprite(domain.models.AnimationState.IDLE);
                     if (frame != null) {
+                        int iw = frame.getWidth();
+                        int ih = frame.getHeight();
+                        int dw = tileSize;
+                        int dh = (int) (ih * ((double) tileSize / iw));
+                        int dx = offsetX + (e.getX() * tileSize);
+                        int dy = offsetY + (e.getY() * tileSize) + tileSize - dh;
+
                         java.awt.AlphaComposite ac = java.awt.AlphaComposite
                                 .getInstance(java.awt.AlphaComposite.SRC_OVER, 0.5f);
                         g2d.setComposite(ac);
-                        g2d.drawImage(frame,
-                                offsetX + (e.getX() * tileSize),
-                                offsetY + (e.getY() * tileSize),
-                                tileSize, tileSize, null);
+                        g2d.drawImage(frame, dx, dy, dw, dh, null);
                         g2d.setComposite(java.awt.AlphaComposite
                                 .getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
                     }
@@ -488,10 +496,13 @@ public class GameView extends JPanel {
                 }
 
                 if (frame != null) {
-                    g2d.drawImage(frame,
-                            offsetX + (e.getX() * tileSize),
-                            offsetY + (e.getY() * tileSize),
-                            tileSize, tileSize, null);
+                    int iw = frame.getWidth();
+                    int ih = frame.getHeight();
+                    int dw = tileSize;
+                    int dh = (int) (ih * ((double) tileSize / iw));
+                    int dx = offsetX + (e.getX() * tileSize);
+                    int dy = offsetY + (e.getY() * tileSize) + tileSize - dh;
+                    g2d.drawImage(frame, dx, dy, dw, dh, null);
                 }
             }
 
@@ -501,15 +512,25 @@ public class GameView extends JPanel {
             if (knight != null && knight.isAlive()) {
                 BufferedImage kFrame = assetManager.getKnightSprite();
                 if (kFrame != null) {
-                    g2d.drawImage(kFrame, offsetX + (knight.getX() * tileSize), offsetY + (knight.getY() * tileSize),
-                            tileSize, tileSize, null);
+                    int iw = kFrame.getWidth();
+                    int ih = kFrame.getHeight();
+                    int dw = tileSize;
+                    int dh = (int) (ih * ((double) tileSize / iw));
+                    int dx = offsetX + (knight.getX() * tileSize);
+                    int dy = offsetY + (knight.getY() * tileSize) + tileSize - dh;
+                    g2d.drawImage(kFrame, dx, dy, dw, dh, null);
                 }
             }
             if (sorcerer != null && sorcerer.isAlive()) {
                 BufferedImage sFrame = assetManager.getSorcererSprite();
                 if (sFrame != null) {
-                    g2d.drawImage(sFrame, offsetX + (sorcerer.getX() * tileSize),
-                            offsetY + (sorcerer.getY() * tileSize), tileSize, tileSize, null);
+                    int iw = sFrame.getWidth();
+                    int ih = sFrame.getHeight();
+                    int dw = tileSize;
+                    int dh = (int) (ih * ((double) tileSize / iw));
+                    int dx = offsetX + (sorcerer.getX() * tileSize);
+                    int dy = offsetY + (sorcerer.getY() * tileSize) + tileSize - dh;
+                    g2d.drawImage(sFrame, dx, dy, dw, dh, null);
                 }
             }
         }
@@ -613,15 +634,22 @@ public class GameView extends JPanel {
                         g2d.setComposite(ac);
                     }
 
-                    int spriteSize = (int) (tileSize * 0.65);
-                    int posOffset = (tileSize - spriteSize) / 2;
-                    int drawX = offsetX + (x * tileSize) + posOffset;
-                    int drawY = offsetY + (y * tileSize) + posOffset;
-
                     if (item.getSprite() != null) {
-                        g2d.drawImage(item.getSprite(), drawX, drawY, spriteSize, spriteSize, null);
+                        int maxDim = (int) (tileSize * 0.65);
+                        int iw = item.getSprite().getWidth();
+                        int ih = item.getSprite().getHeight();
+                        double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
+                        int dw = (int) (iw * scale);
+                        int dh = (int) (ih * scale);
+                        int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
+                        int drawY = offsetY + (y * tileSize) + (tileSize - dh) / 2;
+                        g2d.drawImage(item.getSprite(), drawX, drawY, dw, dh, null);
                     } else {
                         // Sprite yok — renk placeholder (scroll için mor, diğerleri sarı)
+                        int spriteSize = (int) (tileSize * 0.65);
+                        int posOffset = (tileSize - spriteSize) / 2;
+                        int drawX = offsetX + (x * tileSize) + posOffset;
+                        int drawY = offsetY + (y * tileSize) + posOffset;
                         if (item instanceof domain.models.item.ShadowCloneScroll) {
                             g2d.setColor(new Color(150, 50, 255)); // Mor — scroll
                         } else {
@@ -665,13 +693,18 @@ public class GameView extends JPanel {
                         sprite = tileManager.getTile(obj.getImageName());
                     }
 
-                    int drawX = offsetX + (x * tileSize);
-                    int drawY = offsetY + (y * tileSize);
-
                     if (sprite != null) {
-                        g2d.drawImage(sprite, drawX, drawY, tileSize, tileSize, null);
+                        int iw = sprite.getWidth();
+                        int ih = sprite.getHeight();
+                        int dw = tileSize;
+                        int dh = (int) (ih * ((double) tileSize / iw));
+                        int drawX = offsetX + (x * tileSize);
+                        int drawY = offsetY + (y * tileSize) + tileSize - dh;
+                        g2d.drawImage(sprite, drawX, drawY, dw, dh, null);
                     } else {
                         // Placeholder fallback
+                        int drawX = offsetX + (x * tileSize);
+                        int drawY = offsetY + (y * tileSize);
                         Color color = Color.MAGENTA;
                         if (obj instanceof domain.models.entity.Column)
                             color = Color.GRAY;

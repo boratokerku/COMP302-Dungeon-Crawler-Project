@@ -233,7 +233,7 @@ public class GameOverMenu extends JPanel {
 
         if (showLoad) {
             int spacing = Math.round(18 * scale);
-            int y0 = innerY + Math.round(2 * scale); // Shifted down a bit
+            int y0 = innerY + Math.round(2 * scale);
             int y1 = y0 + btnHeight + spacing;
             int y2 = y1 + btnHeight + spacing;
 
@@ -246,7 +246,7 @@ public class GameOverMenu extends JPanel {
             menuBoxPanel.add(menuBtnImg);
         } else {
             int spacing = Math.round(30 * scale);
-            int y0 = innerY + Math.round(22 * scale); // Shifted down a bit
+            int y0 = innerY + Math.round(22 * scale);
             int y1 = y0 + btnHeight + spacing;
 
             restartBtnImg.setBounds(innerX + (innerWidth - btnWidth) / 2, y0, btnWidth, btnHeight);

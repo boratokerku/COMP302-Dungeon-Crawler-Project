@@ -455,14 +455,30 @@ public class GameView extends JPanel {
                             g2d.fillOval(px, py, size, size);
                         }
                     } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
-                        // Blazing Fireball (Orange-Red glowing orb)
-                        int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                        int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
-                        int size = tileSize / 2;
-                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
-                        g2d.fillOval(px, py, size, size);
-                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
-                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                        BufferedImage fireballImg = assetManager.getProjectileFireball();
+                        if (fireballImg != null) {
+                            double px = offsetX + (proj.getExactX() * tileSize);
+                            double py = offsetY + (proj.getExactY() * tileSize);
+                            
+                            // Since the image is vertically oriented pointing down by default,
+                            // we apply (angle - Math.PI / 2.0) offset.
+                            double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) - (Math.PI / 2.0);
+                            
+                            java.awt.geom.AffineTransform old = g2d.getTransform();
+                            g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
+                            g2d.rotate(angle);
+                            g2d.drawImage(fireballImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
+                            g2d.setTransform(old);
+                        } else {
+                            // Fallback if image fails to load
+                            int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                            int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                            int size = tileSize / 2;
+                            g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                            g2d.fillOval(px, py, size, size);
+                            g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                            g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                        }
                     } else {
                         // Purple Mage Spell
                         int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);

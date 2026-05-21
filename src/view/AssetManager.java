@@ -15,6 +15,7 @@ public class AssetManager {
     private SpriteAnimation knightWalk;
     private SpriteAnimation sorcererWalk;
     private BufferedImage projectileArrow;
+    private BufferedImage projectileFireball;
 
     private AssetManager() {
         heroWalkRight = new SpriteAnimation(120);
@@ -39,8 +40,11 @@ public class AssetManager {
         try {
             File f = findFile("resources/images/weapons/arrow.png");
             if (f != null) projectileArrow = ImageIO.read(f);
+
+            File f2 = findFile("resources/images/weapons/fireball.png");
+            if (f2 != null) projectileFireball = ImageIO.read(f2);
         } catch (Exception e) {
-            System.err.println("Error loading arrow sprite: " + e.getMessage());
+            System.err.println("Error loading item sprites: " + e.getMessage());
         }
     }
 
@@ -126,5 +130,9 @@ public class AssetManager {
 
     public BufferedImage getProjectileArrow() {
         return projectileArrow;
+    }
+
+    public BufferedImage getProjectileFireball() {
+        return projectileFireball;
     }
 }

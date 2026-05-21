@@ -697,8 +697,11 @@ public class GameView extends JPanel {
                         int iw = sprite.getWidth();
                         int ih = sprite.getHeight();
                         int dw = tileSize;
-                        int dh = (int) (ih * ((double) tileSize / iw));
-                        int drawX = offsetX + (x * tileSize);
+                        if (obj instanceof domain.models.staticObjects.Decoration) {
+                            dw = (int) (tileSize * 0.4);
+                        }
+                        int dh = (int) (ih * ((double) dw / iw));
+                        int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                         int drawY = offsetY + (y * tileSize) + tileSize - dh;
                         g2d.drawImage(sprite, drawX, drawY, dw, dh, null);
                     } else {

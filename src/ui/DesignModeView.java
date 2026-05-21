@@ -175,20 +175,26 @@ public class DesignModeView extends JPanel {
         final String label;
         final Color bgColor;
         final Runnable action;
+        final String spritePath;
+        BufferedImage sprite;
         Rectangle bounds = new Rectangle();
 
-        ActionBtn(String label, Color bgColor, Runnable action) {
-            this.label = label; this.bgColor = bgColor; this.action = action;
+        ActionBtn(String label, Color bgColor, String spritePath, Runnable action) {
+            this.label = label;
+            this.bgColor = bgColor;
+            this.spritePath = spritePath;
+            this.action = action;
         }
     }
 
     private void buildActionButtons() {
-        actionBtns.add(new ActionBtn("▶  Play",          new Color(60, 140, 60),   this::doPlay));
-        actionBtns.add(new ActionBtn("⚄  +5 Random",     new Color(80, 60, 130),   this::doAddRandom));
-        actionBtns.add(new ActionBtn("💾  Save Map",      new Color(50, 90, 150),   this::doSave));
-        actionBtns.add(new ActionBtn("📂  Load Map",      new Color(100, 80, 30),   this::doLoad));
-        actionBtns.add(new ActionBtn("🗑  Clear Map",     new Color(140, 60, 40),   this::doClear));
-        actionBtns.add(new ActionBtn("✖  Exit Menu",     new Color(80, 30, 50),    onBackToMenu::run));
+        actionBtns.add(new ActionBtn("▶  Play",          new Color(60, 140, 60),   "images/DesignModeImages/DesignModeButtons/PlayButton.png",          this::doPlay));
+        actionBtns.add(new ActionBtn("⚄  +5 Random",     new Color(80, 60, 130),   "images/DesignModeImages/DesignModeButtons/PlusFiveRandomButton.png", this::doAddRandom));
+        actionBtns.add(new ActionBtn("🎲  Gen Map",      new Color(110, 50, 130),  "images/DesignModeImages/DesignModeButtons/GenerateRandomMapButton.png", this::doGenerateRandomMap));
+        actionBtns.add(new ActionBtn("💾  Save Map",      new Color(50, 90, 150),   "images/DesignModeImages/DesignModeButtons/SaveMapButton.png",       this::doSave));
+        actionBtns.add(new ActionBtn("📂  Load Map",      new Color(100, 80, 30),   "images/DesignModeImages/DesignModeButtons/LoadMapButton.png",       this::doLoad));
+        actionBtns.add(new ActionBtn("🗑  Clear Map",     new Color(140, 60, 40),   "images/DesignModeImages/DesignModeButtons/ClearMapButton.png",      this::doClear));
+        actionBtns.add(new ActionBtn("✖  Exit Menu",     new Color(80, 30, 50),    "images/DesignModeImages/DesignModeButtons/ExitToMainMenuButton.png", onBackToMenu::run));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -467,6 +473,187 @@ public class DesignModeView extends JPanel {
             }
         }
         repaint();
+    }
+
+    // ── 6. Generate Random Map ───────────────────────────────────────────────
+    private void doGenerateRandomMap() {
+        Random rand = new Random();
+        int w = map.getWidth();
+        int h = map.getHeight();
+
+        // 1. Zemin ve duvarları sıfırla
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                if (x == 0 || x == w - 1) {
+                    map.placeObject(new domain.models.tile.WallTile("wall/wall_side"), x, y);
+                } else if (y == 0) {
+                    map.placeObject(new domain.models.tile.WallTile("wall/wall_1"), x, y);
+                } else if (y == h - 1) {
+                    map.placeObject(new domain.models.tile.WallTile("wall/wall_2"), x, y);
+                } else {
+                    map.placeObject(new domain.models.tile.FloorTile(), x, y);
+                }
+            }
+        }
+
+        // 2. Oyuncu başlangıç koruma alanı: (4, 4) etrafında bir bölge
+        // Hero start is at (4,4) in DemoRunner. Let's keep a 3x3 area around it empty.
+        boolean[][] reserved = new boolean[w][h];
+        for (int rx = 3; rx <= 5; rx++) {
+            for (int ry = 3; ry <= 5; ry++) {
+                reserved[rx][ry] = true;
+            }
+        }
+
+        // 3. Çıkış Kapısı yerleştirme KALDIRILDI (Kapi assla konulmamali)
+
+        // 4. Sütunlar (Obstacles) yerleştir
+        int numColumns = rand.nextInt(3) + 2; // 2 - 4
+        for (int i = 0; i < numColumns; i++) {
+            int cx, cy;
+            int attempts = 0;
+            do {
+                cx = rand.nextInt(w - 4) + 2;
+                cy = rand.nextInt(h - 4) + 2;
+                attempts++;
+            } while ((reserved[cx][cy] || !isFarEnough(cx, cy)) && attempts < 100);
+
+            if (attempts < 100) {
+                String colImg = rand.nextBoolean() ? "colon/gray_colon_whole" : "colon/purple_colon_whole";
+                map.placeObject(new Column("Column", cx, cy, colImg), cx, cy);
+                reserved[cx][cy] = true;
+            }
+        }
+
+        // 5. Sandıklar (Chests) - 2 ila 4 adet
+        int numChests = rand.nextInt(3) + 2; // 2 - 4
+        for (int i = 0; i < numChests; i++) {
+            int cx, cy;
+            int attempts = 0;
+            do {
+                cx = rand.nextInt(w - 2) + 1;
+                cy = rand.nextInt(h - 2) + 1;
+                attempts++;
+            } while ((reserved[cx][cy] || !isFarEnough(cx, cy)) && attempts < 100);
+
+            if (attempts < 100) {
+                boolean locked = (i == 0); // en az 1 tanesi kilitli sandık olsun
+                map.placeObject(new Chest("Chest", cx, cy, locked), cx, cy);
+                reserved[cx][cy] = true;
+            }
+        }
+
+        // Kasalar (Crates) - 4 ila 6 adet
+        int numCrates = rand.nextInt(3) + 4; // 4 - 6
+        for (int i = 0; i < numCrates; i++) {
+            int cx, cy;
+            int attempts = 0;
+            do {
+                cx = rand.nextInt(w - 2) + 1;
+                cy = rand.nextInt(h - 2) + 1;
+                attempts++;
+            } while ((reserved[cx][cy] || !isFarEnough(cx, cy)) && attempts < 100);
+
+            if (attempts < 100) {
+                map.placeObject(new Crate("Crate", cx, cy), cx, cy);
+                reserved[cx][cy] = true;
+            }
+        }
+
+        // SearchableObjects - 2 ila 3 adet
+        int numSearchables = rand.nextInt(2) + 2; // 2 - 3
+        for (int i = 0; i < numSearchables; i++) {
+            int cx, cy;
+            int attempts = 0;
+            do {
+                cx = rand.nextInt(w - 2) + 1;
+                cy = rand.nextInt(h - 2) + 1;
+                attempts++;
+            } while ((reserved[cx][cy] || !isFarEnough(cx, cy)) && attempts < 100);
+
+            if (attempts < 100) {
+                map.placeObject(new SearchableObject("SearchableObject", cx, cy), cx, cy);
+                reserved[cx][cy] = true;
+            }
+        }
+
+        // 6. Anahtar (KeyItem)
+        int keyX, keyY;
+        int attempts = 0;
+        do {
+            keyX = rand.nextInt(w - 4) + 2;
+            keyY = rand.nextInt(h - 4) + 2;
+            attempts++;
+        } while ((reserved[keyX][keyY] || !isFarEnough(keyX, keyY)) && attempts < 100);
+        if (attempts < 100) {
+            map.placeObject(new KeyItem(keyX, keyY), keyX, keyY);
+            reserved[keyX][keyY] = true;
+        }
+
+        // 7. Diğer Eşyalar (Potions, Weapons, Armors, Rings)
+        int numPotions = rand.nextInt(2) + 2; // 2 - 3
+        for (int i = 0; i < numPotions; i++) {
+            int px, py;
+            int patts = 0;
+            do {
+                px = rand.nextInt(w - 2) + 1;
+                py = rand.nextInt(h - 2) + 1;
+                patts++;
+            } while ((reserved[px][py] || !isFarEnough(px, py)) && patts < 100);
+            if (patts < 100) {
+                map.placeObject(new PotionItem(px, py), px, py);
+                reserved[px][py] = true;
+            }
+        }
+
+        int numWeapons = rand.nextInt(3) + 2; // 2 - 4
+        for (int i = 0; i < numWeapons; i++) {
+            int wx, wy;
+            int watts = 0;
+            do {
+                wx = rand.nextInt(w - 2) + 1;
+                wy = rand.nextInt(h - 2) + 1;
+                watts++;
+            } while ((reserved[wx][wy] || !isFarEnough(wx, wy)) && watts < 100);
+            if (watts < 100) {
+                GameObject weapon = MapItem.createRandomItem(wx, wy);
+                map.placeObject(weapon, wx, wy);
+                reserved[wx][wy] = true;
+            }
+        }
+
+        // 8. Dekorasyon (Torches)
+        int numTorches = rand.nextInt(3) + 3; // 3 - 5
+        for (int i = 0; i < numTorches; i++) {
+            int tx, ty;
+            int tatts = 0;
+            do {
+                tx = rand.nextInt(w - 2) + 1;
+                ty = rand.nextInt(h - 2) + 1;
+                tatts++;
+            } while ((reserved[tx][ty] || !isFarEnough(tx, ty)) && tatts < 100);
+            if (tatts < 100) {
+                map.placeObject(new Decoration("Torch", tx, ty, "torch/torch_1"), tx, ty);
+                reserved[tx][ty] = true;
+            }
+        }
+
+        repaint();
+    }
+
+    private boolean isFarEnough(int tx, int ty) {
+        int[][] dirs = {{0,0}, {-1,0}, {1,0}, {0,-1}, {0,1}};
+        for (int[] d : dirs) {
+            int nx = tx + d[0];
+            int ny = ty + d[1];
+            if (map.isValidPosition(nx, ny)) {
+                GameObject obj = map.getObjectAt(nx, ny);
+                if (obj != null && !(obj instanceof domain.models.tile.FloorTile) && !(obj instanceof domain.models.tile.WallTile)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -768,8 +955,11 @@ public class DesignModeView extends JPanel {
                         int iw = tImg.getWidth();
                         int ih = tImg.getHeight();
                         int dw = tileSize;
-                        int dh = (int) (ih * ((double) tileSize / iw));
-                        int drawX = px;
+                        if (obj instanceof Decoration) {
+                            dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                        }
+                        int dh = (int) (ih * ((double) dw / iw));
+                        int drawX = px + (tileSize - dw) / 2;
                         int drawY = py + tileSize - dh;
                         g.drawImage(tImg, drawX, drawY, dw, dh, null);
                     } else {
@@ -812,50 +1002,79 @@ public class DesignModeView extends JPanel {
     // ── Alt Aksiyon Butonları ─────────────────────────────────────────────────
     private void paintActionButtons(Graphics2D g) {
         int btnCount  = actionBtns.size();
-        int gap       = 6;
-        int totalGap  = gap * (btnCount + 1);
-        int btnW      = (getWidth() - totalGap) / btnCount;
-        int btnH      = BOTTOM_BTN_H - 8;
-        int startY    = getHeight() - BOTTOM_BTN_H + 4;
+        int gap       = 4; // small gap
+        int maxBtnH   = BOTTOM_BTN_H - 6; // 42px
+        
+        // First compute the aspect ratios of all buttons
+        double[] aspects = new double[btnCount];
+        double sumAspect = 0;
+        for (int i = 0; i < btnCount; i++) {
+            aspects[i] = getBtnAspectRatio(actionBtns.get(i));
+            sumAspect += aspects[i];
+        }
+        
+        // Start with the maximum height
+        int btnH = maxBtnH;
+        int totalWidthNeeded = (int) (btnH * sumAspect) + gap * (btnCount - 1);
+        
+        // If it exceeds the available width, scale down based on width
+        int availableWidth = getWidth() - 8;
+        if (totalWidthNeeded > availableWidth) {
+            btnH = (int) ((availableWidth - gap * (btnCount - 1)) / sumAspect);
+            totalWidthNeeded = (int) (btnH * sumAspect) + gap * (btnCount - 1);
+        }
+        
+        // Center the buttons horizontally and vertically
+        int startX    = (getWidth() - totalWidthNeeded) / 2;
+        int startY    = getHeight() - BOTTOM_BTN_H + (BOTTOM_BTN_H - btnH) / 2;
 
-        // Alt şerit arka plan
-        g.setColor(new Color(15, 7, 13));
+        // Alt şerit arka plan — mor
+        g.setColor(new Color(42, 22, 38));
         g.fillRect(0, getHeight() - BOTTOM_BTN_H, getWidth(), BOTTOM_BTN_H);
         // İnce ayırıcı çizgi
-        g.setColor(new Color(100, 50, 30, 180));
+        g.setColor(new Color(100, 50, 80, 180));
         g.fillRect(0, getHeight() - BOTTOM_BTN_H, getWidth(), 2);
 
         g.setFont(new Font("Arial", Font.BOLD, 12));
 
+        int currentX = startX;
         for (int i = 0; i < btnCount; i++) {
             ActionBtn btn = actionBtns.get(i);
-            int bx = gap + i * (btnW + gap);
+            int btnW = (int) (btnH * aspects[i]);
+            int bx = currentX;
             int by = startY;
 
             btn.bounds.setBounds(bx, by, btnW, btnH);
 
-            // Buton arka plan
-            GradientPaint gp = new GradientPaint(bx, by, btn.bgColor.brighter(),
-                    bx, by + btnH, btn.bgColor.darker());
-            g.setPaint(gp);
-            g.fillRoundRect(bx, by, btnW, btnH, 8, 8);
+            BufferedImage sprite = getBtnSprite(btn);
+            if (sprite != null) {
+                g.drawImage(sprite, bx, by, btnW, btnH, null);
+            } else {
+                // Buton arka plan (Fallback)
+                GradientPaint gp = new GradientPaint(bx, by, btn.bgColor.brighter(),
+                        bx, by + btnH, btn.bgColor.darker());
+                g.setPaint(gp);
+                g.fillRoundRect(bx, by, btnW, btnH, 8, 8);
 
-            // Kenar parlaklık efekti
-            g.setColor(new Color(255, 255, 255, 40));
-            g.fillRoundRect(bx + 1, by + 1, btnW - 2, btnH / 2, 8, 8);
+                // Kenar parlaklık efekti
+                g.setColor(new Color(255, 255, 255, 40));
+                g.fillRoundRect(bx + 1, by + 1, btnW - 2, btnH / 2, 8, 8);
 
-            // Kenar çizgisi
-            g.setColor(btn.bgColor.brighter().brighter());
-            g.setStroke(new BasicStroke(1.5f));
-            g.drawRoundRect(bx, by, btnW, btnH, 8, 8);
-            g.setStroke(new BasicStroke(1));
+                // Kenar çizgisi
+                g.setColor(btn.bgColor.brighter().brighter());
+                g.setStroke(new BasicStroke(1.5f));
+                g.drawRoundRect(bx, by, btnW, btnH, 8, 8);
+                g.setStroke(new BasicStroke(1));
 
-            // Label
-            g.setColor(Color.WHITE);
-            FontMetrics fm = g.getFontMetrics();
-            int lx = bx + (btnW - fm.stringWidth(btn.label)) / 2;
-            int ly = by + (btnH + fm.getAscent()) / 2 - 2;
-            g.drawString(btn.label, lx, ly);
+                // Label
+                g.setColor(Color.WHITE);
+                FontMetrics fm = g.getFontMetrics();
+                int lx = bx + (btnW - fm.stringWidth(btn.label)) / 2;
+                int ly = by + (btnH + fm.getAscent()) / 2 - 2;
+                g.drawString(btn.label, lx, ly);
+            }
+            
+            currentX += btnW + gap;
         }
     }
 
@@ -897,8 +1116,11 @@ public class DesignModeView extends JPanel {
             int iw = icon.getWidth();
             int ih = icon.getHeight();
             int dw = tileSize;
-            int dh = (int) (ih * ((double) tileSize / iw));
-            int drawX = px;
+            if (dummy instanceof Decoration) {
+                dw = (int) (tileSize * 0.4); // torch should be much smaller!
+            }
+            int dh = (int) (ih * ((double) dw / iw));
+            int drawX = px + (tileSize - dw) / 2;
             int drawY = py + tileSize - dh;
             g.drawImage(icon, drawX, drawY, dw, dh, null);
         } else {
@@ -911,6 +1133,74 @@ public class DesignModeView extends JPanel {
     // ─────────────────────────────────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────────────────────────────────
+
+    private BufferedImage trimTransparency(BufferedImage img) {
+        if (img == null) return null;
+        int width = img.getWidth();
+        int height = img.getHeight();
+        int minX = width;
+        int minY = height;
+        int maxX = -1;
+        int maxY = -1;
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int alpha = (img.getRGB(x, y) >> 24) & 0xff;
+                if (alpha > 0) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (maxX < minX || maxY < minY) {
+            return img;
+        }
+
+        return img.getSubimage(minX, minY, maxX - minX + 1, maxY - minY + 1);
+    }
+
+    private BufferedImage getBtnSprite(ActionBtn btn) {
+        if (btn.sprite != null) return btn.sprite;
+        if (btn.spritePath == null) return null;
+
+        String key = btn.spritePath;
+        if (imgCache.containsKey(key)) {
+            btn.sprite = imgCache.get(key);
+            return btn.sprite;
+        }
+
+        BufferedImage img = null;
+        String[] paths = {
+            "resources/" + btn.spritePath,
+            "../resources/" + btn.spritePath
+        };
+        for (String p : paths) {
+            File f = new File(p);
+            if (f.exists()) {
+                try {
+                    img = ImageIO.read(f);
+                } catch (Exception ignored) {}
+                break;
+            }
+        }
+        if (img != null) {
+            img = trimTransparency(img);
+            imgCache.put(key, img);
+            btn.sprite = img;
+        }
+        return img;
+    }
+
+    private double getBtnAspectRatio(ActionBtn btn) {
+        BufferedImage img = getBtnSprite(btn);
+        if (img != null) {
+            return (double) img.getWidth() / img.getHeight();
+        }
+        return 3.2;
+    }
 
     private BufferedImage getIcon(PaletteItem item) {
         if (item.icon != null) return item.icon;

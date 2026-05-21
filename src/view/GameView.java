@@ -217,45 +217,163 @@ public class GameView extends JPanel {
         }
     }
 
+    // YENİ HUD ASSETLERİ
+    private transient BufferedImage hpExtImg, hpIntImg;
+    private transient BufferedImage energyExtImg, energyIntImg;
+    private transient BufferedImage manaExtImg, manaIntImg;
+    private transient BufferedImage strExtImg, strIntImg;
+    private transient BufferedImage defExtImg, defIntImg;
+    private transient BufferedImage mainFrameImg;
+    private transient boolean hudLoaded = false;
+
+    private void loadHUDAssets() {
+        if (hudLoaded) return;
+        try {
+            hpExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_exterior.png"));
+            hpIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_interior.png"));
+            
+            energyExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_exterior.png"));
+            energyIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_interior.png"));
+            
+            manaExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_exterior.png"));
+            manaIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_interior.png"));
+            
+            strExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_exterior.png"));
+            strIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_interior.png"));
+            
+            defExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_exterior.png"));
+            defIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_interior.png"));
+            
+            mainFrameImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/main_frame.png"));
+        } catch (Exception e) {
+            System.err.println("HUD assetleri bulunamadı!");
+        }
+        hudLoaded = true;
+    }
+
+    private void drawSingleBar(Graphics2D g, String label, int current, int max, BufferedImage interiorImg, BufferedImage exteriorImg, int x, int y, int w, int h) {
+        // 1. Önce Dış Çerçeveyi (Exterior) tam boyutta çiz (w, h)
+        if (exteriorImg != null) {
+            g.drawImage(exteriorImg, x, y, w, h, null);
+        }
+
+        // 2. Sonra İç Dolguyu (Interior) hesaplayarak çiz
+        if (interiorImg != null && exteriorImg != null) {
+            // Pixel-art settings
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+
+            double ratio = Math.max(0, Math.min(1, current / (double) max));
+            
+            // Exterior'ın orijinal boyutlarına (848x244) göre ekrandaki ölçek oranını bul
+            double scaleW = (double) w / exteriorImg.getWidth();
+            double scaleH = (double) h / exteriorImg.getHeight();
+            
+            // Tüm interior'lar (HP dahil) 740x140 boyutunda kabul edilecek
+            int targetIntW = 740;
+            int targetIntH = 140;
+            
+            // Interior'ı Exterior'ın içine orijinal boşluklara göre ortala
+            // Kullanıcı talebi: Çok az sola kaydır (+15'ten +10'a düşürüldü)
+            int intOrigX = ((exteriorImg.getWidth() - targetIntW) / 2) + 10;
+            int intOrigY = ((exteriorImg.getHeight() - targetIntH) / 2) + 14;
+            
+            // Ekrandaki (scaled) koordinatlar ve boyutlar
+            int shrinkX = 1; // Genişlik birazcık artırıldı (sağdan ve soldan 1'er piksel daraltma)
+            int intX = x + (int) (intOrigX * scaleW) + shrinkX;
+            int intY = y + (int) (intOrigY * scaleH);
+            int intW = (int) (targetIntW * scaleW) - (shrinkX * 2);
+            int intH = (int) (targetIntH * scaleH);
+            
+            int visibleW = (int) (intW * ratio);
+            
+            if (visibleW > 0) {
+                java.awt.Shape oldClip = g.getClip();
+                // Kırpma işlemi sadece interior alanında yapılır
+                g.clipRect(intX, intY, visibleW, intH);
+                
+                // Interior, hesaplanan daha küçük boyutlarla (intW, intH) TAM ÇERÇEVENİN İÇİNE çizilir (ÜZERİNE)
+                g.drawImage(interiorImg, intX, intY, intW, intH, null);
+                
+                g.setClip(oldClip);
+            }
+        }
+        
+        // Etiketi çerçevenin ÜSTÜNE ortalayarak yaz
+        g.setColor(Color.WHITE);
+        g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12));
+        String text = label + ": " + current + "/" + max;
+        java.awt.FontMetrics fm = g.getFontMetrics();
+        int textWidth = fm.stringWidth(text);
+        int textX = x + (w - textWidth) / 2;
+        g.drawString(text, textX, y - 5);
+    }
+
     private void drawHUD(Graphics2D g) {
-        // HUD Ayarları
-        int hudX = 20;
-        int hudY = 20;
-        int barWidth = 150;
-        int barHeight = 15;
+        loadHUDAssets();
+        
+        if (hpExtImg == null) {
+            // Fallback
+            g.setColor(Color.WHITE);
+            g.drawString("HP: " + hero.getHp(), 20, 20);
+            return;
+        }
 
-        // Arşaplan (Gölge efekti)
-        g.setColor(new Color(0, 0, 0, 150));
-        g.fillRect(hudX - 10, hudY - 10, barWidth + 80, 80);
-
-        // 1. HP Bar (Can)
-        g.setColor(Color.GRAY);
-        g.fillRect(hudX, hudY, barWidth, barHeight);
-        g.setColor(new Color(200, 50, 50)); // Kırmızı
-        int hpWidth = (int) ((hero.getHp() / 17.0) * barWidth); // 17 max can
-        g.fillRect(hudX, hudY, Math.max(0, hpWidth), barHeight);
-        g.setColor(Color.WHITE);
-        g.drawString("HP: " + hero.getHp(), hudX + barWidth + 5, hudY + 12);
-
-        // 2. Mana Bar
-        hudY += 25;
-        g.setColor(Color.GRAY);
-        g.fillRect(hudX, hudY, barWidth, barHeight);
-        g.setColor(new Color(50, 100, 200)); // Mavi
-        int manaWidth = (int) ((hero.getMana() / 80.0) * barWidth);
-        g.fillRect(hudX, hudY, Math.max(0, manaWidth), barHeight);
-        g.setColor(Color.WHITE);
-        g.drawString("Mana: " + hero.getMana(), hudX + barWidth + 5, hudY + 12);
-
-        // 3. Energy Bar
-        hudY += 25;
-        g.setColor(Color.GRAY);
-        g.fillRect(hudX, hudY, barWidth, barHeight);
-        g.setColor(new Color(200, 200, 50)); // Sarı
-        int energyWidth = (int) ((hero.getEnergy() / 100.0) * barWidth);
-        g.fillRect(hudX, hudY, Math.max(0, energyWidth), barHeight);
-        g.setColor(Color.WHITE);
-        g.drawString("Energy: " + hero.getEnergy(), hudX + barWidth + 5, hudY + 12);
+        // Haritanın piksel genişliği (sol ve sağ duvar arası mesafe)
+        int mapPixelWidth = gameMap != null ? gameMap.getCols() * tileSize : getWidth();
+        
+        // 1. MAIN FRAME Çizimi (En altta kalacak arka plan)
+        if (mainFrameImg != null) {
+            // Main frame'i harita genişliğine (veya uygun bir orana) göre ölçekle
+            // Örneğin mapPixelWidth kadar genişlik verip aspect ratio koruyalım
+            int frameW = mapPixelWidth; // Eğer ekranı kaplaması istenirse getWidth() yapılabilir
+            int frameH = (int) (mainFrameImg.getHeight() * ((double) frameW / mainFrameImg.getWidth()));
+            
+            // Ekranın tam ortasına yatayda ortala
+            int frameX = (getWidth() - frameW) / 2;
+            
+            // Üst kısmı haritanın en üst tile'ını (offsetY) kapsasın
+            int frameY = offsetY;
+            
+            // Pixel-art netliğini korumak için
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g.drawImage(mainFrameImg, frameX, frameY, frameW, frameH, null);
+        }
+        
+        // 2. HUD Barları (HP, ENG, vs.)
+        // Barları haritanın ortasına (central) yerleştirmek için hesaplama
+        int numBars = 5;
+        int gap = 10; // Barlar arası estetik boşluk
+        int padding = 40; // Sol ve sağ duvardan en az 40px içeride (merkezde) dursun
+        
+        int availableWidth = mapPixelWidth - (padding * 2);
+        int barW = (availableWidth - (gap * (numBars - 1))) / numBars;
+        // Çerçevenin orijinal en/boy oranını bozmadan yüksekliği hesapla
+        int barH = (int) (hpExtImg.getHeight() * ((double) barW / hpExtImg.getWidth()));
+        
+        // 5 barın ve aralarındaki boşlukların kapladığı GERÇEK toplam genişlik
+        int totalWidth = (barW * numBars) + (gap * (numBars - 1));
+        
+        // Başlangıç noktası: haritanın tam merkezine (sol ve sağ duvar arasına) oturt
+        int startX = offsetX + (mapPixelWidth - totalWidth) / 2;
+        
+        // Haritanın hemen üstüne yerleştir. Üstte yazılar olacağı için en az 20px boşluk bırak
+        int y = offsetY - barH - 10;
+        if (y < 20) y = 20;
+        
+        // 1. Health
+        drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, startX, y, barW, barH);
+        
+        // 2. Energy
+        drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, startX + (barW + gap), y, barW, barH);
+        
+        // 3. Mana
+        drawSingleBar(g, "MP", hero.getMana(), 80, manaIntImg, manaExtImg, startX + 2*(barW + gap), y, barW, barH);
+        
+        // 4. STR
+        drawSingleBar(g, "STR", hero.getStr(), 20, strIntImg, strExtImg, startX + 3*(barW + gap), y, barW, barH);
+        
+        // 5. DEF
+        drawSingleBar(g, "DEF", hero.getDef(), 10, defIntImg, defExtImg, startX + 4*(barW + gap), y, barW, barH);
     }
 
     /** Delegates inventory drawing to InventoryView. */
@@ -393,9 +511,6 @@ public class GameView extends JPanel {
     }
 
     private void drawHero(Graphics2D g2d) {
-        if (gameMode == domain.models.GameMode.TEAM_MATCH && !hero.isAlive()) {
-            return;
-        }
         BufferedImage frame = assetManager.getHeroSprite(hero.getAnimationState());
 
         if (frame != null) {
@@ -458,55 +573,14 @@ public class GameView extends JPanel {
                             g2d.fillOval(px, py, size, size);
                         }
                     } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
-                        BufferedImage fireballImg = assetManager.getProjectileFireball();
-                        if (fireballImg != null) {
-                            double px = offsetX + (proj.getExactX() * tileSize);
-                            double py = offsetY + (proj.getExactY() * tileSize);
-                            
-                            // Since the image is vertically oriented pointing down by default,
-                            // we apply (angle - Math.PI / 2.0) offset.
-                            double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) - (Math.PI / 2.0);
-                            
-                            java.awt.geom.AffineTransform old = g2d.getTransform();
-                            g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
-                            g2d.rotate(angle);
-                            g2d.drawImage(fireballImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
-                            g2d.setTransform(old);
-                        } else {
-                            // Fallback if image fails to load
-                            int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                            int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
-                            int size = tileSize / 2;
-                            g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
-                            g2d.fillOval(px, py, size, size);
-                            g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
-                            g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
-                        }
-                    } else if ("SORCERER_FIREBALL".equalsIgnoreCase(proj.getType())) {
-                        BufferedImage sorcererFireballImg = assetManager.getProjectileSorcererFireball();
-                        if (sorcererFireballImg != null) {
-                            double px = offsetX + (proj.getExactX() * tileSize);
-                            double py = offsetY + (proj.getExactY() * tileSize);
-                            
-                            // Since the image is vertically oriented pointing down by default,
-                            // we apply (angle - Math.PI / 2.0) offset.
-                            double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) - (Math.PI / 2.0);
-                            
-                            java.awt.geom.AffineTransform old = g2d.getTransform();
-                            g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
-                            g2d.rotate(angle);
-                            g2d.drawImage(sorcererFireballImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
-                            g2d.setTransform(old);
-                        } else {
-                            // Fallback if image fails to load
-                            int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                            int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
-                            int size = tileSize / 2;
-                            g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
-                            g2d.fillOval(px, py, size, size);
-                            g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
-                            g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
-                        }
+                        // Blazing Fireball (Orange-Red glowing orb)
+                        int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
                     } else {
                         // Purple Mage Spell
                         int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);

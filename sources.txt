@@ -69,3 +69,4 @@ src/domain/models/item/Weapon.java
 src/domain/models/inventory/Inventory.java
 src/domain/models/GameState.java
 src/domain/models/Direction.java
+src/domain/models/entity/DoubleCrate.java

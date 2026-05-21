@@ -10,7 +10,7 @@ public class RingItem extends MapItem {
     private final int strBonus;
 
     public RingItem(int x, int y) {
-        super("Ring of Might", x, y, "images/items/ring/red_ring.png");
+        super("Ring of Might", x, y, "images/items/ring/green_ring.png");
         this.strBonus = 5; // Increases STR stat by 5!
         this.addAction(new TakeAction());
         this.addAction(new WearAction());

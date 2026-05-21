@@ -3,6 +3,7 @@ package ui;
 import domain.models.entity.Chest;
 import domain.models.entity.Column;
 import domain.models.entity.Crate;
+import domain.models.entity.DoubleCrate;
 import domain.models.entity.GameObject;
 import domain.models.entity.SearchableObject;
 import domain.models.item.*;
@@ -95,6 +96,14 @@ public class DesignModeView extends JPanel {
         buildPalette();
         buildActionButtons();
         setupMouseListeners();
+
+        // Animasyonlar için (örn. Torch) periyodik repaint tetikleyici
+        javax.swing.Timer animTimer = new javax.swing.Timer(120, e -> {
+            if (isShowing()) {
+                repaint();
+            }
+        });
+        animTimer.start();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -122,10 +131,10 @@ public class DesignModeView extends JPanel {
         // ── Statik Objeler ───────────────────────────────────────────────────
         add("Chest",    "chest",                    true,  (x,y) -> new Chest("Chest", x, y, false));
         add("Crate",    "crate",                    true,  (x,y) -> new Crate("Crate", x, y));
+        add("DbCrate",  "double_crate",             true,  (x,y) -> new DoubleCrate("DoubleCrate", x, y));
         add("Column",   "colon/gray_colon_whole",   true,  (x,y) -> new Column("Column", x, y, "colon/gray_colon_whole"));
         add("PurpleCol","colon/purple_colon_whole", true,  (x,y) -> new Column("Column", x, y, "colon/purple_colon_whole"));
         add("Torch",    "torch/torch_1",            true,  (x,y) -> new Decoration("Torch", x, y, "torch/torch_1"));
-        add("Search",   "searchable",               true,  (x,y) -> new SearchableObject("SearchableObject", x, y));
 
         // ── Items ────────────────────────────────────────────────────────────
         add("Potion",   "images/items/potion/red_potion.png",    false, (x,y) -> new PotionItem(x, y));
@@ -138,33 +147,12 @@ public class DesignModeView extends JPanel {
         add("Katana",   "images/weapons/samurai_sword.png",       false, (x,y) -> new SamuraiSwordItem(x, y));
         add("DiamSword","images/weapons/diamond_sword_1.png",     false, (x,y) -> new DiamondSwordItem(x, y));
         add("Armor",    "images/items/steel_armor.png",           false, (x,y) -> new ArmorItem(x, y));
-        add("Ring",     "images/items/ring/ring_1.png",           false, (x,y) -> new RingItem(x, y));
-
-        // ── Silgi ────────────────────────────────────────────────────────────
-        palette.add(buildEraser());
+        add("Ring",     "images/items/ring/green_ring.png",       false, (x,y) -> new RingItem(x, y));
     }
 
     private void add(String label, String iconPath, boolean isTileIcon,
                      java.util.function.BiFunction<Integer,Integer,GameObject> factory) {
         palette.add(new PaletteItem(label, iconPath, isTileIcon, factory));
-    }
-
-    /** Özel silgi kalemi */
-    private PaletteItem buildEraser() {
-        PaletteItem eraser = new PaletteItem("Erase", null, false, null);
-        // Kırmızı X ikonu programatik olarak çiziyoruz
-        BufferedImage img = new BufferedImage(48, 48, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = img.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setColor(new Color(60, 20, 20, 200));
-        g.fillRoundRect(0, 0, 48, 48, 10, 10);
-        g.setColor(new Color(220, 60, 60));
-        g.setStroke(new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        g.drawLine(10, 10, 38, 38);
-        g.drawLine(38, 10, 10, 38);
-        g.dispose();
-        eraser.icon = img;
-        return eraser;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -379,15 +367,8 @@ public class DesignModeView extends JPanel {
             placed++;
         }
 
-        // 1 adet SearchableObject'e gizlenmiş item
-        if (!freeTiles.isEmpty()) {
-            int[] pos = freeTiles.remove(rand.nextInt(freeTiles.size()));
-            SearchableObject searchable = new SearchableObject("SearchableObject", pos[0], pos[1]);
-            map.placeObject(searchable, pos[0], pos[1]);
-        }
-
         repaint();
-        showMsg("5 rastgele item + 1 gizli eşya eklendi!", "Tamamlandı");
+        showMsg("5 rastgele item eklendi!", "Tamamlandı");
     }
 
     /**
@@ -560,22 +541,7 @@ public class DesignModeView extends JPanel {
             }
         }
 
-        // SearchableObjects - 2 ila 3 adet
-        int numSearchables = rand.nextInt(2) + 2; // 2 - 3
-        for (int i = 0; i < numSearchables; i++) {
-            int cx, cy;
-            int attempts = 0;
-            do {
-                cx = rand.nextInt(w - 2) + 1;
-                cy = rand.nextInt(h - 2) + 1;
-                attempts++;
-            } while ((reserved[cx][cy] || !isFarEnough(cx, cy)) && attempts < 100);
 
-            if (attempts < 100) {
-                map.placeObject(new SearchableObject("SearchableObject", cx, cy), cx, cy);
-                reserved[cx][cy] = true;
-            }
-        }
 
         // 6. Anahtar (KeyItem)
         int keyX, keyY;
@@ -705,6 +671,7 @@ public class DesignModeView extends JPanel {
         if (obj instanceof RingItem)         return "RingItem";
         if (obj instanceof KeyItem)          return "KeyItem";
         if (obj instanceof Chest)            return "Chest";
+        if (obj instanceof DoubleCrate)      return "DoubleCrate";
         if (obj instanceof Crate)            return "Crate";
         if (obj instanceof Column)           return "Column";
         if (obj instanceof Door)             return "Door";
@@ -745,6 +712,7 @@ public class DesignModeView extends JPanel {
                 case "RingItem"         -> new RingItem(x, y);
                 case "KeyItem"          -> new KeyItem(x, y);
                 case "Chest"            -> new Chest(name, x, y, locked);
+                case "DoubleCrate"      -> new DoubleCrate(name, x, y);
                 case "Crate"            -> new Crate(name, x, y);
                 case "Column"           -> imgName != null && !imgName.isEmpty()
                                               ? new Column(name, x, y, imgName)
@@ -853,6 +821,12 @@ public class DesignModeView extends JPanel {
 
             // Aspect-ratio koruyarak çiz
             BufferedImage icon = getIcon(item);
+            if (item.iconPath != null && item.iconPath.startsWith("torch/")) {
+                long now = System.currentTimeMillis();
+                int[] frames = {1, 2, 3, 4, 6, 7, 8};
+                int frame = frames[(int) ((now / 120) % frames.length)];
+                icon = tileManager.getTile("torch/torch_" + frame);
+            }
             int slotPad = selected ? 3 : 1;
             drawIconFit(g, icon, ix + slotPad, iy + slotPad, ICON_SIZE - slotPad * 2);
 
@@ -933,7 +907,14 @@ public class DesignModeView extends JPanel {
                     // MapItem kendi sprite'ını taşır
                     tImg = ((domain.models.item.MapItem) obj).getSprite();
                 } else {
-                    tImg = tileManager.getTile(obj.getImageName());
+                    String imgName = obj.getImageName();
+                    if (obj instanceof Decoration && imgName != null && imgName.startsWith("torch/")) {
+                        long now = System.currentTimeMillis();
+                        int[] frames = {1, 2, 3, 4, 6, 7, 8};
+                        int frame = frames[(int) ((now / 120) % frames.length)];
+                        imgName = "torch/torch_" + frame;
+                    }
+                    tImg = tileManager.getTile(imgName);
                 }
 
                 if (tImg != null) {
@@ -1091,6 +1072,12 @@ public class DesignModeView extends JPanel {
         if (item.factory == null) return; // silgi — ek görsele gerek yok
 
         BufferedImage icon = getIcon(item);
+        if (item.iconPath != null && item.iconPath.startsWith("torch/")) {
+            long now = System.currentTimeMillis();
+            int[] frames = {1, 2, 3, 4, 6, 7, 8};
+            int frame = frames[(int) ((now / 120) % frames.length)];
+            icon = tileManager.getTile("torch/torch_" + frame);
+        }
         if (icon == null) return;
 
         int px = mapOffsetX + hoverTileX * tileSize;

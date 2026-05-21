@@ -690,7 +690,14 @@ public class GameView extends JPanel {
 
                     BufferedImage sprite = null;
                     if (tileManager != null) {
-                        sprite = tileManager.getTile(obj.getImageName());
+                        String imgName = obj.getImageName();
+                        if (obj instanceof domain.models.staticObjects.Decoration && imgName != null && imgName.startsWith("torch/")) {
+                            long now = System.currentTimeMillis();
+                            int[] frames = {1, 2, 3, 4, 6, 7, 8};
+                            int frame = frames[(int) ((now / 120) % frames.length)];
+                            imgName = "torch/torch_" + frame;
+                        }
+                        sprite = tileManager.getTile(imgName);
                     }
 
                     if (sprite != null) {

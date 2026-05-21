@@ -324,7 +324,7 @@ public class GameView extends JPanel {
         int frameW = mapPixelWidth; 
         int frameH = 100; // Fallback
         int frameX = (getWidth() - frameW) / 2;
-        int frameY = offsetY;
+        int frameY = 0; // Oyun ekranının tam üstüyle (Y=0) çakışacak biçimde
 
         // 1. MAIN FRAME Çizimi (En altta kalacak arka plan)
         if (mainFrameImg != null) {

@@ -321,31 +321,30 @@ public class GameView extends JPanel {
         // Haritanın piksel genişliği (sol ve sağ duvar arası mesafe)
         int mapPixelWidth = gameMap != null ? gameMap.getCols() * tileSize : getWidth();
         
+        int frameW = mapPixelWidth; 
+        int frameH = 100; // Fallback
+        int frameX = (getWidth() - frameW) / 2;
+        int frameY = offsetY;
+
         // 1. MAIN FRAME Çizimi (En altta kalacak arka plan)
         if (mainFrameImg != null) {
             // Main frame'i harita genişliğine (veya uygun bir orana) göre ölçekle
-            // Örneğin mapPixelWidth kadar genişlik verip aspect ratio koruyalım
-            int frameW = mapPixelWidth; // Eğer ekranı kaplaması istenirse getWidth() yapılabilir
-            int frameH = (int) (mainFrameImg.getHeight() * ((double) frameW / mainFrameImg.getWidth()));
-            
-            // Ekranın tam ortasına yatayda ortala
-            int frameX = (getWidth() - frameW) / 2;
-            
-            // Üst kısmı haritanın en üst tile'ını (offsetY) kapsasın
-            int frameY = offsetY;
+            frameH = (int) (mainFrameImg.getHeight() * ((double) frameW / mainFrameImg.getWidth()));
             
             // Pixel-art netliğini korumak için
             g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.drawImage(mainFrameImg, frameX, frameY, frameW, frameH, null);
+        } else {
+            frameY = offsetY - frameH; // Fallback position above map
         }
         
         // 2. HUD Barları (HP, ENG, vs.)
-        // Barları haritanın ortasına (central) yerleştirmek için hesaplama
+        // Barları main frame'in İÇİNE ortalamak için hesaplama
         int numBars = 5;
         int gap = 10; // Barlar arası estetik boşluk
-        int padding = 40; // Sol ve sağ duvardan en az 40px içeride (merkezde) dursun
+        int padding = 60; // Sol ve sağ duvardan boşluk (main frame içine sığması için)
         
-        int availableWidth = mapPixelWidth - (padding * 2);
+        int availableWidth = frameW - (padding * 2);
         int barW = (availableWidth - (gap * (numBars - 1))) / numBars;
         // Çerçevenin orijinal en/boy oranını bozmadan yüksekliği hesapla
         int barH = (int) (hpExtImg.getHeight() * ((double) barW / hpExtImg.getWidth()));
@@ -353,12 +352,11 @@ public class GameView extends JPanel {
         // 5 barın ve aralarındaki boşlukların kapladığı GERÇEK toplam genişlik
         int totalWidth = (barW * numBars) + (gap * (numBars - 1));
         
-        // Başlangıç noktası: haritanın tam merkezine (sol ve sağ duvar arasına) oturt
-        int startX = offsetX + (mapPixelWidth - totalWidth) / 2;
+        // Başlangıç noktası: main frame'in içine yatayda tam merkeze oturt
+        int startX = frameX + (frameW - totalWidth) / 2;
         
-        // Haritanın hemen üstüne yerleştir. Üstte yazılar olacağı için en az 20px boşluk bırak
-        int y = offsetY - barH - 10;
-        if (y < 20) y = 20;
+        // Y noktası: main frame'in içine dikeyde tam merkeze oturt
+        int y = frameY + (frameH - barH) / 2;
         
         // 1. Health
         drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, startX, y, barW, barH);

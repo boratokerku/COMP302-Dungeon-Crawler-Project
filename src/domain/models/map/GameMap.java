@@ -40,6 +40,21 @@ public class GameMap extends Grid {
         return obj != null && obj.isPassable();
     }
 
+    /**
+     * Extends Grid.placeObject() by additionally linking the placed object
+     * to this GameMap instance.
+     *
+     * @param obj The GameObject to place. Can be null to clear the cell.
+     * @param x   The x-coordinate where the object should be placed.
+     * @param y   The y-coordinate where the object should be placed.
+     * @return    true if placement succeeded; false if coordinates are out of bounds.
+     *
+     * @requires  true (no precondition; all inputs handled defensively)
+     * @modifies  this.cells[x][y], obj.position, obj.map (if obj != null and valid)
+     * @effects   Calls super.placeObject(obj, x, y). If that returns true and obj
+     *            is non-null, additionally calls obj.setMap(this) to register the
+     *            map reference on the object. Returns the result of the super call.
+     */
     @Override
     public boolean placeObject(GameObject obj, int x, int y) {
         boolean success = super.placeObject(obj, x, y);

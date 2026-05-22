@@ -2,6 +2,24 @@ package domain.models.map;
 
 import domain.models.entity.GameObject;
 
+/**
+ * OVERVIEW: GameMap represents a 2D spatial grid layout of the game world, 
+ * managing the locations and relationships of various GameObjects.
+ *
+ * ABSTRACTION FUNCTION (AF):
+ * AF(this) = A 2D grid dungeon of dimensions this.rows x this.cols, where each 
+ * coordinate index contains the registered GameObject(s) occupying that tile.
+ *
+ * REPRESENTATION INVARIANT (RI):
+ * 1. cells != null, rows > 0, cols > 0
+ * 2. cells.length == rows and all row arrays have a length equal to cols.
+ * 3. Bidirectional Position Sync: For every GameObject obj at cells[r][c], 
+ * obj.getX() == r and obj.getY() == c.
+ * 4. Bidirectional Map Sync: For every GameObject obj at cells[r][c], 
+ * obj.getCurrentMap() == this.
+ * 5. No Duplication (Aliasing): The exact same physical memory reference of a 
+ * GameObject cannot occupy more than one cell simultaneously.
+ */
 public class GameMap extends Grid {
 
     public GameMap(int width, int height) {
@@ -80,5 +98,39 @@ public class GameMap extends Grid {
 
     public int getHeight() {
         return cols;
+    }
+
+    @Override
+    public boolean repOk() {
+        if (!super.repOk()) {
+            return false;
+        }
+
+        java.util.Set<GameObject> seenObjects = new java.util.HashSet<>();
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                GameObject obj = cells[r][c];
+                if (obj != null) {
+                    // 3. Bidirectional Position Sync
+                    if (obj.getX() != r || obj.getY() != c) {
+                        return false;
+                    }
+
+                    // 4. Bidirectional Map Sync
+                    if (obj.getCurrentMap() != this) {
+                        return false;
+                    }
+
+                    // 5. No Duplication (Aliasing)
+                    if (seenObjects.contains(obj)) {
+                        return false;
+                    }
+                    seenObjects.add(obj);
+                }
+            }
+        }
+
+        return true;
     }
 }

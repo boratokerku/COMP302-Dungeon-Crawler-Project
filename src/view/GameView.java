@@ -868,14 +868,8 @@ public class GameView extends JPanel {
                         obj instanceof domain.models.entity.SearchableObject ||
                         obj instanceof domain.models.entity.Sign) {
 
-                    boolean inZone = hero != null && Math.abs(x - hero.getX()) <= 1
-                            && Math.abs(y - hero.getY()) <= 1;
-
-                    if (!inZone) {
-                        java.awt.AlphaComposite ac = java.awt.AlphaComposite
-                                .getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f);
-                        g2d.setComposite(ac);
-                    }
+                    // Kullanıcı talebi: Obstacle'lar yarı saydam değil opak olmalı
+                    // (AlphaComposite kaldırıldı)
 
                     BufferedImage sprite = null;
                     if (tileManager != null) {
@@ -920,8 +914,7 @@ public class GameView extends JPanel {
                         g2d.fillRect(drawX, drawY, tileSize, tileSize);
                     }
 
-                    // Reset composite
-                    g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
+                    // (Composite sıfırlamaya gerek yok, çünkü AlphaComposite kullanılmıyor)
                 }
             }
         }

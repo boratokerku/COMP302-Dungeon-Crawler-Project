@@ -333,6 +333,11 @@ public class GameView extends JPanel {
         
         int contentStartX = x + (w - totalContentWidth) / 2;
         
+        // Kullanıcı talebi: HP'nin ikonunu ve yazısını birazcık daha sağa al
+        if ("HP".equals(label)) {
+            contentStartX -= 8;
+        }
+        
         if (iconImg != null) {
             g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             // Yazı baseline (alt çizgi) y-5. İkonu yazının hizasına oturtmak için yukarı çekiyoruz

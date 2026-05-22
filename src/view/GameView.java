@@ -319,7 +319,8 @@ public class GameView extends JPanel {
         // Etiketi çerçevenin ÜSTÜNE ortalayarak yaz
         g.setColor(Color.WHITE);
         g.setFont(hudFont != null ? hudFont : new java.awt.Font("SansSerif", java.awt.Font.BOLD, 16));
-        String text = label + ": " + current + "/" + max;
+        // Kullanıcı talebi: ENG yazısındaki sayıyı yaklaştırmak için ": " yerine ":" kullanıyoruz
+        String text = label + ":" + current + "/" + max;
         java.awt.FontMetrics fm = g.getFontMetrics();
         int textWidth = fm.stringWidth(text);
         

@@ -168,6 +168,32 @@ public class Hero extends Entity {
         return this.equippedWeapon;
     }
 
+    /**
+     * Moves the hero on the grid map based on directional offsets.
+     *
+     * @requires (dx >= -1 && dx <= 1) && (dy >= -1 && dy <= 1)
+     * @modifies this.x, this.y
+     * @effects If the target position (this.x + dx, this.y + dy) is within the map
+     *          boundaries
+     *          and there is no collision with a Static Object (Wall), updates the
+     *          hero's coordinates
+     *          to the target position. If a collision occurs or the target is out
+     *          of bounds,
+     *          the hero's position remains unchanged.
+     */
+    public boolean move(int dx, int dy) {
+        if (this.currentMap == null)
+            return false;
+        int nextX = this.x + dx;
+        int nextY = this.y + dy;
+        if (this.currentMap.isWalkable(nextX, nextY)) {
+            this.x = nextX;
+            this.y = nextY;
+            return true;
+        }
+        return false;
+    }
+
     public boolean move(Direction dir, domain.models.map.GameMap map, java.util.List<Entity> entities) {
         if (this.energy < 3) {
             System.out.println("No energy to move!");
@@ -226,7 +252,8 @@ public class Hero extends Entity {
             if (this.energy >= attackCost) {
                 int damage = calculateDamage(this.weaponAtk);
                 target.takeDamage(damage);
-                view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 60, 60));
+                view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP",
+                        new java.awt.Color(255, 60, 60));
                 this.energy -= attackCost; // Saldırı maliyeti
                 System.out.println("Hero attacked target! Damage: " + damage + " Energy: " + this.energy);
 

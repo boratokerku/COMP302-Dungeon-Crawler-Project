@@ -32,7 +32,24 @@ public class DemoRunner {
                 domain.models.entity.GameObject obj = original.getObjectAt(x, y);
                 if (obj == null) continue;
                 if (obj instanceof domain.models.tile.WallTile) {
-                    copy.placeObject(new domain.models.tile.WallTile(obj.getImageName()), x, y);
+                    domain.models.tile.WallTile origWall = (domain.models.tile.WallTile) obj;
+                    domain.models.tile.WallTile newWall = new domain.models.tile.WallTile(origWall.getImageName());
+                    copy.placeObject(newWall, x, y);
+                    if (origWall.getDecoration() != null) {
+                        domain.models.entity.GameObject origDeco = origWall.getDecoration();
+                        domain.models.entity.GameObject newDeco = null;
+                        if (origDeco instanceof domain.models.entity.Column) {
+                            newDeco = new domain.models.entity.Column(origDeco.getName(), x, y, origDeco.getImageName());
+                        } else if (origDeco instanceof domain.models.entity.Sign) {
+                            newDeco = new domain.models.entity.Sign(origDeco.getName(), x, y, origDeco.getImageName());
+                        } else if (origDeco instanceof domain.models.staticObjects.Decoration) {
+                            newDeco = new domain.models.staticObjects.Decoration(origDeco.getName(), x, y, origDeco.getImageName());
+                        }
+                        if (newDeco != null) {
+                            newWall.setDecoration(newDeco);
+                            newDeco.setMap(copy);
+                        }
+                    }
                 } else if (obj instanceof domain.models.tile.FloorTile) {
                     copy.placeObject(new domain.models.tile.FloorTile(), x, y);
                 } else if (obj instanceof domain.models.entity.Chest) {
@@ -52,9 +69,11 @@ public class DemoRunner {
                 } else if (obj instanceof domain.models.staticObjects.Decoration) {
                     copy.placeObject(new domain.models.staticObjects.Decoration(obj.getName(), x, y, obj.getImageName()), x, y);
                 } else if (obj instanceof domain.models.staticObjects.KeyItem) {
-                    copy.placeObject(new domain.models.staticObjects.KeyItem(x, y), x, y);
+                    domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) obj;
+                    copy.placeObject(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()), x, y);
                 } else if (obj instanceof domain.models.item.PotionItem) {
-                    copy.placeObject(new domain.models.item.PotionItem(x, y), x, y);
+                    domain.models.item.PotionItem pot = (domain.models.item.PotionItem) obj;
+                    copy.placeObject(new domain.models.item.PotionItem(pot.getName(), x, y, pot.getImageName()), x, y);
                 } else if (obj instanceof domain.models.item.SwordItem) {
                     copy.placeObject(new domain.models.item.SwordItem(x, y), x, y);
                 } else if (obj instanceof domain.models.item.WoodenSwordItem) {
@@ -74,7 +93,8 @@ public class DemoRunner {
                 } else if (obj instanceof domain.models.item.RingItem) {
                     copy.placeObject(new domain.models.item.RingItem(x, y), x, y);
                 } else if (obj instanceof domain.models.entity.SearchableObject) {
-                    copy.placeObject(new domain.models.entity.SearchableObject(obj.getName(), x, y), x, y);
+                    domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
+                    copy.placeObject(new domain.models.entity.SearchableObject(so.getName(), x, y, so.getImageName(), so.getOpenImageName()), x, y);
                 } else {
                     copy.placeObject(obj, x, y);
                 }

@@ -45,14 +45,9 @@ public class DesignModeView extends JPanel {
     private final TileManager tileManager;
 
     // ── Layout ───────────────────────────────────────────────────────────────
-    // 2 satır, ~48px ikonlar — referans görselle aynı
+    // Layout and sizing constants for panels
     private static final int ICON_SIZE    = 48;   // px — item ikonu
     private static final int ICON_GAP     = 3;    // px — ikonlar arası
-    private static final int TOOLBAR_ROWS = 2;    // satır sayısı
-    private static final int TOOLBAR_PAD  = 8;    // px — sol/sağ kenar boşluğu
-    private static final int TOOLBAR_VPAD = 6;    // px — üst/alt kenar boşluğu
-    // Toolbar yüksekliği: 2 satır ikon + boşluklar + border
-    private static final int TOOLBAR_H    = TOOLBAR_VPAD * 2 + TOOLBAR_ROWS * ICON_SIZE + (TOOLBAR_ROWS - 1) * ICON_GAP + 16;
     private static final int BOTTOM_BTN_H = 48;   // px — alt buton şeridi
 
     private int tileSize   = 32;
@@ -61,52 +56,45 @@ public class DesignModeView extends JPanel {
 
     // Hover'daki item için tooltip
     private String hoveredPaletteLabel = null;
-    // toolbar scroll (kullanılmıyor — 2 satırda herşey sığıyor)
-    private int toolbarScrollX = 0;
 
     // ── Palet ────────────────────────────────────────────────────────────────
-    private final List<PaletteItem> palette = new ArrayList<>();
+    // ── Palet ────────────────────────────────────────────────────────────────
+    private final List<PaletteItem> leftPalette = new ArrayList<>();
+    private final List<PaletteItem> topPalette = new ArrayList<>();
+    private final List<PaletteItem> rightPalette = new ArrayList<>();
+    private String selectedPanel = null; // "LEFT", "TOP", "RIGHT"
     private int selectedPaletteIdx = -1;   // seçili item (-1 = hiçbiri)
 
-    private static class PaletteLayout {
-        int iconSize;
-        int step;
-        int cols;
-        int startX;
-        int startY;
+    private static final int LEFT_PANEL_W = 64;
+    private static final int RIGHT_PANEL_W = 64;
+    private static final int TOP_PANEL_H = 70;
+
+    private Rectangle getLeftItemBounds(int idx) {
+        int x = (LEFT_PANEL_W - ICON_SIZE) / 2;
+        int y = TOP_PANEL_H + 20 + idx * (ICON_SIZE + 10);
+        return new Rectangle(x, y, ICON_SIZE, ICON_SIZE);
     }
 
-    private PaletteLayout getPaletteLayout() {
-        PaletteLayout l = new PaletteLayout();
-        int total = palette.size();
-        if (total == 0) return l;
-        l.cols = (int) Math.ceil(total / (double) TOOLBAR_ROWS);
-        
-        l.iconSize = ICON_SIZE;
-        int gap = ICON_GAP;
-        l.step = l.iconSize + gap;
-        
-        int mapW = tileSize * map.getWidth();
-        int totalW = l.cols * l.step - gap;
-        int usableW = mapW - TOOLBAR_PAD * 2;
-        
-        if (totalW > usableW && l.cols > 0) {
-            l.step = (usableW + gap) / l.cols;
-            l.iconSize = l.step - gap;
-            totalW = l.cols * l.step - gap;
-        }
-        
-        l.startX = mapOffsetX + TOOLBAR_PAD + Math.max(0, (usableW - totalW) / 2);
-        l.startY = TOOLBAR_VPAD + 8;
-        
-        // Vertically center smaller icons in the fixed height toolbar
-        int drawnH = TOOLBAR_ROWS * l.iconSize + (TOOLBAR_ROWS - 1) * gap;
-        int expectedH = TOOLBAR_ROWS * ICON_SIZE + (TOOLBAR_ROWS - 1) * ICON_GAP;
-        if (drawnH < expectedH) {
-            l.startY += (expectedH - drawnH) / 2;
-        }
-        
-        return l;
+    private Rectangle getRightItemBounds(int idx) {
+        int x = getWidth() - RIGHT_PANEL_W + (RIGHT_PANEL_W - ICON_SIZE) / 2;
+        int y = TOP_PANEL_H + 20 + idx * (ICON_SIZE + 10);
+        return new Rectangle(x, y, ICON_SIZE, ICON_SIZE);
+    }
+
+    private Rectangle getTopItemBounds(int idx) {
+        int totalW = topPalette.size() * (ICON_SIZE + 8) - 8;
+        int startX = (getWidth() - totalW) / 2;
+        int x = startX + idx * (ICON_SIZE + 8);
+        int y = (TOP_PANEL_H - ICON_SIZE) / 2;
+        return new Rectangle(x, y, ICON_SIZE, ICON_SIZE);
+    }
+
+    private PaletteItem getSelectedPaletteItem() {
+        if (selectedPanel == null || selectedPaletteIdx < 0) return null;
+        if ("LEFT".equals(selectedPanel)) return leftPalette.get(selectedPaletteIdx);
+        if ("RIGHT".equals(selectedPanel)) return rightPalette.get(selectedPaletteIdx);
+        if ("TOP".equals(selectedPanel)) return topPalette.get(selectedPaletteIdx);
+        return null;
     }
 
     // ── Hover ────────────────────────────────────────────────────────────────
@@ -175,32 +163,38 @@ public class DesignModeView extends JPanel {
     }
 
     private void buildPalette() {
-        // ── Statik Objeler ───────────────────────────────────────────────────
-        add("Chest",    "chest",                    true,  (x,y) -> new Chest("Chest", x, y, false));
-        add("Crate",    "crate",                    true,  (x,y) -> new Crate("Crate", x, y));
-        add("DbCrate",  "double_crate",             true,  (x,y) -> new DoubleCrate("DoubleCrate", x, y));
-        add("Column",   "colon/gray_colon_whole",   true,  (x,y) -> new Column("Column", x, y, "colon/gray_colon_whole"));
-        add("PurpleCol","colon/purple_colon_whole", true,  (x,y) -> new Column("Column", x, y, "colon/purple_colon_whole"));
-        add("Sign",     "sign/sign_brown",          true,  (x,y) -> new Sign("Sign", x, y, "sign/sign_brown"));
-        add("Torch",    "torch/torch_1",            true,  (x,y) -> new Decoration("Torch", x, y, "torch/torch_1"));
+        // LEFT PALETTE (Obstacles & Wall-Mounted Objects)
+        leftPalette.add(new PaletteItem("Crate",    "crate",                    true,  (x,y) -> new Crate("Crate", x, y)));
+        leftPalette.add(new PaletteItem("DbCrate",  "double_crate",             true,  (x,y) -> new DoubleCrate("DoubleCrate", x, y)));
+        leftPalette.add(new PaletteItem("Column",   "colon/gray_colon_whole",   true,  (x,y) -> new Column("Column", x, y, "colon/gray_colon_whole")));
+        leftPalette.add(new PaletteItem("PurpleCol","colon/purple_colon_whole", true,  (x,y) -> new Column("Column", x, y, "colon/purple_colon_whole")));
+        leftPalette.add(new PaletteItem("Sign",     "sign/sign_brown",          true,  (x,y) -> new Sign("Sign", x, y, "sign/sign_brown")));
+        leftPalette.add(new PaletteItem("SignOrg",  "sign/sign_orange",          true,  (x,y) -> new Sign("Sign", x, y, "sign/sign_orange")));
+        leftPalette.add(new PaletteItem("Torch",    "torch/torch_1",            true,  (x,y) -> new Decoration("Torch", x, y, "torch/torch_1")));
 
-        // ── Items ────────────────────────────────────────────────────────────
-        add("Potion",   "images/items/potion/red_potion.png",    false, (x,y) -> new PotionItem(x, y));
-        add("Key",      "images/items/key/golden_key_1.png",     false, (x,y) -> new KeyItem(x, y));
-        add("Sword",    "images/weapons/knight_sword.png",        false, (x,y) -> new SwordItem(x, y));
-        add("WdSword",  "images/weapons/wooden_sword.png",        false, (x,y) -> new WoodenSwordItem(x, y));
-        add("Axe",      "images/weapons/axe.png",                 false, (x,y) -> new AxeItem(x, y));
-        add("Bow",      "images/weapons/bow.png",                 false, (x,y) -> new BowItem(x, y));
-        add("FireWand", "images/weapons/fire_wand.png",           false, (x,y) -> new FireWandItem(x, y));
-        add("Katana",   "images/weapons/samurai_sword.png",       false, (x,y) -> new SamuraiSwordItem(x, y));
-        add("DiamSword","images/weapons/diamond_sword_1.png",     false, (x,y) -> new DiamondSwordItem(x, y));
-        add("Armor",    "images/items/steel_armor.png",           false, (x,y) -> new ArmorItem(x, y));
-        add("Ring",     "images/items/ring/green_ring.png",       false, (x,y) -> new RingItem(x, y));
-    }
+        // TOP PALETTE (Usables & Collectibles)
+        topPalette.add(new PaletteItem("RedPotion", "images/items/potion/red_potion.png",    false, (x,y) -> new PotionItem("Red Potion", x, y, "images/items/potion/red_potion.png")));
+        topPalette.add(new PaletteItem("BluePotion","images/items/potion/blue_potion.png",   false, (x,y) -> new PotionItem("Blue Potion", x, y, "images/items/potion/blue_potion.png")));
+        topPalette.add(new PaletteItem("GreenPotion","images/items/potion/green_potion.png", false, (x,y) -> new PotionItem("Green Potion", x, y, "images/items/potion/green_potion.png")));
+        topPalette.add(new PaletteItem("GoldKey",   "images/items/key/golden_key_1.png",     false, (x,y) -> new KeyItem("Golden Key", x, y, "images/items/key/golden_key_1.png")));
+        topPalette.add(new PaletteItem("Sword",     "images/weapons/knight_sword.png",        false, (x,y) -> new SwordItem(x, y)));
+        topPalette.add(new PaletteItem("WdSword",   "images/weapons/wooden_sword.png",        false, (x,y) -> new WoodenSwordItem(x, y)));
+        topPalette.add(new PaletteItem("Axe",       "images/weapons/axe.png",                 false, (x,y) -> new AxeItem(x, y)));
+        topPalette.add(new PaletteItem("Bow",       "images/weapons/bow.png",                 false, (x,y) -> new BowItem(x, y)));
+        topPalette.add(new PaletteItem("FireWand",  "images/weapons/fire_wand.png",           false, (x,y) -> new FireWandItem(x, y)));
+        topPalette.add(new PaletteItem("Katana",    "images/weapons/samurai_sword.png",       false, (x,y) -> new SamuraiSwordItem(x, y)));
+        topPalette.add(new PaletteItem("DiamSword", "images/weapons/diamond_sword_1.png",     false, (x,y) -> new DiamondSwordItem(x, y)));
+        topPalette.add(new PaletteItem("Armor",     "images/items/steel_armor.png",           false, (x,y) -> new ArmorItem(x, y)));
+        topPalette.add(new PaletteItem("Ring",      "images/items/ring/green_ring.png",       false, (x,y) -> new RingItem(x, y)));
 
-    private void add(String label, String iconPath, boolean isTileIcon,
-                     java.util.function.BiFunction<Integer,Integer,GameObject> factory) {
-        palette.add(new PaletteItem(label, iconPath, isTileIcon, factory));
+        // RIGHT PALETTE (Searchable Containers)
+        rightPalette.add(new PaletteItem("BrChest",  "containers/chest_brown",          true,  (x,y) -> new SearchableObject("Brown Chest", x, y, "containers/chest_brown", "containers/empty_chest_1")));
+        rightPalette.add(new PaletteItem("RedChest", "containers/chest_red",            true,  (x,y) -> new SearchableObject("Red Chest", x, y, "containers/chest_red", "containers/empty_chest_2")));
+        rightPalette.add(new PaletteItem("WhChest",  "containers/chest_white",          true,  (x,y) -> new SearchableObject("White Chest", x, y, "containers/chest_white", "containers/empty_chest_3")));
+        rightPalette.add(new PaletteItem("GoldChest","containers/gold_chest_closed",    true,  (x,y) -> new SearchableObject("Gold Chest", x, y, "containers/gold_chest_closed", "containers/gold_chest_empty")));
+        rightPalette.add(new PaletteItem("SilvChest","containers/silver_chest_closed",  true,  (x,y) -> new SearchableObject("Silver Chest", x, y, "containers/silver_chest_closed", "containers/silver_chest_empty")));
+        rightPalette.add(new PaletteItem("Bag",      "containers/bag",                  true,  (x,y) -> new SearchableObject("Bag", x, y, "containers/bag", "storage/bag - empty")));
+        rightPalette.add(new PaletteItem("MagBag",   "containers/magical_bag",          true,  (x,y) -> new SearchableObject("Magical Bag", x, y, "containers/magical_bag", "storage/bag - empty")));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -251,62 +245,93 @@ public class DesignModeView extends JPanel {
 
     private void handlePress(MouseEvent e) {
         isDragging = true;
-        // Üst araç çubuğu tıklaması — palette seçimi
-        if (e.getY() < TOOLBAR_H) {
-            selectPaletteAt(e.getX(), e.getY());
+        int mx = e.getX();
+        int my = e.getY();
+        int bottomStart = getHeight() - BOTTOM_BTN_H;
+
+        boolean inTopPanel = (my < TOP_PANEL_H);
+        boolean inLeftPanel = (mx < LEFT_PANEL_W && my >= TOP_PANEL_H && my < bottomStart);
+        boolean inRightPanel = (mx >= getWidth() - RIGHT_PANEL_W && my >= TOP_PANEL_H && my < bottomStart);
+
+        if (inTopPanel || inLeftPanel || inRightPanel) {
+            selectPaletteAt(mx, my);
             repaint();
             return;
         }
-        // Alt buton şeridi
-        int bottomStart = getHeight() - BOTTOM_BTN_H;
-        if (e.getY() >= bottomStart) {
-            fireActionBtn(e.getX(), e.getY());
+
+        if (my >= bottomStart) {
+            fireActionBtn(mx, my);
             return;
         }
+
         // Harita alanı
         handleMapClick(e);
     }
 
     private void handleDrag(MouseEvent e) {
         if (!isDragging) return;
-        int y = e.getY();
-        if (y >= TOOLBAR_H && y < getHeight() - BOTTOM_BTN_H) {
-            updateHover(e.getX(), e.getY());
-            if (selectedPaletteIdx >= 0) placeOrErase(e);
+        int mx = e.getX();
+        int my = e.getY();
+        int bottomStart = getHeight() - BOTTOM_BTN_H;
+
+        boolean inViewport = (mx >= LEFT_PANEL_W && mx < getWidth() - RIGHT_PANEL_W &&
+                              my >= TOP_PANEL_H && my < bottomStart);
+
+        if (inViewport) {
+            updateHover(mx, my);
+            if (selectedPaletteIdx >= 0 && selectedPanel != null) {
+                placeOrErase(e);
+            }
             repaint();
         }
     }
 
     private void handleMove(MouseEvent e) {
-        updateHover(e.getX(), e.getY());
-        // Toolbar üzerindeyse tooltip güncelle
+        int mx = e.getX();
+        int my = e.getY();
+        updateHover(mx, my);
+
         hoveredPaletteLabel = null;
-        if (e.getY() < TOOLBAR_H) {
-            PaletteItem hovered = getPaletteItemAt(e.getX(), e.getY());
-            if (hovered != null) hoveredPaletteLabel = hovered.label;
+        PaletteItem hovered = getPaletteItemAt(mx, my);
+        if (hovered != null) {
+            hoveredPaletteLabel = hovered.label;
         }
         repaint();
     }
 
     private void handleMapClick(MouseEvent e) {
         updateHover(e.getX(), e.getY());
-        placeOrErase(e);
+        if (selectedPaletteIdx >= 0 && selectedPanel != null) {
+            placeOrErase(e);
+        }
         repaint();
     }
 
     private void updateHover(int mx, int my) {
         if (tileSize <= 0) { hoverTileX = hoverTileY = -1; return; }
+        int bottomStart = getHeight() - BOTTOM_BTN_H;
+        boolean inViewport = (mx >= LEFT_PANEL_W && mx < getWidth() - RIGHT_PANEL_W &&
+                              my >= TOP_PANEL_H && my < bottomStart);
+
+        if (!inViewport) {
+            hoverTileX = hoverTileY = -1;
+            return;
+        }
+
         int tx = (mx - mapOffsetX) / tileSize;
         int ty = (my - mapOffsetY) / tileSize;
-        if (map.isValidPosition(tx, ty)) { hoverTileX = tx; hoverTileY = ty; }
-        else { hoverTileX = hoverTileY = -1; }
+        if (map.isValidPosition(tx, ty)) {
+            hoverTileX = tx;
+            hoverTileY = ty;
+        } else {
+            hoverTileX = hoverTileY = -1;
+        }
     }
 
     private void placeOrErase(MouseEvent e) {
         if (hoverTileX < 0 || hoverTileY < 0) return;
-        if (selectedPaletteIdx < 0) return;
-
-        PaletteItem item = palette.get(selectedPaletteIdx);
+        PaletteItem item = getSelectedPaletteItem();
+        if (item == null) return;
 
         boolean isRight = javax.swing.SwingUtilities.isRightMouseButton(e);
         boolean isLeft = javax.swing.SwingUtilities.isLeftMouseButton(e);
@@ -319,14 +344,18 @@ public class DesignModeView extends JPanel {
 
         if (!isLeft) return;
 
-        // Duvar tile'ı üzerine koymayı engelle
         GameObject existing = map.getObjectAt(hoverTileX, hoverTileY);
-        if (existing instanceof WallTile) {
-            return;
-        }
-
-        // Yerleştir
         GameObject obj = item.factory.apply(hoverTileX, hoverTileY);
+
+        boolean isWallMounted = (obj instanceof domain.models.staticObjects.Decoration ||
+                                 obj instanceof domain.models.entity.Column ||
+                                 obj instanceof domain.models.entity.Sign);
+
+        if (existing instanceof WallTile) {
+            if (!isWallMounted) {
+                return; // Normal items cannot be placed on wall tiles
+            }
+        }
 
         boolean replacingSameCategory = false;
         if (isItem(obj)) {
@@ -356,8 +385,12 @@ public class DesignModeView extends JPanel {
 
     private void eraseAt(int tx, int ty) {
         GameObject existing = map.getObjectAt(tx, ty);
-        if (existing == null || existing instanceof WallTile) return;
-        map.placeObject(new FloorTile(), tx, ty);
+        if (existing == null) return;
+        if (existing instanceof WallTile) {
+            map.placeObject(null, tx, ty);
+        } else {
+            map.placeObject(new FloorTile(), tx, ty);
+        }
     }
 
     private int countItems() {
@@ -403,7 +436,8 @@ public class DesignModeView extends JPanel {
             || obj instanceof domain.models.entity.DoubleCrate
             || obj instanceof domain.models.entity.Column
             || obj instanceof domain.models.entity.Sign
-            || obj instanceof domain.models.staticObjects.Decoration;
+            || obj instanceof domain.models.staticObjects.Decoration
+            || obj instanceof domain.models.entity.SearchableObject;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -411,25 +445,75 @@ public class DesignModeView extends JPanel {
     // ─────────────────────────────────────────────────────────────────────────
 
     private void selectPaletteAt(int mx, int my) {
-        PaletteItem found = getPaletteItemAt(mx, my);
-        if (found != null) {
-            int idx = palette.indexOf(found);
-            selectedPaletteIdx = (selectedPaletteIdx == idx) ? -1 : idx;
+        int bottomStart = getHeight() - BOTTOM_BTN_H;
+        // Check LEFT panel
+        if (mx < LEFT_PANEL_W && my >= TOP_PANEL_H && my < bottomStart) {
+            for (int i = 0; i < leftPalette.size(); i++) {
+                if (getLeftItemBounds(i).contains(mx, my)) {
+                    if ("LEFT".equals(selectedPanel) && selectedPaletteIdx == i) {
+                        selectedPanel = null;
+                        selectedPaletteIdx = -1;
+                    } else {
+                        selectedPanel = "LEFT";
+                        selectedPaletteIdx = i;
+                    }
+                    return;
+                }
+            }
+        }
+        // Check RIGHT panel
+        else if (mx >= getWidth() - RIGHT_PANEL_W && my >= TOP_PANEL_H && my < bottomStart) {
+            for (int i = 0; i < rightPalette.size(); i++) {
+                if (getRightItemBounds(i).contains(mx, my)) {
+                    if ("RIGHT".equals(selectedPanel) && selectedPaletteIdx == i) {
+                        selectedPanel = null;
+                        selectedPaletteIdx = -1;
+                    } else {
+                        selectedPanel = "RIGHT";
+                        selectedPaletteIdx = i;
+                    }
+                    return;
+                }
+            }
+        }
+        // Check TOP panel
+        else if (my < TOP_PANEL_H) {
+            for (int i = 0; i < topPalette.size(); i++) {
+                if (getTopItemBounds(i).contains(mx, my)) {
+                    if ("TOP".equals(selectedPanel) && selectedPaletteIdx == i) {
+                        selectedPanel = null;
+                        selectedPaletteIdx = -1;
+                    } else {
+                        selectedPanel = "TOP";
+                        selectedPaletteIdx = i;
+                    }
+                    return;
+                }
+            }
         }
     }
 
-    /** Toolbar'da verilen (mx,my) koordinatındaki palette item'ını döndürür */
     private PaletteItem getPaletteItemAt(int mx, int my) {
-        if (palette.isEmpty()) return null;
-        PaletteLayout layout = getPaletteLayout();
-
-        for (int i = 0; i < palette.size(); i++) {
-            int col = i % layout.cols;
-            int row = i / layout.cols;
-            int ix  = layout.startX + col * layout.step;
-            int iy  = layout.startY + row * (layout.iconSize + ICON_GAP);
-            if (mx >= ix && mx <= ix + layout.iconSize && my >= iy && my <= iy + layout.iconSize) {
-                return palette.get(i);
+        int bottomStart = getHeight() - BOTTOM_BTN_H;
+        if (mx < LEFT_PANEL_W && my >= TOP_PANEL_H && my < bottomStart) {
+            for (int i = 0; i < leftPalette.size(); i++) {
+                if (getLeftItemBounds(i).contains(mx, my)) {
+                    return leftPalette.get(i);
+                }
+            }
+        }
+        else if (mx >= getWidth() - RIGHT_PANEL_W && my >= TOP_PANEL_H && my < bottomStart) {
+            for (int i = 0; i < rightPalette.size(); i++) {
+                if (getRightItemBounds(i).contains(mx, my)) {
+                    return rightPalette.get(i);
+                }
+            }
+        }
+        else if (my < TOP_PANEL_H) {
+            for (int i = 0; i < topPalette.size(); i++) {
+                if (getTopItemBounds(i).contains(mx, my)) {
+                    return topPalette.get(i);
+                }
             }
         }
         return null;
@@ -764,7 +848,27 @@ public class DesignModeView extends JPanel {
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj == null || obj instanceof WallTile || obj instanceof FloorTile) continue;
+                if (obj == null || obj instanceof FloorTile) continue;
+
+                if (obj instanceof WallTile) {
+                    WallTile wall = (WallTile) obj;
+                    GameObject deco = wall.getDecoration();
+                    if (deco != null) {
+                        String type = objectType(deco);
+                        if (type != null) {
+                            if (!first) sb.append(",\n");
+                            first = false;
+                            sb.append("    {\"type\":\"").append(type)
+                              .append("\",\"name\":\"").append(escape(deco.getName()))
+                              .append("\",\"x\":").append(x)
+                              .append(",\"y\":").append(y)
+                              .append(",\"isWallMounted\":true")
+                              .append(",\"imageName\":\"").append(escape(deco.getImageName())).append("\"}");
+                        }
+                    }
+                    continue;
+                }
+
                 String type = objectType(obj);
                 if (type == null) continue;
                 if (!first) sb.append(",\n");
@@ -773,9 +877,23 @@ public class DesignModeView extends JPanel {
                   .append("\",\"name\":\"").append(escape(obj.getName()))
                   .append("\",\"x\":").append(x)
                   .append(",\"y\":").append(y);
-                if (obj instanceof Chest)  sb.append(",\"isLocked\":").append(((Chest)obj).isLocked());
-                if (obj instanceof Door)   sb.append(",\"isLocked\":").append(((Door)obj).isLocked());
-                if (obj instanceof Column || obj instanceof Sign) sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
+
+                if (obj instanceof Chest) {
+                    sb.append(",\"isLocked\":").append(((Chest)obj).isLocked());
+                }
+                if (obj instanceof Door) {
+                    sb.append(",\"isLocked\":").append(((Door)obj).isLocked());
+                }
+                if (obj instanceof Column || obj instanceof Sign || obj instanceof Decoration) {
+                    sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
+                }
+                if (obj instanceof SearchableObject) {
+                    sb.append(",\"openImageName\":\"").append(escape(((SearchableObject)obj).getOpenImageName())).append("\"")
+                      .append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
+                }
+                if (obj instanceof PotionItem || obj instanceof KeyItem) {
+                    sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
+                }
                 sb.append("}");
             }
         }
@@ -807,12 +925,17 @@ public class DesignModeView extends JPanel {
     }
 
     private void loadMapFromJson(String json) {
-        // Önce haritayı temizle (duvarlar korunur)
-        for (int x = 0; x < map.getWidth(); x++)
+        // Önce haritayı temizle (duvarlar korunur, dekorasyonları temizlenir)
+        for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (!(obj instanceof WallTile)) map.placeObject(new FloorTile(), x, y);
+                if (obj instanceof WallTile) {
+                    ((WallTile) obj).setDecoration(null);
+                } else {
+                    map.placeObject(new FloorTile(), x, y);
+                }
             }
+        }
 
         // Basit JSON ayrıştırıcı — her nesne kaydı satır bazında işlenir
         for (String line : json.split("\n")) {
@@ -824,9 +947,13 @@ public class DesignModeView extends JPanel {
             int y = jsonInt(line, "y");
             boolean locked = "true".equals(jsonStr(line, "isLocked"));
             String imgName = jsonStr(line, "imageName");
+            String openImgName = jsonStr(line, "openImageName");
+            boolean isWallMounted = "true".equals(jsonStr(line, "isWallMounted"));
 
             GameObject obj = switch (type) {
-                case "PotionItem"       -> new PotionItem(x, y);
+                case "PotionItem"       -> imgName != null && !imgName.isEmpty()
+                                              ? new PotionItem(name, x, y, imgName)
+                                              : new PotionItem(x, y);
                 case "SwordItem"        -> new SwordItem(x, y);
                 case "WoodenSwordItem"  -> new WoodenSwordItem(x, y);
                 case "SamuraiSwordItem" -> new SamuraiSwordItem(x, y);
@@ -836,7 +963,9 @@ public class DesignModeView extends JPanel {
                 case "FireWandItem"     -> new FireWandItem(x, y);
                 case "ArmorItem"        -> new ArmorItem(x, y);
                 case "RingItem"         -> new RingItem(x, y);
-                case "KeyItem"          -> new KeyItem(x, y);
+                case "KeyItem"          -> imgName != null && !imgName.isEmpty()
+                                              ? new KeyItem(name, x, y, imgName)
+                                              : new KeyItem(x, y);
                 case "Chest"            -> new Chest(name, x, y, locked);
                 case "DoubleCrate"      -> new DoubleCrate(name, x, y);
                 case "Crate"            -> new Crate(name, x, y);
@@ -847,8 +976,12 @@ public class DesignModeView extends JPanel {
                                               ? new Sign(name, x, y, imgName)
                                               : new Sign(name, x, y);
                 case "Door"             -> new Door(name, x, y, locked);
-                case "Decoration"       -> new Decoration(name, x, y, "torch/torch_1");
-                case "SearchableObject" -> new SearchableObject(name, x, y);
+                case "Decoration"       -> imgName != null && !imgName.isEmpty()
+                                              ? new Decoration(name, x, y, imgName)
+                                              : new Decoration(name, x, y, "torch/torch_1");
+                case "SearchableObject" -> imgName != null && !imgName.isEmpty()
+                                              ? new SearchableObject(name, x, y, imgName, openImgName)
+                                              : new SearchableObject(name, x, y);
                 default                 -> null;
             };
             if (obj != null) map.placeObject(obj, x, y);
@@ -867,20 +1000,26 @@ public class DesignModeView extends JPanel {
 
         calculateLayout();
 
-        paintToolbar(g2);
+        paintTopPanel(g2);
+        paintLeftPanel(g2);
+        paintRightPanel(g2);
         paintMap(g2);
         paintHoverHighlight(g2);
         paintActionButtons(g2);
         paintCursor(g2);
+        paintTooltip(g2);
+        paintSelectedLabel(g2);
 
         g2.dispose();
     }
 
     private void calculateLayout() {
-        // Harita: toolbar ve buton şeridi arasındaki TÜM alanı kullan
-        int mapAreaY = TOOLBAR_H + 6;
-        int mapAreaH = getHeight() - TOOLBAR_H - BOTTOM_BTN_H - 12;
-        int mapAreaW = getWidth() - 8;
+        int mapAreaX = LEFT_PANEL_W;
+        int mapAreaY = TOP_PANEL_H;
+        int mapAreaW = getWidth() - LEFT_PANEL_W - RIGHT_PANEL_W;
+        int mapAreaH = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
+
+        if (mapAreaW <= 0 || mapAreaH <= 0) return;
 
         int tw = mapAreaW / map.getWidth();
         int th = mapAreaH / map.getHeight();
@@ -888,61 +1027,117 @@ public class DesignModeView extends JPanel {
 
         int mapW = tileSize * map.getWidth();
         int mapH = tileSize * map.getHeight();
-        mapOffsetX = (getWidth() - mapW) / 2;
+        mapOffsetX = mapAreaX + (mapAreaW - mapW) / 2;
         mapOffsetY = mapAreaY + (mapAreaH - mapH) / 2;
     }
 
-    // ── Üst Toolbar ─────────────────────────────────────────────────────────
-    private void paintToolbar(Graphics2D g) {
-        // Toolbar haritanın genişliğiyle hizalı
-        int mapW     = tileSize * map.getWidth();
-        int toolbarX = mapOffsetX;
-        int W        = mapW;
-        int H        = TOOLBAR_H;
+    private void paintTopPanel(Graphics2D g) {
+        int W = getWidth();
+        int H = TOP_PANEL_H;
 
-        // 1. Kırmızı-turuncu arka plan (yalnızca harita genişliğinde)
-        GradientPaint bg = new GradientPaint(
-                toolbarX, 0, new Color(210, 65, 20),
-                toolbarX, H, new Color(175, 40, 10));
-        g.setPaint(bg);
-        g.fillRect(toolbarX, 0, W, H);
+        BufferedImage bgImg = tileManager.getTile("carpet/red_carpet_middle");
+        if (bgImg != null) {
+            int iw = bgImg.getWidth();
+            int ih = bgImg.getHeight();
+            int tileW = (int) (iw * ((double) H / ih));
+            for (int tx = 0; tx < W; tx += tileW) {
+                g.drawImage(bgImg, tx, 0, tileW, H, null);
+            }
+        } else {
+            // Retro gradient background fallback (dark red/purple)
+            GradientPaint bg = new GradientPaint(
+                    0, 0, new Color(50, 20, 40),
+                    0, H, new Color(30, 10, 25));
+            g.setPaint(bg);
+            g.fillRect(0, 0, W, H);
+        }
 
-        // 2. Dış turuncu çerçeve
-        g.setColor(new Color(220, 135, 25));
-        g.setStroke(new BasicStroke(3));
-        g.drawRect(toolbarX + 2, 2, W - 4, H - 4);
+        // Gold border at the bottom
+        g.setColor(new Color(212, 175, 55)); // Gold color
+        g.setStroke(new BasicStroke(2.5f));
+        g.drawLine(0, H - 2, W, H - 2);
 
-        // İç dashed çerçeve
-        float[] dash1 = {6f, 4f};
-        g.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, dash1, 0f));
-        g.setColor(new Color(255, 210, 60, 200));
-        g.drawRect(toolbarX + 6, 6, W - 12, H - 12);
+        // Items
+        for (int i = 0; i < topPalette.size(); i++) {
+            PaletteItem item = topPalette.get(i);
+            Rectangle bounds = getTopItemBounds(i);
 
-        // En iç ince çerçeve
-        float[] dash2 = {3f, 5f};
-        g.setStroke(new BasicStroke(1f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, dash2, 3f));
-        g.setColor(new Color(255, 240, 120, 120));
-        g.drawRect(toolbarX + 9, 9, W - 18, H - 18);
-        g.setStroke(new BasicStroke(1));
+            boolean selected = "TOP".equals(selectedPanel) && (i == selectedPaletteIdx);
 
-        // 3. İkon grid — 2 satır, aspect-ratio korunarak
-        PaletteLayout layout = getPaletteLayout();
-        
-        for (int i = 0; i < palette.size(); i++) {
-            PaletteItem item = palette.get(i);
-            int col = i % layout.cols;
-            int row = i / layout.cols;
-            int ix  = layout.startX + col * layout.step;
-            int iy  = layout.startY + row * (layout.iconSize + ICON_GAP);
-
-            boolean selected = (i == selectedPaletteIdx);
+            // Set item background to #0A142E (Color(10, 20, 46))
+            g.setColor(new Color(10, 20, 46));
+            g.fillRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 6, 6);
 
             if (selected) {
-                g.setColor(new Color(255, 215, 0, 180));
-                g.fillRoundRect(ix - 2, iy - 2, layout.iconSize + 4, layout.iconSize + 4, 6, 6);
+                g.setColor(new Color(255, 215, 0, 100));
+                g.fillRoundRect(bounds.x - 2, bounds.y - 2, bounds.width + 4, bounds.height + 4, 8, 8);
             }
 
-            // Aspect-ratio koruyarak çiz
+            BufferedImage icon = getIcon(item);
+            drawIconFit(g, icon, bounds.x, bounds.y, bounds.width);
+
+            if (selected) {
+                g.setColor(new Color(255, 215, 0)); // Gold select border
+                g.setStroke(new BasicStroke(2.5f));
+                g.drawRoundRect(bounds.x - 2, bounds.y - 2, bounds.width + 4, bounds.height + 4, 8, 8);
+            } else {
+                g.setColor(new Color(255, 255, 255, 40));
+                g.setStroke(new BasicStroke(1));
+                g.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 6, 6);
+            }
+        }
+    }
+
+    private void paintLeftPanel(Graphics2D g) {
+        int W = LEFT_PANEL_W;
+        int H = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
+        int Y = TOP_PANEL_H;
+
+        BufferedImage topImg = tileManager.getTile("carpet/red_carpet_top");
+        BufferedImage midImg = tileManager.getTile("carpet/red_carpet_middle");
+        BufferedImage botImg = tileManager.getTile("carpet/red_carpet_bottom");
+
+        if (topImg != null && midImg != null && botImg != null) {
+            // Draw top cap (Height = 32 pixels)
+            g.drawImage(topImg, 0, Y, W, 32, null);
+
+            // Draw bottom cap (Height = 32 pixels)
+            g.drawImage(botImg, 0, Y + H - 32, W, 32, null);
+
+            // Draw tiled middle body (without vertical stretching)
+            int yStart = Y + 32;
+            int yEnd = Y + H - 32;
+            int spriteHeight = midImg.getHeight();
+            for (int y = yStart; y < yEnd; y += spriteHeight) {
+                int drawHeight = Math.min(spriteHeight, yEnd - y);
+                g.drawImage(midImg, 0, y, W, y + drawHeight, 0, 0, midImg.getWidth(), drawHeight, null);
+            }
+        } else {
+            // Gradient background fallback
+            GradientPaint bg = new GradientPaint(
+                    0, Y, new Color(40, 20, 50),
+                    W, Y + H, new Color(20, 10, 30));
+            g.setPaint(bg);
+            g.fillRect(0, Y, W, H);
+        }
+
+        // Gold border on the right
+        g.setColor(new Color(212, 175, 55));
+        g.setStroke(new BasicStroke(2.5f));
+        g.drawLine(W - 2, Y, W - 2, Y + H);
+
+        // Items
+        for (int i = 0; i < leftPalette.size(); i++) {
+            PaletteItem item = leftPalette.get(i);
+            Rectangle bounds = getLeftItemBounds(i);
+
+            boolean selected = "LEFT".equals(selectedPanel) && (i == selectedPaletteIdx);
+
+            if (selected) {
+                g.setColor(new Color(255, 215, 0, 100));
+                g.fillRoundRect(bounds.x - 2, bounds.y - 2, bounds.width + 4, bounds.height + 4, 8, 8);
+            }
+
             BufferedImage icon = getIcon(item);
             if (item.iconPath != null && item.iconPath.startsWith("torch/")) {
                 long now = System.currentTimeMillis();
@@ -950,49 +1145,126 @@ public class DesignModeView extends JPanel {
                 int frame = frames[(int) ((now / 120) % frames.length)];
                 icon = tileManager.getTile("torch/torch_" + frame);
             }
-            int slotPad = selected ? 3 : 1;
-            drawIconFit(g, icon, ix + slotPad, iy + slotPad, layout.iconSize - slotPad * 2);
+            drawIconFit(g, icon, bounds.x, bounds.y, bounds.width);
 
             if (selected) {
-                g.setColor(new Color(255, 230, 50));
+                g.setColor(new Color(255, 215, 0));
                 g.setStroke(new BasicStroke(2.5f));
-                g.drawRoundRect(ix - 2, iy - 2, layout.iconSize + 4, layout.iconSize + 4, 6, 6);
+                g.drawRoundRect(bounds.x - 2, bounds.y - 2, bounds.width + 4, bounds.height + 4, 8, 8);
+            } else {
+                g.setColor(new Color(255, 255, 255, 40));
                 g.setStroke(new BasicStroke(1));
+                g.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 6, 6);
             }
-        }
-
-        // 4. Hover tooltip
-        if (hoveredPaletteLabel != null) {
-            g.setFont(new Font("Arial", Font.BOLD, 11));
-            FontMetrics fm = g.getFontMetrics();
-            int tw = fm.stringWidth(hoveredPaletteLabel) + 10;
-            int th = fm.getHeight() + 4;
-            java.awt.Point mp = getMousePosition();
-            int tx = (mp != null) ? Math.min(toolbarX + W - tw - 4, Math.max(toolbarX + 4, mp.x - tw / 2)) : toolbarX + W / 2;
-            g.setColor(new Color(20, 10, 5, 220));
-            g.fillRoundRect(tx, H + 2, tw, th, 5, 5);
-            g.setColor(new Color(255, 220, 100));
-            g.drawString(hoveredPaletteLabel, tx + 5, H + 2 + fm.getAscent() + 2);
-        }
-
-        // 5. Seçili item adı etiketi
-        if (selectedPaletteIdx >= 0) {
-            String selLabel = "[ " + palette.get(selectedPaletteIdx).label + " ]";
-            g.setFont(new Font("Arial", Font.BOLD, 11));
-            FontMetrics fm = g.getFontMetrics();
-            int lw = fm.stringWidth(selLabel) + 8;
-            int lh = fm.getHeight() + 2;
-            int lx = toolbarX + W - lw - 6;
-            int ly = H - lh - 3;
-            g.setColor(new Color(0, 0, 0, 160));
-            g.fillRoundRect(lx, ly, lw, lh, 4, 4);
-            g.setColor(new Color(255, 230, 80));
-            g.drawString(selLabel, lx + 4, ly + fm.getAscent() + 1);
         }
     }
 
+    private void paintRightPanel(Graphics2D g) {
+        int W = RIGHT_PANEL_W;
+        int H = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
+        int X = getWidth() - W;
+        int Y = TOP_PANEL_H;
 
-    // ── Harita ───────────────────────────────────────────────────────────────
+        BufferedImage topImg = tileManager.getTile("carpet/red_carpet_top");
+        BufferedImage midImg = tileManager.getTile("carpet/red_carpet_middle");
+        BufferedImage botImg = tileManager.getTile("carpet/red_carpet_bottom");
+
+        if (topImg != null && midImg != null && botImg != null) {
+            // Draw top cap (Height = 32 pixels)
+            g.drawImage(topImg, X, Y, W, 32, null);
+
+            // Draw bottom cap (Height = 32 pixels)
+            g.drawImage(botImg, X, Y + H - 32, W, 32, null);
+
+            // Draw tiled middle body (without vertical stretching)
+            int yStart = Y + 32;
+            int yEnd = Y + H - 32;
+            int spriteHeight = midImg.getHeight();
+            for (int y = yStart; y < yEnd; y += spriteHeight) {
+                int drawHeight = Math.min(spriteHeight, yEnd - y);
+                g.drawImage(midImg, X, y, X + W, y + drawHeight, 0, 0, midImg.getWidth(), drawHeight, null);
+            }
+        } else {
+            // Gradient background fallback
+            GradientPaint bg = new GradientPaint(
+                    X, Y, new Color(40, 20, 50),
+                    X + W, Y + H, new Color(20, 10, 30));
+            g.setPaint(bg);
+            g.fillRect(X, Y, W, H);
+        }
+
+        // Gold border on the left
+        g.setColor(new Color(212, 175, 55));
+        g.setStroke(new BasicStroke(2.5f));
+        g.drawLine(X + 2, Y, X + 2, Y + H);
+
+        // Items
+        for (int i = 0; i < rightPalette.size(); i++) {
+            PaletteItem item = rightPalette.get(i);
+            Rectangle bounds = getRightItemBounds(i);
+
+            boolean selected = "RIGHT".equals(selectedPanel) && (i == selectedPaletteIdx);
+
+            if (selected) {
+                g.setColor(new Color(255, 215, 0, 100));
+                g.fillRoundRect(bounds.x - 2, bounds.y - 2, bounds.width + 4, bounds.height + 4, 8, 8);
+            }
+
+            BufferedImage icon = getIcon(item);
+            drawIconFit(g, icon, bounds.x, bounds.y, bounds.width);
+
+            if (selected) {
+                g.setColor(new Color(255, 215, 0));
+                g.setStroke(new BasicStroke(2.5f));
+                g.drawRoundRect(bounds.x - 2, bounds.y - 2, bounds.width + 4, bounds.height + 4, 8, 8);
+            } else {
+                g.setColor(new Color(255, 255, 255, 40));
+                g.setStroke(new BasicStroke(1));
+                g.drawRoundRect(bounds.x, bounds.y, bounds.width, bounds.height, 6, 6);
+            }
+        }
+    }
+
+    private void paintTooltip(Graphics2D g) {
+        if (hoveredPaletteLabel != null) {
+            g.setFont(new Font("Arial", Font.BOLD, 12));
+            FontMetrics fm = g.getFontMetrics();
+            int tw = fm.stringWidth(hoveredPaletteLabel) + 12;
+            int th = fm.getHeight() + 6;
+            java.awt.Point mp = getMousePosition();
+            if (mp != null) {
+                int tx = Math.min(getWidth() - tw - 10, Math.max(10, mp.x - tw / 2));
+                int ty = mp.y + 15;
+                if (ty + th > getHeight() - BOTTOM_BTN_H) {
+                    ty = mp.y - th - 5;
+                }
+                g.setColor(new Color(20, 10, 5, 230));
+                g.fillRoundRect(tx, ty, tw, th, 6, 6);
+                g.setColor(new Color(255, 220, 100));
+                g.drawRoundRect(tx, ty, tw, th, 6, 6);
+                g.drawString(hoveredPaletteLabel, tx + 6, ty + fm.getAscent() + 3);
+            }
+        }
+    }
+
+    private void paintSelectedLabel(Graphics2D g) {
+        PaletteItem selected = getSelectedPaletteItem();
+        if (selected != null) {
+            String selLabel = "[ Selected: " + selected.label + " ]";
+            g.setFont(new Font("Arial", Font.BOLD, 12));
+            FontMetrics fm = g.getFontMetrics();
+            int lw = fm.stringWidth(selLabel) + 10;
+            int lh = fm.getHeight() + 4;
+            int lx = getWidth() - lw - 15;
+            int ly = TOP_PANEL_H + 10;
+            g.setColor(new Color(0, 0, 0, 180));
+            g.fillRoundRect(lx, ly, lw, lh, 5, 5);
+            g.setColor(new Color(255, 215, 0));
+            g.drawRoundRect(lx, ly, lw, lh, 5, 5);
+            g.drawString(selLabel, lx + 5, ly + fm.getAscent() + 2);
+        }
+    }
+
     private void paintMap(Graphics2D g) {
         if (map == null || tileManager == null) return;
 
@@ -1013,13 +1285,39 @@ public class DesignModeView extends JPanel {
                     if (floor != null) g.drawImage(floor, px, py, tileSize, tileSize, null);
                 }
 
-                // Yan duvar özel çizim
-                if (obj instanceof WallTile && "wall/wall_side".equals(obj.getImageName())) {
-                    BufferedImage tImg = tileManager.getTile("wall/wall_side");
-                    if (tImg != null) {
-                        int sw = Math.max(tileSize / 3, 4);
-                        int dx = (x == 0) ? px + tileSize - sw : px;
-                        g.drawImage(tImg, dx, py, sw, tileSize, null);
+                // Normal wall tile or wall side tile
+                if (obj instanceof WallTile) {
+                    if ("wall/wall_side".equals(obj.getImageName())) {
+                        BufferedImage tImg = tileManager.getTile("wall/wall_side");
+                        if (tImg != null) {
+                            int sw = Math.max(tileSize / 3, 4);
+                            int dx = (x == 0) ? px + tileSize - sw : px;
+                            g.drawImage(tImg, dx, py, sw, tileSize, null);
+                        }
+                    } else {
+                        BufferedImage tImg = tileManager.getTile(obj.getImageName());
+                        if (tImg != null) {
+                            g.drawImage(tImg, px, py, tileSize, tileSize, null);
+                        }
+                    }
+
+                    // DRAW WALL MOUNTED DECORATION:
+                    WallTile wall = (WallTile) obj;
+                    if (wall.getDecoration() != null) {
+                        GameObject deco = wall.getDecoration();
+                        BufferedImage decoImg = tileManager.getTile(deco.getImageName());
+                        if (decoImg != null) {
+                            int iw = decoImg.getWidth();
+                            int ih = decoImg.getHeight();
+                            int dw = tileSize;
+                            if (deco instanceof Decoration) {
+                                dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                            }
+                            int dh = (int) (ih * ((double) dw / iw));
+                            int drawX = px + (tileSize - dw) / 2;
+                            int drawY = py + tileSize - dh;
+                            g.drawImage(decoImg, drawX, drawY, dw, dh, null);
+                        }
                     }
                     continue;
                 }
@@ -1027,7 +1325,6 @@ public class DesignModeView extends JPanel {
                 // Tile veya item sprite
                 BufferedImage tImg = null;
                 if (obj instanceof domain.models.item.MapItem) {
-                    // MapItem kendi sprite'ını taşır
                     tImg = ((domain.models.item.MapItem) obj).getSprite();
                 } else {
                     String imgName = obj.getImageName();
@@ -1042,7 +1339,6 @@ public class DesignModeView extends JPanel {
 
                 if (tImg != null) {
                     if (obj instanceof domain.models.item.MapItem) {
-                        // Fit items preserving aspect ratio within tileSize * 0.65, centered
                         int maxDim = (int) (tileSize * 0.65);
                         int iw = tImg.getWidth();
                         int ih = tImg.getHeight();
@@ -1055,7 +1351,6 @@ public class DesignModeView extends JPanel {
                     } else if (obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
                                obj instanceof Door || obj instanceof Decoration ||
                                obj instanceof SearchableObject || obj instanceof Sign) {
-                        // Fit static objects preserving aspect ratio with width scaled to tileSize, bottom-aligned
                         int iw = tImg.getWidth();
                         int ih = tImg.getHeight();
                         int dw = tileSize;
@@ -1067,11 +1362,9 @@ public class DesignModeView extends JPanel {
                         int drawY = py + tileSize - dh;
                         g.drawImage(tImg, drawX, drawY, dw, dh, null);
                     } else {
-                        // Standard floor/wall tile, fill normally
                         g.drawImage(tImg, px, py, tileSize, tileSize, null);
                     }
-                } else if (!(obj instanceof WallTile) && !(obj instanceof FloorTile)) {
-                    // Fallback placeholder
+                } else if (!(obj instanceof FloorTile)) {
                     g.setColor(new Color(180, 100, 200, 180));
                     g.fillRect(px + 4, py + 4, tileSize - 8, tileSize - 8);
                 }
@@ -1186,13 +1479,9 @@ public class DesignModeView extends JPanel {
     private int lastMouseX = -1, lastMouseY = -1;
 
     private void paintCursor(Graphics2D g) {
-        if (selectedPaletteIdx < 0) return;
-        // Fare pozisyonunu takip etmek için mouse listener zaten var;
-        // mevcut hover tile varsa orada önizleme çiz
+        PaletteItem item = getSelectedPaletteItem();
+        if (item == null || item.factory == null) return;
         if (hoverTileX < 0 || hoverTileY < 0) return;
-
-        PaletteItem item = palette.get(selectedPaletteIdx);
-        if (item.factory == null) return; // silgi — ek görsele gerek yok
 
         BufferedImage icon = getIcon(item);
         if (item.iconPath != null && item.iconPath.startsWith("torch/")) {

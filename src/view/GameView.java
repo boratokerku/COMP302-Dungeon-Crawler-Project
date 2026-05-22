@@ -770,12 +770,32 @@ public class GameView extends JPanel {
                             g2d.drawImage(tileImage, drawX, offsetY + (y * tileSize),
                                     sideWidth, tileSize, null);
                         }
+                        
+                        domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
+                        if (wall.getDecoration() != null) {
+                            BufferedImage decoImg = tileManager.getTile(wall.getDecoration().getImageName());
+                            if (decoImg != null) {
+                                g2d.drawImage(decoImg, offsetX + (x * tileSize), offsetY + (y * tileSize),
+                                        tileSize, tileSize, null);
+                            }
+                        }
                     } else {
                         // Normal harita objesi (Duvar vs.)
                         BufferedImage tileImage = tileManager.getTile(obj.getImageName());
                         if (tileImage != null) {
                             g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize,
                                     tileSize, null);
+                        }
+                        
+                        if (obj instanceof domain.models.tile.WallTile) {
+                            domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
+                            if (wall.getDecoration() != null) {
+                                BufferedImage decoImg = tileManager.getTile(wall.getDecoration().getImageName());
+                                if (decoImg != null) {
+                                    g2d.drawImage(decoImg, offsetX + (x * tileSize), offsetY + (y * tileSize),
+                                            tileSize, tileSize, null);
+                                }
+                            }
                         }
                     }
                 }

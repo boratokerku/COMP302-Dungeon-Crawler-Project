@@ -16,7 +16,12 @@ public class InputHandler implements KeyListener {
     // Aktif shadow clone (null ise henüz çağrılmamış veya süresi dolmuş)
     private ShadowClone shadowClone;
     
+    private domain.models.GameMode gameMode = domain.models.GameMode.ADVENTURE;
     private boolean inputEnabled = true;
+
+    public void setGameMode(domain.models.GameMode mode) {
+        this.gameMode = mode;
+    }
 
     public InputHandler(Hero hero, domain.models.map.GameMap map,
             java.util.List<domain.models.entity.Entity> entities, view.GameView gameView) {
@@ -41,6 +46,7 @@ public class InputHandler implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         if (!inputEnabled) return;
+        if (!hero.isAlive()) return;
         
         int code = e.getKeyCode();
 
@@ -231,6 +237,7 @@ public class InputHandler implements KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         if (!inputEnabled) return;
+        if (!hero.isAlive()) return;
         
         int code = e.getKeyCode();
         if (isMovementKey(code)) {

@@ -25,26 +25,42 @@ public class Knight extends Entity implements Renderable {
         }
         moveCooldown = 0;
 
-        // En yakın hedefi bul (Hero veya ShadowClone)
-        Entity target = findNearestTarget(hero, entities);
+        Entity target;
+        if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
+            target = findNearestEnemyTeamMatch(entities);
+        } else {
+            target = findNearestTarget(hero, entities);
+        }
+        
+        if (target == null) return;
 
         int distance = (int) Math.ceil(distanceTo(target));
 
         if (distance <= 1) {
-            // ATTACK: Hedefe bitişik — saldır (design doc §2.5.1)
-            String label = (target instanceof Hero) ? "Hero" : "Shadow Clone";
-            System.out.println("Knight: Attacking " + label);
+            // ATTACK: Hedefe bitişik — saldır
             attackTarget(target);
-        } else if (distance <= 5) {
-            // CHASING: Hedef algılama mesafesinde → hedefe doğru hareket et
-            String label = (target instanceof Hero) ? "Hero" : "Shadow Clone";
-            System.out.println("Knight: Chasing " + label);
+        } else if (this.getTeam() != domain.models.Team.NONE || distance <= 5) {
+            // CHASING: Hedef algılama mesafesinde veya Team Match modunda (sınırsız görüş) → hedefe doğru hareket et
             chaseTarget(target, map, entities);
         } else {
             // ROAMING: Hedef çok uzakta → rastgele yürür
-            System.out.println("Knight: Roaming");
             roam(map, entities);
         }
+    }
+
+    private Entity findNearestEnemyTeamMatch(java.util.List<Entity> entities) {
+        Entity nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for (Entity e : entities) {
+            if (e != this && e.isAlive() && e.getTeam() != domain.models.Team.NONE && e.getTeam() != this.getTeam()) {
+                double d = distanceTo(e);
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = e;
+                }
+            }
+        }
+        return nearest;
     }
 
     // Hero veya hayatta olan ShadowClone'dan hangisi daha yakınsa onu döndür

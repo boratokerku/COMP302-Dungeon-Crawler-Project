@@ -62,7 +62,8 @@ public class SaveManager {
                 } else if (obj instanceof domain.models.entity.Column
                         || obj instanceof domain.models.entity.Crate
                         || obj instanceof domain.models.entity.SearchableObject
-                        || obj instanceof domain.models.staticObjects.Decoration) {
+                        || obj instanceof domain.models.staticObjects.Decoration
+                        || obj instanceof domain.models.entity.Sign) {
                     // Static nesneleri ismiyle birlikte kaydet
                     state.mapItems.add(new GameState.ItemRecord(
                             obj.getClass().getSimpleName(), obj.getName(), x, y

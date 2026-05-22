@@ -39,24 +39,54 @@ public class Sorcerer extends Entity implements Renderable {
     }
 
     /**
-     * Sorcerer AI ana metodu.
+     * Main AI method for the Sorcerer.
      *
      * Design doc §2.5.2:
      * "Sorcerer does not walk and moves only by teleportation."
      * "Every 7 seconds, with 50% probability he teleports himself
      *  to a random empty spot on the map."
      *
-     * @param hero     Oyuncu karakteri
-     * @param map      Harita (boş tile bulmak için)
-     * @param entities Tüm varlıklar (çakışma kontrolü için)
+     * REQUIRES:
+     *   - hero != null (the hero reference must not be null)
+     *   - map != null  (the map reference must not be null; used to find empty tiles for teleportation)
+     *   - This Sorcerer instance must have a valid (x, y) position within the map boundaries
+     *
+     * MODIFIES:
+     *   - this.lastTeleportTime   (updated when the 7-second teleport cooldown expires)
+     *   - this.lastProjectileTime (updated when the 5-second projectile cooldown expires)
+     *   - this.pendingProjectile  (set to a new Projectile when the 5-second cooldown expires)
+     *   - this.x, this.y          (changed if a teleport occurs: Sorcerer moves to a random
+     *                               walkable, unoccupied tile on the map)
+     *
+     * EFFECTS:
+     *   - If this.isAlive() == false, the method returns immediately with no side effects.
+     *   - In Team Match mode (this.getTeam() != NONE), the target is the nearest living
+     *     entity from the opposing team; in normal mode, the target is whichever of the
+     *     hero or any living ShadowClone is closest to the Sorcerer.
+     *   - If elapsed time since last projectile >= 5000 ms: pendingProjectile is assigned
+     *     a new Projectile directed toward the current target (to be retrieved by
+     *     DemoRunner via pollPendingProjectile()).
+     *   - If elapsed time since last teleport >= 7000 ms: with 50% probability
+     *     (random.nextBoolean()), this.x and this.y are updated to a random walkable
+     *     and unoccupied tile; with 50% probability nothing happens but the timer resets.
+     *
+     * @param hero     the player character (must not be null)
+     * @param map      the game map (must not be null; used to search for empty tiles)
+     * @param entities the list of all entities (used for occupancy and team checks)
      */
     public void followHero(Hero hero, domain.models.map.GameMap map, java.util.List<Entity> entities) {
         if (!this.isAlive()) return;
 
         long currentTime = System.currentTimeMillis();
 
-        // En yakın hedefi bul (Hero veya ShadowClone)
-        Entity target = findNearestTarget(hero, entities);
+        Entity target;
+        if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
+            target = findNearestEnemyTeamMatch(entities);
+        } else {
+            target = findNearestTarget(hero, entities);
+        }
+        
+        if (target == null) return;
 
         // Her 7 sn'de teleport (design doc §2.5.2)
         if (currentTime - lastTeleportTime >= 7000) {
@@ -69,6 +99,21 @@ public class Sorcerer extends Entity implements Renderable {
             lastProjectileTime = currentTime;
             pendingProjectile = createProjectile(target);
         }
+    }
+
+    private Entity findNearestEnemyTeamMatch(java.util.List<Entity> entities) {
+        Entity nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for (Entity e : entities) {
+            if (e != this && e.isAlive() && e.getTeam() != domain.models.Team.NONE && e.getTeam() != this.getTeam()) {
+                double d = Math.sqrt(Math.pow(this.x - e.getX(), 2) + Math.pow(this.y - e.getY(), 2));
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = e;
+                }
+            }
+        }
+        return nearest;
     }
 
     // Hero veya hayatta olan ShadowClone'dan hangisi daha yakınsa onu döndür
@@ -111,9 +156,7 @@ public class Sorcerer extends Entity implements Renderable {
         double dx = (diffX / dist) * speed;
         double dy = (diffY / dist) * speed;
 
-        System.out.println("Sorcerer fired projectile! Direction: (" + dx + ", " + dy + ")");
-        // Design doc §2.5.2: 8 HP damage
-        return new Projectile(this.x, this.y, this.x, this.y, dx, dy, 8, this);
+        return new Projectile(this.x, this.y, this.x, this.y, dx, dy, 8, this, "SORCERER_FIREBALL");
     }
 
     /**

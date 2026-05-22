@@ -1,3 +1,7 @@
+src/ui/ClearMapDialog.java
+src/ui/MaxItemDialog.java
+src/ui/MaxObstacleDialog.java
+src/ui/DesignModeView.java
 src/DemoRunner.java
 src/controller/MouseHandler.java
 src/controller/InputHandler.java
@@ -27,11 +31,14 @@ src/domain/logic/TakeOffAction.java
 src/domain/logic/Action.java
 src/domain/logic/ScrollSpawner.java
 src/domain/logic/DiscardAction.java
+src/domain/models/Team.java
 src/domain/models/AnimationState.java
 src/domain/models/entity/Hero.java
 src/domain/models/entity/SearchableObject.java
 src/domain/models/entity/ShadowClone.java
+src/domain/models/entity/DoubleCrate.java
 src/domain/models/entity/Knight.java
+src/domain/models/entity/Sign.java
 src/domain/models/entity/Crate.java
 src/domain/models/entity/Projectile.java
 src/domain/models/entity/Column.java
@@ -67,4 +74,5 @@ src/domain/models/item/Item.java
 src/domain/models/item/Weapon.java
 src/domain/models/inventory/Inventory.java
 src/domain/models/GameState.java
+src/domain/models/GameMode.java
 src/domain/models/Direction.java

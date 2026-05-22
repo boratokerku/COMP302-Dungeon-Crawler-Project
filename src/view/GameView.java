@@ -58,10 +58,12 @@ public class GameView extends JPanel {
     private domain.models.entity.Knight knight;
     private domain.models.entity.Sorcerer sorcerer;
     private TileManager tileManager;
-
-    // Spawn edilen dahil TÜM entity'leri tutan liste (EnemySpawner yeni ekledikçe
-    // buraya yansır)
     private java.util.List<domain.models.entity.Entity> entityList;
+    private domain.models.GameMode gameMode = domain.models.GameMode.ADVENTURE;
+
+    public void setGameMode(domain.models.GameMode mode) {
+        this.gameMode = mode;
+    }
 
     // Dinamik hesaplanan ekran değişkenleri
     private int tileSize = 64;
@@ -215,45 +217,203 @@ public class GameView extends JPanel {
         }
     }
 
+    // YENİ HUD ASSETLERİ
+    private transient BufferedImage hpExtImg, hpIntImg;
+    private transient BufferedImage energyExtImg, energyIntImg;
+    private transient BufferedImage manaExtImg, manaIntImg;
+    private transient BufferedImage strExtImg, strIntImg;
+    private transient BufferedImage defExtImg, defIntImg;
+    private transient BufferedImage hpIconImg, energyIconImg, manaIconImg, strIconImg, defIconImg;
+    private transient BufferedImage mainFrameImg;
+    private transient java.awt.Font hudFont;
+    private transient boolean hudLoaded = false;
+
+    private void loadHUDAssets() {
+        if (hudLoaded) return;
+        try {
+            hpExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_exterior.png"));
+            hpIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_interior.png"));
+            
+            energyExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_exterior.png"));
+            energyIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_interior.png"));
+            
+            manaExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_exterior.png"));
+            manaIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_interior.png"));
+            
+            strExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_exterior.png"));
+            strIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_interior.png"));
+            
+            defExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_exterior.png"));
+            defIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_interior.png"));
+            
+            hpIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_icon.png"));
+            energyIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_icon.png"));
+            manaIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_icon.png"));
+            strIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_icon.png"));
+            defIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_icon.png"));
+            
+            mainFrameImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/main_frame.png"));
+            
+            try {
+                java.awt.Font customFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, new java.io.File("resources/fonts/VT323-Regular.ttf"));
+                java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
+                ge.registerFont(customFont);
+                hudFont = customFont.deriveFont(java.awt.Font.PLAIN, 16f); // Kullanıcı talebi: 16 punto
+            } catch (Exception fe) {
+                System.err.println("VT323 fontu yüklenemedi: " + fe.getMessage());
+                hudFont = new java.awt.Font("SansSerif", java.awt.Font.BOLD, 18);
+            }
+        } catch (Exception e) {
+            System.err.println("HUD assetleri bulunamadı!");
+        }
+        hudLoaded = true;
+    }
+
+    private void drawSingleBar(Graphics2D g, String label, int current, int max, BufferedImage interiorImg, BufferedImage exteriorImg, BufferedImage iconImg, int x, int y, int w, int h) {
+        // 1. Önce Dış Çerçeveyi (Exterior) tam boyutta çiz (w, h)
+        if (exteriorImg != null) {
+            g.drawImage(exteriorImg, x, y, w, h, null);
+        }
+
+        // 2. Sonra İç Dolguyu (Interior) hesaplayarak çiz
+        if (interiorImg != null && exteriorImg != null) {
+            // Pixel-art settings
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+
+            double ratio = Math.max(0, Math.min(1, current / (double) max));
+            
+            // Exterior'ın orijinal boyutlarına (848x244) göre ekrandaki ölçek oranını bul
+            double scaleW = (double) w / exteriorImg.getWidth();
+            double scaleH = (double) h / exteriorImg.getHeight();
+            
+            // Tüm interior'lar (HP dahil) 740x140 boyutunda kabul edilecek
+            int targetIntW = 740;
+            int targetIntH = 140;
+            
+            // Interior'ı Exterior'ın içine orijinal boşluklara göre ortala
+            // Kullanıcı talebi: Çok az sola kaydır (+15'ten +10'a düşürüldü)
+            int intOrigX = ((exteriorImg.getWidth() - targetIntW) / 2) + 10;
+            int intOrigY = ((exteriorImg.getHeight() - targetIntH) / 2) + 14;
+            
+            // Ekrandaki (scaled) koordinatlar ve boyutlar
+            int shrinkX = 1; // Genişlik birazcık artırıldı (sağdan ve soldan 1'er piksel daraltma)
+            int intX = x + (int) (intOrigX * scaleW) + shrinkX;
+            int intY = y + (int) (intOrigY * scaleH);
+            int intW = (int) (targetIntW * scaleW) - (shrinkX * 2);
+            int intH = (int) (targetIntH * scaleH);
+            
+            int visibleW = (int) (intW * ratio);
+            
+            if (visibleW > 0) {
+                java.awt.Shape oldClip = g.getClip();
+                // Kırpma işlemi sadece interior alanında yapılır
+                g.clipRect(intX, intY, visibleW, intH);
+                
+                // Interior, hesaplanan daha küçük boyutlarla (intW, intH) TAM ÇERÇEVENİN İÇİNE çizilir (ÜZERİNE)
+                g.drawImage(interiorImg, intX, intY, intW, intH, null);
+                
+                g.setClip(oldClip);
+            }
+        }
+        
+        // Etiketi çerçevenin ÜSTÜNE ortalayarak yaz
+        g.setColor(Color.WHITE);
+        g.setFont(hudFont != null ? hudFont : new java.awt.Font("SansSerif", java.awt.Font.BOLD, 16));
+        // Kullanıcı talebi: ENG yazısındaki sayıyı yaklaştırmak için ": " yerine ":" kullanıyoruz
+        String text = label + ":" + current + "/" + max;
+        java.awt.FontMetrics fm = g.getFontMetrics();
+        int textWidth = fm.stringWidth(text);
+        
+        int iconSize = 20; // Yazıların yanında ufak bir kare
+        int iconSpacing = 3; // Kullanıcı talebi: Yazıları ikonlara yaklaştır (6'dan 3'e düşürüldü)
+        
+        int totalContentWidth = textWidth;
+        if (iconImg != null) {
+            totalContentWidth += iconSize + iconSpacing;
+        }
+        
+        int contentStartX = x + (w - totalContentWidth) / 2;
+        
+        // Kullanıcı talebi: HP'nin ikonunu ve yazısını birazcık daha sağa al
+        if ("HP".equals(label)) {
+            contentStartX -= 8;
+        }
+        
+        if (iconImg != null) {
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            // Yazı baseline (alt çizgi) y-5. İkonu yazının hizasına oturtmak için yukarı çekiyoruz
+            int iconY = (y - 5) - iconSize + 3; // +3 piksel ufak bir estetik kaydırma
+            g.drawImage(iconImg, contentStartX, iconY, iconSize, iconSize, null);
+            g.drawString(text, contentStartX + iconSize + iconSpacing, y - 5);
+        } else {
+            g.drawString(text, contentStartX, y - 5);
+        }
+    }
+
     private void drawHUD(Graphics2D g) {
-        // HUD Ayarları
-        int hudX = 20;
-        int hudY = 20;
-        int barWidth = 150;
-        int barHeight = 15;
+        loadHUDAssets();
+        
+        if (hpExtImg == null) {
+            // Fallback
+            g.setColor(Color.WHITE);
+            g.drawString("HP: " + hero.getHp(), 20, 20);
+            return;
+        }
 
-        // Arşaplan (Gölge efekti)
-        g.setColor(new Color(0, 0, 0, 150));
-        g.fillRect(hudX - 10, hudY - 10, barWidth + 80, 80);
+        // Haritanın piksel genişliği (sol ve sağ duvar arası mesafe)
+        int mapPixelWidth = gameMap != null ? gameMap.getCols() * tileSize : getWidth();
+        
+        int frameW = mapPixelWidth; 
+        int frameH = 100; // Fallback
+        int frameX = (getWidth() - frameW) / 2;
+        int frameY = 0; // Oyun ekranının tam üstüyle (Y=0) çakışacak biçimde
 
-        // 1. HP Bar (Can)
-        g.setColor(Color.GRAY);
-        g.fillRect(hudX, hudY, barWidth, barHeight);
-        g.setColor(new Color(200, 50, 50)); // Kırmızı
-        int hpWidth = (int) ((hero.getHp() / 17.0) * barWidth); // 17 max can
-        g.fillRect(hudX, hudY, Math.max(0, hpWidth), barHeight);
-        g.setColor(Color.WHITE);
-        g.drawString("HP: " + hero.getHp(), hudX + barWidth + 5, hudY + 12);
-
-        // 2. Mana Bar
-        hudY += 25;
-        g.setColor(Color.GRAY);
-        g.fillRect(hudX, hudY, barWidth, barHeight);
-        g.setColor(new Color(50, 100, 200)); // Mavi
-        int manaWidth = (int) ((hero.getMana() / 80.0) * barWidth);
-        g.fillRect(hudX, hudY, Math.max(0, manaWidth), barHeight);
-        g.setColor(Color.WHITE);
-        g.drawString("Mana: " + hero.getMana(), hudX + barWidth + 5, hudY + 12);
-
-        // 3. Energy Bar
-        hudY += 25;
-        g.setColor(Color.GRAY);
-        g.fillRect(hudX, hudY, barWidth, barHeight);
-        g.setColor(new Color(200, 200, 50)); // Sarı
-        int energyWidth = (int) ((hero.getEnergy() / 100.0) * barWidth);
-        g.fillRect(hudX, hudY, Math.max(0, energyWidth), barHeight);
-        g.setColor(Color.WHITE);
-        g.drawString("Energy: " + hero.getEnergy(), hudX + barWidth + 5, hudY + 12);
+        // 1. MAIN FRAME Çizimi (En altta kalacak arka plan)
+        if (mainFrameImg != null) {
+            // Main frame'i harita genişliğine (veya uygun bir orana) göre ölçekle
+            frameH = (int) (mainFrameImg.getHeight() * ((double) frameW / mainFrameImg.getWidth()));
+            
+            // Pixel-art netliğini korumak için
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g.drawImage(mainFrameImg, frameX, frameY, frameW, frameH, null);
+        } else {
+            frameY = offsetY - frameH; // Fallback position above map
+        }
+        
+        // 2. HUD Barları (HP, ENG, vs.)
+        // Barları main frame'in İÇİNE ortalamak için hesaplama
+        int numBars = 5;
+        int gap = 15; // Barlar arası estetik boşluk
+        int padding = 60; // Sol ve sağ duvardan boşluk (main frame içine sığması için)
+        
+        int availableWidth = frameW - (padding * 2);
+        int barW = (availableWidth - (gap * (numBars - 1))) / numBars;
+        // Çerçevenin orijinal en/boy oranını bozmadan yüksekliği hesapla
+        int barH = (int) (hpExtImg.getHeight() * ((double) barW / hpExtImg.getWidth()));
+        
+        // 5 barın ve aralarındaki boşlukların kapladığı GERÇEK toplam genişlik
+        int totalWidth = (barW * numBars) + (gap * (numBars - 1));
+        
+        // Başlangıç noktası: main frame'in içine yatayda tam merkeze oturt
+        int startX = frameX + (frameW - totalWidth) / 2;
+        
+        // Y noktası: main frame'in içine dikeyde tam merkeze oturt ve 7 piksel aşağı kaydır
+        int y = frameY + (frameH - barH) / 2 + 7;
+        
+        // 1. Health
+        drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
+        
+        // 2. Energy
+        drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap), y, barW, barH);
+        
+        // 3. Mana
+        drawSingleBar(g, "MP", hero.getMana(), 80, manaIntImg, manaExtImg, manaIconImg, startX + 2*(barW + gap), y, barW, barH);
+        
+        // 4. STR
+        drawSingleBar(g, "STR", hero.getStr(), 20, strIntImg, strExtImg, strIconImg, startX + 3*(barW + gap), y, barW, barH);
+        
+        // 5. DEF
+        drawSingleBar(g, "DEF", hero.getDef(), 6, defIntImg, defExtImg, defIconImg, startX + 4*(barW + gap), y, barW, barH);
     }
 
     /** Delegates inventory drawing to InventoryView. */
@@ -310,7 +470,7 @@ public class GameView extends JPanel {
 
     private String lastLoggedWeapon = null;
 
-    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir) {
+    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh) {
         if (hero.getEquippedWeapon() == null) {
             if (lastLoggedWeapon != null) {
                 System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL");
@@ -331,7 +491,7 @@ public class GameView extends JPanel {
             return;
         }
         
-        int wSize = tileSize / 2; // 32x32 size
+        int wSize = dw / 2; // weapon size scales with the hero's width
         
         // Dynamically fetch weapon metadata (or use defaults)
         double pivotX = 0.5;
@@ -352,23 +512,23 @@ public class GameView extends JPanel {
         
         java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
         
-        // 1. Translate to the center of the dynamic tileSize grid cell
-        g2d.translate(x + tileSize / 2, y + tileSize / 2);
+        // 1. Translate to the center of the rendered hero frame
+        g2d.translate(x + dw / 2, y + dh / 2);
         
         // 2. If facing LEFT, mirror the entire horizontal transformation context!
         if (dir == Direction.LEFT) {
             g2d.scale(-1, 1);
         }
         
-        // 3. Convert absolute standard hand joint coordinates (23, 8) to standard-relative ratios (based on 64px tileSize)
+        // 3. Convert absolute standard hand joint coordinates (23, 8) to standard-relative ratios (based on 64px standard size)
         double ratioX = 23.0 / 64.0;
         double ratioY = 8.0 / 64.0;
         double customRatioX = (double) customHandX / 64.0;
         double customRatioY = (double) customHandY / 64.0;
         
-        // Scale offsets dynamically with the current tileSize
-        int handX = (int) (ratioX * tileSize) + (int) (customRatioX * tileSize);
-        int handY = (int) (ratioY * tileSize) + (int) (customRatioY * tileSize);
+        // Scale offsets dynamically with the current rendered dimensions
+        int handX = (int) (ratioX * dw) + (int) (customRatioX * dw);
+        int handY = (int) (ratioY * dh) + (int) (customRatioY * dh);
         
         g2d.translate(handX, handY);
         
@@ -394,16 +554,22 @@ public class GameView extends JPanel {
         BufferedImage frame = assetManager.getHeroSprite(hero.getAnimationState());
 
         if (frame != null) {
+            int iw = frame.getWidth();
+            int ih = frame.getHeight();
+            int dw = tileSize;
+            int dh = (int) (ih * ((double) tileSize / iw));
             int x = offsetX + (hero.getX() * tileSize);
-            int y = offsetY + (hero.getY() * tileSize);
+            int y = offsetY + (hero.getY() * tileSize) + tileSize - dh;
+
+            drawTeamAura(g2d, hero, x + dw / 2, y + dh - 5, tileSize);
 
             if (hero.getDirection() == Direction.LEFT) {
                 // Resmi yatayda aynalayarak çiziyoruz
-                g2d.drawImage(frame, x + tileSize, y, -tileSize, tileSize, null);
-                drawEquippedWeapon(g2d, x, y, Direction.LEFT);
+                g2d.drawImage(frame, x + dw, y, -dw, dh, null);
+                drawEquippedWeapon(g2d, x, y, Direction.LEFT, dw, dh);
             } else {
-                g2d.drawImage(frame, x, y, tileSize, tileSize, null);
-                drawEquippedWeapon(g2d, x, y, Direction.RIGHT);
+                g2d.drawImage(frame, x, y, dw, dh, null);
+                drawEquippedWeapon(g2d, x, y, Direction.RIGHT, dw, dh);
             }
         }
     }
@@ -470,13 +636,17 @@ public class GameView extends JPanel {
                     // Klon: hero sprite'ı %50 saydamlıkla (görsel ayrım)
                     frame = assetManager.getHeroSprite(domain.models.AnimationState.IDLE);
                     if (frame != null) {
+                        int iw = frame.getWidth();
+                        int ih = frame.getHeight();
+                        int dw = tileSize;
+                        int dh = (int) (ih * ((double) tileSize / iw));
+                        int dx = offsetX + (e.getX() * tileSize);
+                        int dy = offsetY + (e.getY() * tileSize) + tileSize - dh;
+
                         java.awt.AlphaComposite ac = java.awt.AlphaComposite
                                 .getInstance(java.awt.AlphaComposite.SRC_OVER, 0.5f);
                         g2d.setComposite(ac);
-                        g2d.drawImage(frame,
-                                offsetX + (e.getX() * tileSize),
-                                offsetY + (e.getY() * tileSize),
-                                tileSize, tileSize, null);
+                        g2d.drawImage(frame, dx, dy, dw, dh, null);
                         g2d.setComposite(java.awt.AlphaComposite
                                 .getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
                     }
@@ -488,10 +658,16 @@ public class GameView extends JPanel {
                 }
 
                 if (frame != null) {
-                    g2d.drawImage(frame,
-                            offsetX + (e.getX() * tileSize),
-                            offsetY + (e.getY() * tileSize),
-                            tileSize, tileSize, null);
+                    int iw = frame.getWidth();
+                    int ih = frame.getHeight();
+                    int dw = tileSize;
+                    int dh = (int) (ih * ((double) tileSize / iw));
+                    int dx = offsetX + (e.getX() * tileSize);
+                    int dy = offsetY + (e.getY() * tileSize) + tileSize - dh;
+                    
+                    drawTeamAura(g2d, e, dx + dw / 2, dy + dh - 5, tileSize);
+                    
+                    g2d.drawImage(frame, dx, dy, dw, dh, null);
                 }
             }
 
@@ -501,18 +677,56 @@ public class GameView extends JPanel {
             if (knight != null && knight.isAlive()) {
                 BufferedImage kFrame = assetManager.getKnightSprite();
                 if (kFrame != null) {
-                    g2d.drawImage(kFrame, offsetX + (knight.getX() * tileSize), offsetY + (knight.getY() * tileSize),
-                            tileSize, tileSize, null);
+                    int iw = kFrame.getWidth();
+                    int ih = kFrame.getHeight();
+                    int dw = tileSize;
+                    int dh = (int) (ih * ((double) tileSize / iw));
+                    int dx = offsetX + (knight.getX() * tileSize);
+                    int dy = offsetY + (knight.getY() * tileSize) + tileSize - dh;
+                    
+                    drawTeamAura(g2d, knight, dx + dw / 2, dy + dh - 5, tileSize);
+                    
+                    g2d.drawImage(kFrame, dx, dy, dw, dh, null);
                 }
             }
             if (sorcerer != null && sorcerer.isAlive()) {
                 BufferedImage sFrame = assetManager.getSorcererSprite();
                 if (sFrame != null) {
-                    g2d.drawImage(sFrame, offsetX + (sorcerer.getX() * tileSize),
-                            offsetY + (sorcerer.getY() * tileSize), tileSize, tileSize, null);
+                    int iw = sFrame.getWidth();
+                    int ih = sFrame.getHeight();
+                    int dw = tileSize;
+                    int dh = (int) (ih * ((double) tileSize / iw));
+                    int dx = offsetX + (sorcerer.getX() * tileSize);
+                    int dy = offsetY + (sorcerer.getY() * tileSize) + tileSize - dh;
+                    
+                    drawTeamAura(g2d, sorcerer, dx + dw / 2, dy + dh - 5, tileSize);
+                    
+                    g2d.drawImage(sFrame, dx, dy, dw, dh, null);
                 }
             }
         }
+    }
+
+    private void drawTeamAura(Graphics2D g2d, domain.models.entity.Entity entity, int cx, int cy, int size) {
+        if (gameMode != domain.models.GameMode.TEAM_MATCH) return;
+        domain.models.Team team = entity.getTeam();
+        if (team == domain.models.Team.NONE || team == null) return;
+        
+        Color centerColor = (team == domain.models.Team.CYAN) ? new Color(0, 255, 255, 150) : new Color(255, 140, 0, 150);
+        Color edgeColor = new Color(0, 0, 0, 0);
+        
+        int radius = size / 2 + 15;
+        
+        java.awt.geom.Point2D center = new java.awt.geom.Point2D.Float(cx, cy);
+        float[] dist = {0.0f, 1.0f};
+        Color[] colors = {centerColor, edgeColor};
+        
+        java.awt.RadialGradientPaint p = new java.awt.RadialGradientPaint(center, radius, dist, colors);
+        java.awt.Paint oldPaint = g2d.getPaint();
+        g2d.setPaint(p);
+        
+        g2d.fillOval(cx - radius, cy - radius / 2, radius * 2, radius);
+        g2d.setPaint(oldPaint);
     }
 
     private void drawMap(Graphics2D g2d) {
@@ -529,7 +743,8 @@ public class GameView extends JPanel {
                             obj instanceof domain.models.entity.Crate ||
                             obj instanceof domain.models.staticObjects.Door ||
                             obj instanceof domain.models.staticObjects.Decoration ||
-                            obj instanceof domain.models.entity.SearchableObject) {
+                            obj instanceof domain.models.entity.SearchableObject ||
+                            obj instanceof domain.models.entity.Sign) {
                         // Eğer hücrede bir eşya veya statik obje varsa, altını delik bırakmamak için
                         // Zemin (FloorTile)
                         // çiziyoruz
@@ -613,15 +828,22 @@ public class GameView extends JPanel {
                         g2d.setComposite(ac);
                     }
 
-                    int spriteSize = (int) (tileSize * 0.65);
-                    int posOffset = (tileSize - spriteSize) / 2;
-                    int drawX = offsetX + (x * tileSize) + posOffset;
-                    int drawY = offsetY + (y * tileSize) + posOffset;
-
                     if (item.getSprite() != null) {
-                        g2d.drawImage(item.getSprite(), drawX, drawY, spriteSize, spriteSize, null);
+                        int maxDim = (int) (tileSize * 0.65);
+                        int iw = item.getSprite().getWidth();
+                        int ih = item.getSprite().getHeight();
+                        double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
+                        int dw = (int) (iw * scale);
+                        int dh = (int) (ih * scale);
+                        int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
+                        int drawY = offsetY + (y * tileSize) + (tileSize - dh) / 2;
+                        g2d.drawImage(item.getSprite(), drawX, drawY, dw, dh, null);
                     } else {
                         // Sprite yok — renk placeholder (scroll için mor, diğerleri sarı)
+                        int spriteSize = (int) (tileSize * 0.65);
+                        int posOffset = (tileSize - spriteSize) / 2;
+                        int drawX = offsetX + (x * tileSize) + posOffset;
+                        int drawY = offsetY + (y * tileSize) + posOffset;
                         if (item instanceof domain.models.item.ShadowCloneScroll) {
                             g2d.setColor(new Color(150, 50, 255)); // Mor — scroll
                         } else {
@@ -649,29 +871,39 @@ public class GameView extends JPanel {
                         obj instanceof domain.models.entity.Crate ||
                         obj instanceof domain.models.staticObjects.Door ||
                         obj instanceof domain.models.staticObjects.Decoration ||
-                        obj instanceof domain.models.entity.SearchableObject) {
+                        obj instanceof domain.models.entity.SearchableObject ||
+                        obj instanceof domain.models.entity.Sign) {
 
-                    boolean inZone = hero != null && Math.abs(x - hero.getX()) <= 1
-                            && Math.abs(y - hero.getY()) <= 1;
-
-                    if (!inZone) {
-                        java.awt.AlphaComposite ac = java.awt.AlphaComposite
-                                .getInstance(java.awt.AlphaComposite.SRC_OVER, 0.4f);
-                        g2d.setComposite(ac);
-                    }
+                    // Kullanıcı talebi: Obstacle'lar yarı saydam değil opak olmalı
+                    // (AlphaComposite kaldırıldı)
 
                     BufferedImage sprite = null;
                     if (tileManager != null) {
-                        sprite = tileManager.getTile(obj.getImageName());
+                        String imgName = obj.getImageName();
+                        if (obj instanceof domain.models.staticObjects.Decoration && imgName != null && imgName.startsWith("torch/")) {
+                            long now = System.currentTimeMillis();
+                            int[] frames = {1, 2, 3, 4, 6, 7, 8};
+                            int frame = frames[(int) ((now / 120) % frames.length)];
+                            imgName = "torch/torch_" + frame;
+                        }
+                        sprite = tileManager.getTile(imgName);
                     }
 
-                    int drawX = offsetX + (x * tileSize);
-                    int drawY = offsetY + (y * tileSize);
-
                     if (sprite != null) {
-                        g2d.drawImage(sprite, drawX, drawY, tileSize, tileSize, null);
+                        int iw = sprite.getWidth();
+                        int ih = sprite.getHeight();
+                        int dw = tileSize;
+                        if (obj instanceof domain.models.staticObjects.Decoration) {
+                            dw = (int) (tileSize * 0.4);
+                        }
+                        int dh = (int) (ih * ((double) dw / iw));
+                        int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
+                        int drawY = offsetY + (y * tileSize) + tileSize - dh;
+                        g2d.drawImage(sprite, drawX, drawY, dw, dh, null);
                     } else {
                         // Placeholder fallback
+                        int drawX = offsetX + (x * tileSize);
+                        int drawY = offsetY + (y * tileSize);
                         Color color = Color.MAGENTA;
                         if (obj instanceof domain.models.entity.Column)
                             color = Color.GRAY;
@@ -681,13 +913,14 @@ public class GameView extends JPanel {
                             color = new Color(101, 67, 33);
                         else if (obj instanceof domain.models.entity.SearchableObject)
                             color = Color.DARK_GRAY;
+                        else if (obj instanceof domain.models.entity.Sign)
+                            color = new Color(180, 115, 60);
 
                         g2d.setColor(color);
                         g2d.fillRect(drawX, drawY, tileSize, tileSize);
                     }
 
-                    // Reset composite
-                    g2d.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
+                    // (Composite sıfırlamaya gerek yok, çünkü AlphaComposite kullanılmıyor)
                 }
             }
         }

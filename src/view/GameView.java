@@ -413,7 +413,7 @@ public class GameView extends JPanel {
         drawSingleBar(g, "STR", hero.getStr(), 20, strIntImg, strExtImg, strIconImg, startX + 3*(barW + gap), y, barW, barH);
         
         // 5. DEF
-        drawSingleBar(g, "DEF", hero.getDef(), 10, defIntImg, defExtImg, defIconImg, startX + 4*(barW + gap), y, barW, barH);
+        drawSingleBar(g, "DEF", hero.getDef(), 6, defIntImg, defExtImg, defIconImg, startX + 4*(barW + gap), y, barW, barH);
     }
 
     /** Delegates inventory drawing to InventoryView. */

@@ -223,7 +223,9 @@ public class GameView extends JPanel {
     private transient BufferedImage manaExtImg, manaIntImg;
     private transient BufferedImage strExtImg, strIntImg;
     private transient BufferedImage defExtImg, defIntImg;
+    private transient BufferedImage hpIconImg, energyIconImg, manaIconImg, strIconImg, defIconImg;
     private transient BufferedImage mainFrameImg;
+    private transient java.awt.Font hudFont;
     private transient boolean hudLoaded = false;
 
     private void loadHUDAssets() {
@@ -244,14 +246,30 @@ public class GameView extends JPanel {
             defExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_exterior.png"));
             defIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_interior.png"));
             
+            hpIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_icon.png"));
+            energyIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_icon.png"));
+            manaIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_icon.png"));
+            strIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_icon.png"));
+            defIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_icon.png"));
+            
             mainFrameImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/main_frame.png"));
+            
+            try {
+                java.awt.Font customFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, new java.io.File("resources/fonts/VT323-Regular.ttf"));
+                java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
+                ge.registerFont(customFont);
+                hudFont = customFont.deriveFont(java.awt.Font.PLAIN, 16f); // Kullanıcı talebi: 16 punto
+            } catch (Exception fe) {
+                System.err.println("VT323 fontu yüklenemedi: " + fe.getMessage());
+                hudFont = new java.awt.Font("SansSerif", java.awt.Font.BOLD, 18);
+            }
         } catch (Exception e) {
             System.err.println("HUD assetleri bulunamadı!");
         }
         hudLoaded = true;
     }
 
-    private void drawSingleBar(Graphics2D g, String label, int current, int max, BufferedImage interiorImg, BufferedImage exteriorImg, int x, int y, int w, int h) {
+    private void drawSingleBar(Graphics2D g, String label, int current, int max, BufferedImage interiorImg, BufferedImage exteriorImg, BufferedImage iconImg, int x, int y, int w, int h) {
         // 1. Önce Dış Çerçeveyi (Exterior) tam boyutta çiz (w, h)
         if (exteriorImg != null) {
             g.drawImage(exteriorImg, x, y, w, h, null);
@@ -300,12 +318,30 @@ public class GameView extends JPanel {
         
         // Etiketi çerçevenin ÜSTÜNE ortalayarak yaz
         g.setColor(Color.WHITE);
-        g.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 12));
+        g.setFont(hudFont != null ? hudFont : new java.awt.Font("SansSerif", java.awt.Font.BOLD, 16));
         String text = label + ": " + current + "/" + max;
         java.awt.FontMetrics fm = g.getFontMetrics();
         int textWidth = fm.stringWidth(text);
-        int textX = x + (w - textWidth) / 2;
-        g.drawString(text, textX, y - 5);
+        
+        int iconSize = 20; // Yazıların yanında ufak bir kare
+        int iconSpacing = 3; // Kullanıcı talebi: Yazıları ikonlara yaklaştır (6'dan 3'e düşürüldü)
+        
+        int totalContentWidth = textWidth;
+        if (iconImg != null) {
+            totalContentWidth += iconSize + iconSpacing;
+        }
+        
+        int contentStartX = x + (w - totalContentWidth) / 2;
+        
+        if (iconImg != null) {
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            // Yazı baseline (alt çizgi) y-5. İkonu yazının hizasına oturtmak için yukarı çekiyoruz
+            int iconY = (y - 5) - iconSize + 3; // +3 piksel ufak bir estetik kaydırma
+            g.drawImage(iconImg, contentStartX, iconY, iconSize, iconSize, null);
+            g.drawString(text, contentStartX + iconSize + iconSpacing, y - 5);
+        } else {
+            g.drawString(text, contentStartX, y - 5);
+        }
     }
 
     private void drawHUD(Graphics2D g) {
@@ -341,7 +377,7 @@ public class GameView extends JPanel {
         // 2. HUD Barları (HP, ENG, vs.)
         // Barları main frame'in İÇİNE ortalamak için hesaplama
         int numBars = 5;
-        int gap = 10; // Barlar arası estetik boşluk
+        int gap = 15; // Barlar arası estetik boşluk
         int padding = 60; // Sol ve sağ duvardan boşluk (main frame içine sığması için)
         
         int availableWidth = frameW - (padding * 2);
@@ -359,19 +395,19 @@ public class GameView extends JPanel {
         int y = frameY + (frameH - barH) / 2 + 7;
         
         // 1. Health
-        drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, startX, y, barW, barH);
+        drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
         
         // 2. Energy
-        drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, startX + (barW + gap), y, barW, barH);
+        drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap), y, barW, barH);
         
         // 3. Mana
-        drawSingleBar(g, "MP", hero.getMana(), 80, manaIntImg, manaExtImg, startX + 2*(barW + gap), y, barW, barH);
+        drawSingleBar(g, "MP", hero.getMana(), 80, manaIntImg, manaExtImg, manaIconImg, startX + 2*(barW + gap), y, barW, barH);
         
         // 4. STR
-        drawSingleBar(g, "STR", hero.getStr(), 20, strIntImg, strExtImg, startX + 3*(barW + gap), y, barW, barH);
+        drawSingleBar(g, "STR", hero.getStr(), 20, strIntImg, strExtImg, strIconImg, startX + 3*(barW + gap), y, barW, barH);
         
         // 5. DEF
-        drawSingleBar(g, "DEF", hero.getDef(), 10, defIntImg, defExtImg, startX + 4*(barW + gap), y, barW, barH);
+        drawSingleBar(g, "DEF", hero.getDef(), 10, defIntImg, defExtImg, defIconImg, startX + 4*(barW + gap), y, barW, barH);
     }
 
     /** Delegates inventory drawing to InventoryView. */

@@ -32,6 +32,7 @@ public abstract class GameObject {
 
     public domain.models.map.GameMap getMap() { return map; }
     public void setMap(domain.models.map.GameMap map) { this.map = map; }
+    public domain.models.map.GameMap getCurrentMap() { return map; }
 
     public java.util.List<domain.logic.Action> getActions() { return actions; }
     public void addAction(domain.logic.Action action) { this.actions.add(action); }

@@ -56,6 +56,10 @@ public abstract class MapItem extends GameObject {
     public String getProjectileType() { return "ARROW"; }
 
     /**
+     * @requires No specific preconditions.
+     * @modifies This method does not modify any existing objects (it is a creator).
+     * @effects Returns a new, non-null Weapon object with randomized attributes (e.g., damage, weight).
+     *
      * Weighted random weapon drop based on rarity tiers:
      * - Wooden Sword (Common, 40%)
      * - Knight Sword (Common, 30%)

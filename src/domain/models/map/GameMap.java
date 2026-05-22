@@ -75,6 +75,25 @@ public class GameMap extends Grid {
      */
     @Override
     public boolean placeObject(GameObject obj, int x, int y) {
+        if (!isValidPosition(x, y)) return false;
+
+        GameObject existing = getObjectAt(x, y);
+        if (existing instanceof domain.models.tile.WallTile) {
+            if (obj == null) {
+                ((domain.models.tile.WallTile) existing).setDecoration(null);
+                return true;
+            }
+            if (obj instanceof domain.models.staticObjects.Decoration ||
+                obj instanceof domain.models.entity.Column ||
+                obj instanceof domain.models.entity.Sign) {
+                ((domain.models.tile.WallTile) existing).setDecoration(obj);
+                obj.setPosition(x, y);
+                obj.setMap(this);
+                return true;
+            }
+            return false;
+        }
+
         boolean success = super.placeObject(obj, x, y);
         if (success && obj != null) {
             obj.setMap(this);

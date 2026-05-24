@@ -172,6 +172,29 @@ public class DesignModeView extends JPanel {
         leftPalette.add(new PaletteItem("SignOrg",  "sign/sign_orange",          true,  (x,y) -> new Sign("Sign", x, y, "sign/sign_orange")));
         leftPalette.add(new PaletteItem("Torch",    "torch/torch_1",            true,  (x,y) -> new Decoration("Torch", x, y, "torch/torch_1")));
 
+        // DYNAMICALLY SCAN WallObjects DIRECTORY
+        File wallDir = new File("resources/images/WallObjects");
+        if (!wallDir.exists()) {
+            wallDir = new File("../resources/images/WallObjects");
+        }
+        if (wallDir.exists() && wallDir.isDirectory()) {
+            File[] files = wallDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
+            if (files != null) {
+                for (File file : files) {
+                    String filename = file.getName();
+                    String rawLabel = filename.substring(0, filename.lastIndexOf('.'));
+                    // Capitalize label nicely
+                    String label = rawLabel;
+                    if (rawLabel.length() > 0) {
+                        label = Character.toUpperCase(rawLabel.charAt(0)) + rawLabel.substring(1);
+                    }
+                    final String finalLabel = label;
+                    final String relativePath = "images/WallObjects/" + filename;
+                    leftPalette.add(new PaletteItem(finalLabel, relativePath, false, (x, y) -> new domain.models.staticObjects.WallObject(finalLabel, x, y, relativePath)));
+                }
+            }
+        }
+
         // TOP PALETTE (Usables & Collectibles)
         topPalette.add(new PaletteItem("RedPotion", "images/items/potion/red_potion.png",    false, (x,y) -> new PotionItem("Red Potion", x, y, "images/items/potion/red_potion.png")));
         topPalette.add(new PaletteItem("BluePotion","images/items/potion/blue_potion.png",   false, (x,y) -> new PotionItem("Blue Potion", x, y, "images/items/potion/blue_potion.png")));
@@ -347,13 +370,17 @@ public class DesignModeView extends JPanel {
         GameObject existing = map.getObjectAt(hoverTileX, hoverTileY);
         GameObject obj = item.factory.apply(hoverTileX, hoverTileY);
 
-        boolean isWallMounted = (obj instanceof domain.models.staticObjects.Decoration ||
-                                 obj instanceof domain.models.entity.Column ||
-                                 obj instanceof domain.models.entity.Sign);
+        boolean isWallMounted = (obj instanceof domain.models.staticObjects.WallObject);
 
         if (existing instanceof WallTile) {
             if (!isWallMounted) {
                 return; // Normal items cannot be placed on wall tiles
+            }
+        }
+
+        if (obj instanceof domain.models.staticObjects.WallObject) {
+            if (!(existing instanceof WallTile) || hoverTileX == 0 || hoverTileX == map.getWidth() - 1) {
+                return; // WallObjects can only be placed on non-side wall tiles
             }
         }
 
@@ -437,7 +464,8 @@ public class DesignModeView extends JPanel {
             || obj instanceof domain.models.entity.Column
             || obj instanceof domain.models.entity.Sign
             || obj instanceof domain.models.staticObjects.Decoration
-            || obj instanceof domain.models.entity.SearchableObject;
+            || obj instanceof domain.models.entity.SearchableObject
+            || obj instanceof domain.models.staticObjects.WallObject;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -656,8 +684,11 @@ public class DesignModeView extends JPanel {
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj == null || obj instanceof WallTile) continue;
-                if (obj instanceof FloorTile) continue;
+                if (obj instanceof WallTile) {
+                    ((WallTile) obj).setDecoration(null);
+                    continue;
+                }
+                if (obj == null || obj instanceof FloorTile) continue;
                 // Sadece yerleştirilen objeleri sil → FloorTile ile değiştir
                 map.placeObject(new FloorTile(), x, y);
             }
@@ -813,6 +844,43 @@ public class DesignModeView extends JPanel {
             }
         }
 
+        // Place random WallObjects
+        List<PaletteItem> wallObjectItems = new ArrayList<>();
+        for (PaletteItem item : leftPalette) {
+            if (item.factory != null) {
+                GameObject dummy = item.factory.apply(0, 0);
+                if (dummy instanceof domain.models.staticObjects.WallObject) {
+                    wallObjectItems.add(item);
+                }
+            }
+        }
+        if (!wallObjectItems.isEmpty()) {
+            List<int[]> wallTiles = new ArrayList<>();
+            for (int x = 1; x < w - 1; x++) {
+                GameObject topWall = map.getObjectAt(x, 0);
+                if (topWall instanceof WallTile && ((WallTile) topWall).getDecoration() == null) {
+                    wallTiles.add(new int[]{x, 0});
+                }
+                GameObject botWall = map.getObjectAt(x, h - 1);
+                if (botWall instanceof WallTile && ((WallTile) botWall).getDecoration() == null) {
+                    wallTiles.add(new int[]{x, h - 1});
+                }
+            }
+
+            if (!wallTiles.isEmpty()) {
+                java.util.Collections.shuffle(wallTiles);
+                int numWallObjects = rand.nextInt(3) + 2; // Place 2 to 4 random WallObjects
+                int placedWallObjs = 0;
+                for (int[] pos : wallTiles) {
+                    if (placedWallObjs >= numWallObjects) break;
+                    PaletteItem selectedItem = wallObjectItems.get(rand.nextInt(wallObjectItems.size()));
+                    GameObject wallObj = selectedItem.factory.apply(pos[0], pos[1]);
+                    map.placeObject(wallObj, pos[0], pos[1]);
+                    placedWallObjs++;
+                }
+            }
+        }
+
         repaint();
     }
 
@@ -902,6 +970,7 @@ public class DesignModeView extends JPanel {
     }
 
     private String objectType(GameObject obj) {
+        if (obj instanceof domain.models.staticObjects.WallObject) return "WallObject";
         if (obj instanceof PotionItem)       return "PotionItem";
         if (obj instanceof SwordItem)        return "SwordItem";
         if (obj instanceof WoodenSwordItem)  return "WoodenSwordItem";
@@ -982,6 +1051,7 @@ public class DesignModeView extends JPanel {
                 case "SearchableObject" -> imgName != null && !imgName.isEmpty()
                                               ? new SearchableObject(name, x, y, imgName, openImgName)
                                               : new SearchableObject(name, x, y);
+                case "WallObject"       -> new domain.models.staticObjects.WallObject(name, x, y, imgName);
                 default                 -> null;
             };
             if (obj != null) map.placeObject(obj, x, y);
@@ -1290,14 +1360,19 @@ public class DesignModeView extends JPanel {
                     if ("wall/wall_side".equals(obj.getImageName())) {
                         BufferedImage tImg = tileManager.getTile("wall/wall_side");
                         if (tImg != null) {
-                            int sw = Math.max(tileSize / 3, 4);
+                            int sw = Math.max(tileSize / 3, 4) + 6; // 6 pixels wider
                             int dx = (x == 0) ? px + tileSize - sw : px;
-                            g.drawImage(tImg, dx, py, sw, tileSize, null);
+                            g.drawImage(tImg, dx, py - 6, sw, tileSize + 6, null); // 6 pixels taller
+                        }
+                    } else if ("wall/wall_1".equals(obj.getImageName())) {
+                        BufferedImage tImg = tileManager.getTile(obj.getImageName());
+                        if (tImg != null) {
+                            g.drawImage(tImg, px, py - 8, tileSize, tileSize + 8, null); // 8 pixels taller
                         }
                     } else {
                         BufferedImage tImg = tileManager.getTile(obj.getImageName());
                         if (tImg != null) {
-                            g.drawImage(tImg, px, py, tileSize, tileSize, null);
+                            g.drawImage(tImg, px, py - 6, tileSize, tileSize + 6, null); // 6 pixels taller
                         }
                     }
 
@@ -1310,12 +1385,20 @@ public class DesignModeView extends JPanel {
                             int iw = decoImg.getWidth();
                             int ih = decoImg.getHeight();
                             int dw = tileSize;
-                            if (deco instanceof Decoration) {
-                                dw = (int) (tileSize * 0.4); // torch should be much smaller!
-                            }
+                             if (deco instanceof Decoration) {
+                                 dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                             } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                                 dw = Math.max(tileSize - 6, 4); // make it 3 bits/pixels smaller on each side!
+                             }
                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = px + (tileSize - dw) / 2;
-                            int drawY = py + tileSize - dh;
+                            int drawY;
+                            if (deco instanceof domain.models.staticObjects.WallObject) {
+                                int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
+                                drawY = py - wallOffset / 2 + (tileSize - dh) / 2; // Center in wall vertically
+                            } else {
+                                drawY = py + tileSize - dh;
+                            }
                             g.drawImage(decoImg, drawX, drawY, dw, dh, null);
                         }
                     }

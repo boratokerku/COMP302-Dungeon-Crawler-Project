@@ -78,14 +78,21 @@ public class GameMap extends Grid {
         if (!isValidPosition(x, y)) return false;
 
         GameObject existing = getObjectAt(x, y);
+
+        // Rule: WallObject can only be placed on a WallTile
+        if (obj instanceof domain.models.staticObjects.WallObject) {
+            if (!(existing instanceof domain.models.tile.WallTile)) {
+                return false;
+            }
+        }
+
         if (existing instanceof domain.models.tile.WallTile) {
             if (obj == null) {
                 ((domain.models.tile.WallTile) existing).setDecoration(null);
                 return true;
             }
-            if (obj instanceof domain.models.staticObjects.Decoration ||
-                obj instanceof domain.models.entity.Column ||
-                obj instanceof domain.models.entity.Sign) {
+            // Rule: Only WallObjects can be placed on wall tiles
+            if (obj instanceof domain.models.staticObjects.WallObject) {
                 ((domain.models.tile.WallTile) existing).setDecoration(obj);
                 obj.setPosition(x, y);
                 obj.setMap(this);

@@ -1,19 +1,27 @@
 package domain.models.staticObjects;
 
-public class Door extends StaticObject {
-    private boolean isOpen;
+import domain.models.entity.GameObject;
+
+public class Door extends GameObject {
     private boolean isLocked;
 
-    public Door(int x, int y, boolean isLocked) {
-        super(x, y, true, false);
-        this.isOpen = false;
+    public Door(String name, int x, int y, boolean isLocked) {
+        super(name, x, y, "door/door_closed", false);
         this.isLocked = isLocked;
+    }
+
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public void unlock() {
+        this.isLocked = false;
     }
 
     public void open() {
         if (!isLocked) {
-            this.isOpen = true;
-            this.obstacle = false;
+            this.passable = true;
+            this.imageName = "door/door_open";
         }
     }
 }

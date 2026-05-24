@@ -24,15 +24,65 @@ public class TileManager {
             return tileCache.get(name);
         }
 
-        try {
-            File tileFile = new File("resources/images/tiles/" + name + ".png");
-            if (tileFile.exists()) {
-                BufferedImage img = ImageIO.read(tileFile);
+        File foundFile = null;
+        String[] prefixes = {
+            "resources/images/tiles/",
+            "resources/images/",
+            "resources/"
+        };
+
+        for (String prefix : prefixes) {
+            String path = prefix + name;
+            File f1 = new File(path);
+            if (f1.exists() && f1.isFile()) {
+                foundFile = f1;
+                break;
+            }
+            File f2 = new File("../" + path);
+            if (f2.exists() && f2.isFile()) {
+                foundFile = f2;
+                break;
+            }
+            if (!path.toLowerCase().endsWith(".png")) {
+                File f3 = new File(path + ".png");
+                if (f3.exists() && f3.isFile()) {
+                    foundFile = f3;
+                    break;
+                }
+                File f4 = new File("../" + path + ".png");
+                if (f4.exists() && f4.isFile()) {
+                    foundFile = f4;
+                    break;
+                }
+            }
+        }
+
+        if (foundFile == null) {
+            File f1 = new File(name);
+            if (f1.exists() && f1.isFile()) {
+                foundFile = f1;
+            } else {
+                File f2 = new File("../" + name);
+                if (f2.exists() && f2.isFile()) {
+                    foundFile = f2;
+                }
+            }
+        }
+
+        if (foundFile != null) {
+            try {
+                BufferedImage img = ImageIO.read(foundFile);
                 tileCache.put(name, img);
                 return img;
+            } catch (IOException e) {
+                System.err.println("Tile yüklenirken hata (" + name + "): " + e.getMessage());
             }
-        } catch (IOException e) {
-            System.err.println("Tile yüklenirken hata (" + name + "): " + e.getMessage());
+        }
+
+        // Eğer zemin varyasyonlarından biriyse ve bulunamadıysa (örneğin floor_crack), normal floor döndür.
+        if (name.startsWith("floor_")) {
+            System.out.println("Varyasyon bulunamadı (" + name + "), normal floor kullanılıyor.");
+            return getTile("floor");
         }
 
         return null;

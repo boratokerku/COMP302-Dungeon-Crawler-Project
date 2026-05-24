@@ -3,7 +3,10 @@ package domain.models.entity;
 import java.awt.Point;
 import java.util.Random;
 
-public class Knight extends Entity {
+public class Knight extends Entity implements Renderable {
+
+    @Override
+    public String getSpriteKey() { return "knight"; }
 
     private final Random random = new Random();
     private int moveCooldown = 0;
@@ -22,21 +25,42 @@ public class Knight extends Entity {
         }
         moveCooldown = 0;
 
-        // En yakın hedefi bul (Hero veya ShadowClone)
-        Entity target = findNearestTarget(hero, entities);
+        Entity target;
+        if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
+            target = findNearestEnemyTeamMatch(entities);
+        } else {
+            target = findNearestTarget(hero, entities);
+        }
+        
+        if (target == null) return;
 
         int distance = (int) Math.ceil(distanceTo(target));
 
-        if (distance > 5) {
-            // ROAMING: Hedef çok uzakta → rastgele yürür
-            System.out.println("Knight: Roaming");
-            roam(map, entities);
-        } else {
-            // CHASING: Hedef algılama mesafesinde → hedefe doğru hareket et
-            String label = (target instanceof Hero) ? "Hero" : "Shadow Clone";
-            System.out.println("Knight: Chasing " + label);
+        if (distance <= 1) {
+            // ATTACK: Hedefe bitişik — saldır
+            attackTarget(target);
+        } else if (this.getTeam() != domain.models.Team.NONE || distance <= 5) {
+            // CHASING: Hedef algılama mesafesinde veya Team Match modunda (sınırsız görüş) → hedefe doğru hareket et
             chaseTarget(target, map, entities);
+        } else {
+            // ROAMING: Hedef çok uzakta → rastgele yürür
+            roam(map, entities);
         }
+    }
+
+    private Entity findNearestEnemyTeamMatch(java.util.List<Entity> entities) {
+        Entity nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for (Entity e : entities) {
+            if (e != this && e.isAlive() && e.getTeam() != domain.models.Team.NONE && e.getTeam() != this.getTeam()) {
+                double d = distanceTo(e);
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = e;
+                }
+            }
+        }
+        return nearest;
     }
 
     // Hero veya hayatta olan ShadowClone'dan hangisi daha yakınsa onu döndür
@@ -60,6 +84,16 @@ public class Knight extends Entity {
         double dx = this.x - target.getX();
         double dy = this.y - target.getY();
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Design doc §2.5.1: "4HP damage, some absorbed by DEF stat of hero"
+    private void attackTarget(Entity target) {
+        int baseDamage = 4;
+        int def = (target instanceof Hero) ? ((Hero) target).getDef() : 0;
+        int damage = Math.max(1, baseDamage - def); // Minimum 1 damage to prevent complete invincibility
+        target.takeDamage(damage);
+        view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
+        System.out.println("Knight dealt " + damage + " dmg | Target HP: " + target.getHp());
     }
 
     // Herhangi bir Entity hedefine doğru bir adım atar (Hero veya ShadowClone)

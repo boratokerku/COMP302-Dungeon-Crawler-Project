@@ -13,4 +13,29 @@ public class SwordItem extends MapItem {
         this.addAction(new UnequipAction());
         this.addAction(new DiscardAction());
     }
+
+    @Override
+    public double getWeaponPivotX() {
+        return 0.5;
+    }
+
+    @Override
+    public double getWeaponPivotY() {
+        return 0.85; // Hand grips the hilt of the sword near the bottom
+    }
+
+    @Override
+    public double getWeaponAngleOffset() {
+        return 0.0; // Naturally vertical
+    }
+
+    @Override
+    public int getHandOffsetX() {
+        return 0; // standard horizontal grip
+    }
+
+    @Override
+    public int getHandOffsetY() {
+        return 0; // standard vertical grip
+    }
 }

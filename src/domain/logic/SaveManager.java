@@ -32,10 +32,13 @@ public class SaveManager {
 
         // Hero verisi
         String equippedWeaponType = hero.getEquippedWeapon() != null ? hero.getEquippedWeapon().getClass().getSimpleName() : null;
+        String equippedArmorType  = hero.getEquippedArmor()  != null ? hero.getEquippedArmor().getClass().getSimpleName() : null;
+        String equippedRingType   = hero.getEquippedRing()   != null ? hero.getEquippedRing().getClass().getSimpleName() : null;
+        
         state.hero = new GameState.HeroRecord(
                 hero.getX(), hero.getY(),
                 hero.getHp(), hero.getMana(), hero.getEnergy(),
-                hero.getStr(), equippedWeaponType
+                hero.getStr(), equippedWeaponType, equippedArmorType, equippedRingType
         );
 
         // Envanter (sınıf ismine göre — yüklerken yeniden oluşturmak için)
@@ -51,13 +54,25 @@ public class SaveManager {
                     state.mapItems.add(new GameState.ItemRecord(
                             obj.getClass().getSimpleName(), x, y
                     ));
+                } else if (obj instanceof domain.models.entity.Chest) {
+                    domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                    state.mapItems.add(new GameState.ItemRecord(
+                            "Chest", chest.getName(), x, y, chest.isLocked()
+                    ));
                 } else if (obj instanceof domain.models.entity.Column
                         || obj instanceof domain.models.entity.Crate
-                        || obj instanceof domain.models.entity.Chest
-                        || obj instanceof domain.models.entity.SearchableObject) {
+                        || obj instanceof domain.models.entity.SearchableObject
+                        || obj instanceof domain.models.staticObjects.Decoration
+                        || obj instanceof domain.models.entity.Sign) {
                     // Static nesneleri ismiyle birlikte kaydet
                     state.mapItems.add(new GameState.ItemRecord(
                             obj.getClass().getSimpleName(), obj.getName(), x, y
+                    ));
+                } else if (obj instanceof domain.models.staticObjects.Door) {
+                    // Kapıları kilit bilgisiyle kaydet
+                    domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
+                    state.mapItems.add(new GameState.ItemRecord(
+                            "Door", door.getName(), x, y, door.isLocked()
                     ));
                 }
             }
@@ -70,15 +85,26 @@ public class SaveManager {
                         "Knight", e.getX(), e.getY(), e.getHp(), e.isAlive(), 0
                 ));
             } else if (e instanceof Sorcerer) {
-                long timeLeft = ((Sorcerer) e).getTimeLeft();
+                long teleportLeft    = ((Sorcerer) e).getTimeLeft();
+                long projectileLeft  = ((Sorcerer) e).getProjectileTimeLeft();
                 state.enemies.add(new GameState.EnemyRecord(
-                        "Sorcerer", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
+                        "Sorcerer", e.getX(), e.getY(), e.getHp(), e.isAlive(), teleportLeft, projectileLeft
                 ));
             } else if (e instanceof domain.models.entity.ShadowClone) {
-                if (e.isAlive()) { // Sadece yaşayan klonları kaydet
+                if (e.isAlive()) {
                     long timeLeft = ((domain.models.entity.ShadowClone) e).getTimeLeft();
                     state.enemies.add(new GameState.EnemyRecord(
                             "ShadowClone", e.getX(), e.getY(), e.getHp(), e.isAlive(), timeLeft
+                    ));
+                }
+            } else if (e instanceof domain.models.entity.Projectile) {
+                if (e.isAlive()) {
+                    domain.models.entity.Projectile p = (domain.models.entity.Projectile) e;
+                    boolean isHeroOwned = (p.getOwner() instanceof domain.models.entity.Hero);
+                    state.projectiles.add(new GameState.ProjectileRecord(
+                            p.getX(), p.getY(), p.getExactX(), p.getExactY(),
+                            p.getDeltaX(), p.getDeltaY(), p.getDamage(),
+                            p.getType(), isHeroOwned
                     ));
                 }
             }

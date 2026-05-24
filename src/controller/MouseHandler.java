@@ -7,6 +7,7 @@ import view.ActionMenu;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 
 public class MouseHandler extends MouseAdapter {
 
@@ -69,5 +70,13 @@ public class MouseHandler extends MouseAdapter {
         // actually handled by actionMenu parent,
         // but actionMenu is a child of GameView (we'll add it).
         actionMenu.show(gameView, obj, e.getX(), e.getY());
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        int rotation = e.getWheelRotation();
+        if (rotation != 0) {
+            gameView.scrollHotbar(rotation);
+        }
     }
 }

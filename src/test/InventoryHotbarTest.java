@@ -1,3 +1,5 @@
+package test;
+
 import domain.models.inventory.InventoryHotbar;
 
 import org.junit.jupiter.api.BeforeEach;

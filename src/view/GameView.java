@@ -1,23 +1,21 @@
 
 package view;
 
-import javax.swing.JPanel;
+import domain.models.Direction;
+import domain.models.entity.Hero;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Color;
 import java.awt.image.BufferedImage;
-
-import domain.models.entity.Hero;
-import domain.models.Direction;
+import javax.swing.JPanel;
 
 public class GameView extends JPanel {
     private Hero hero;
     private AssetManager assetManager;
 
-    // Inventory rendering is fully delegated to InventoryView
+    // Hotbar rendering is delegated to InventoryView (legacy class name)
     private InventoryView inventoryView;
-    private boolean inventoryVisible = false;
 
     // Floating text structure for high-quality damage visual effects
     public static class FloatingText {
@@ -416,18 +414,24 @@ public class GameView extends JPanel {
         drawSingleBar(g, "DEF", hero.getDef(), 6, defIntImg, defExtImg, defIconImg, startX + 4*(barW + gap), y, barW, barH);
     }
 
-    /** Delegates inventory drawing to InventoryView. */
+    /** Delegates always-visible hotbar drawing to InventoryView. */
     private void drawInventory(Graphics2D g) {
-        if (!inventoryVisible)
-            return;
         inventoryView.draw(g, getWidth(), getHeight());
     }
 
-    /** Returns the inventory item clicked at the given screen position. */
+    /** Returns the hotbar item clicked at the given screen position. */
     public domain.models.entity.GameObject getClickedInventoryItem(int screenX, int screenY) {
-        if (!inventoryVisible)
-            return null;
         return inventoryView.getClickedItem(screenX, screenY);
+    }
+
+    public void scrollHotbar(int offset) {
+        inventoryView.scrollSelection(offset);
+        repaint();
+    }
+
+    public void setHotbarSlot(int slot) {
+        inventoryView.selectSlot(slot);
+        repaint();
     }
 
     private final java.util.Map<String, BufferedImage> weaponImageCache = new java.util.HashMap<>();
@@ -947,10 +951,11 @@ public class GameView extends JPanel {
     }
 
     public void toggleInventory() {
-        this.inventoryVisible = !this.inventoryVisible;
+        // Hotbar is always visible; keep this as a no-op for compatibility.
+        repaint();
     }
 
     public boolean isInventoryVisible() {
-        return inventoryVisible;
+        return true;
     }
 }

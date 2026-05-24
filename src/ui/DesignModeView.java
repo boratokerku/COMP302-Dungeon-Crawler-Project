@@ -1098,7 +1098,7 @@ public class DesignModeView extends JPanel {
         int mapW = tileSize * map.getWidth();
         int mapH = tileSize * map.getHeight();
         mapOffsetX = mapAreaX + (mapAreaW - mapW) / 2;
-        mapOffsetY = mapAreaY + (mapAreaH - mapH) / 2;
+        mapOffsetY = mapAreaY + (mapAreaH - mapH) / 2 - 10;
     }
 
     private void paintTopPanel(Graphics2D g) {

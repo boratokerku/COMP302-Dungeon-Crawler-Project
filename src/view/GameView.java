@@ -117,9 +117,8 @@ public class GameView extends JPanel {
             int tileH = usableHeight / gameMap.getHeight();
             tileSize = Math.min(tileW, tileH);
 
-            // Haritayı yatayda ortala, dikeyde HUD'un altına yerleştir
             offsetX = (getWidth() - (tileSize * gameMap.getWidth())) / 2;
-            offsetY = hudReserve + (getHeight() - hudReserve - (tileSize * gameMap.getHeight())) / 2;
+            offsetY = hudReserve + (getHeight() - hudReserve - (tileSize * gameMap.getHeight())) / 2 - 10;
         }
     }
 

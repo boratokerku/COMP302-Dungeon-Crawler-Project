@@ -1,21 +1,19 @@
-import domain.models.entity.*;
-import domain.models.map.GameMap;
 import domain.logic.EnemySpawner;
 import domain.logic.ScrollSpawner;
 import domain.models.GameState;
+import domain.models.entity.*;
+import domain.models.map.GameMap;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import ui.DesignModeView;
 import view.AssetManager;
 import view.GameView;
 import view.TileManager;
-import ui.DesignModeView;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-import java.util.ArrayList;
-import java.util.List;
-
-import java.awt.CardLayout;
-import java.awt.Color;
-import javax.swing.JPanel;
 
 public class DemoRunner {
     private static GameMap initialDesignedMap = null;
@@ -543,6 +541,7 @@ public class DemoRunner {
         view.ActionMenu actionMenu = new view.ActionMenu(hero);
         controller.MouseHandler mouseHandler = new controller.MouseHandler(hero, map, gameView, actionMenu);
         gameView.addMouseListener(mouseHandler);
+        gameView.addMouseWheelListener(mouseHandler);
 
         controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);
         inputHandler.setGameMode(mode);

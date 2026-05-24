@@ -1,11 +1,11 @@
 package controller;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import domain.models.AnimationState;
+import domain.models.Direction;
 import domain.models.entity.Hero;
 import domain.models.entity.ShadowClone;
-import domain.models.Direction;
-import domain.models.AnimationState;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 public class InputHandler implements KeyListener {
     private Hero hero;
@@ -49,6 +49,14 @@ public class InputHandler implements KeyListener {
         if (!hero.isAlive()) return;
         
         int code = e.getKeyCode();
+
+        int hotbarSlot = mapNumberKeyToSlot(code);
+        if (hotbarSlot != -1) {
+            if (gameView != null) {
+                gameView.setHotbarSlot(hotbarSlot);
+            }
+            return;
+        }
 
         // Hareket ve Yön Mantığı
         if (code == KeyEvent.VK_W || code == KeyEvent.VK_UP) {
@@ -254,6 +262,29 @@ public class InputHandler implements KeyListener {
                 code == KeyEvent.VK_A || code == KeyEvent.VK_D ||
                 code == KeyEvent.VK_UP || code == KeyEvent.VK_DOWN ||
                 code == KeyEvent.VK_LEFT || code == KeyEvent.VK_RIGHT;
+    }
+
+    private int mapNumberKeyToSlot(int keyCode) {
+        switch (keyCode) {
+            case KeyEvent.VK_1:
+                return 1;
+            case KeyEvent.VK_2:
+                return 2;
+            case KeyEvent.VK_3:
+                return 3;
+            case KeyEvent.VK_4:
+                return 4;
+            case KeyEvent.VK_5:
+                return 5;
+            case KeyEvent.VK_6:
+                return 6;
+            case KeyEvent.VK_7:
+                return 7;
+            case KeyEvent.VK_8:
+                return 8;
+            default:
+                return -1;
+        }
     }
 
     // Klon varsa ve hayattaysa ters yönde hareket ettir

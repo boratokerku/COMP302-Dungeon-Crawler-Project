@@ -4,6 +4,7 @@ import domain.models.entity.Hero;
 import domain.models.inventory.InventoryHotbar;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
@@ -13,13 +14,13 @@ import javax.imageio.ImageIO;
  */
 public class InventoryView {
 
+    private static final double SCALE_FACTOR = 2.0;
+
     // ── Dependencies ─────────────────────────────────────────────────────────
     private final Hero hero;
     private TileManager tileManager; // set after construction via setter
 
     // ── Layout constants ──────────────────────────────────────────────────────
-    private final int slotSize = 44;
-    private final int padding = 6;
     private final int slotsX = InventoryHotbar.SLOT_COUNT;
 
     // ── Computed positions (needed for click hit-testing) ─────────────────────
@@ -30,6 +31,13 @@ public class InventoryView {
 
     // ── Assets ────────────────────────────────────────────────────────────────
     private BufferedImage bgImage;
+
+    // ── Runtime layout cache ──────────────────────────────────────────────────
+    private int barWidth;
+    private int barHeight;
+    private int slotWidth;
+    private int slotHeight;
+    private int itemSize;
 
     // ── Constructor ───────────────────────────────────────────────────────────
     public InventoryView(Hero hero) {
@@ -42,38 +50,11 @@ public class InventoryView {
         try {
             File imgFile = new File("resources/images/storage/toolbar.png");
             if (imgFile.exists()) {
-                bgImage = trimTransparentMargins(ImageIO.read(imgFile));
+                bgImage = ImageIO.read(imgFile);
             }
-        } catch (Exception e) {
+        } catch (java.io.IOException e) {
             System.err.println("InventoryView: Could not load toolbar.png: " + e.getMessage());
         }
-    }
-
-    private BufferedImage trimTransparentMargins(BufferedImage src) {
-        if (src == null) return null;
-
-        int minX = src.getWidth();
-        int minY = src.getHeight();
-        int maxX = -1;
-        int maxY = -1;
-
-        for (int y = 0; y < src.getHeight(); y++) {
-            for (int x = 0; x < src.getWidth(); x++) {
-                int alpha = (src.getRGB(x, y) >>> 24) & 0xFF;
-                if (alpha > 0) {
-                    if (x < minX) minX = x;
-                    if (y < minY) minY = y;
-                    if (x > maxX) maxX = x;
-                    if (y > maxY) maxY = y;
-                }
-            }
-        }
-
-        if (maxX < minX || maxY < minY) {
-            return src;
-        }
-
-        return src.getSubimage(minX, minY, (maxX - minX) + 1, (maxY - minY) + 1);
     }
 
     // ── Setters ───────────────────────────────────────────────────────────────
@@ -96,37 +77,44 @@ public class InventoryView {
         syncHotbarItems();
 
         // ── Layout ────────────────────────────────────────────────────────────
-        int barWidth = slotsX * slotSize + (slotsX + 1) * padding;
-        int barHeight = slotSize + (2 * padding);
+        if (bgImage != null) {
+            barWidth = (int) Math.round(bgImage.getWidth() * SCALE_FACTOR);
+            barHeight = (int) Math.round(bgImage.getHeight() * SCALE_FACTOR);
+        } else {
+            barWidth = Math.min(panelWidth - 40, 320) * 2;
+            barHeight = 32 * 2;
+        }
+
+        slotWidth = Math.max(1, barWidth / slotsX);
+        slotHeight = barHeight;
+        itemSize = Math.max(12, Math.min(slotWidth, slotHeight) - 8);
 
         startX = (panelWidth - barWidth) / 2;
         startY = panelHeight - barHeight - 14;
 
         // ── Background ───────────────────────────────────────────────────────
         if (bgImage != null) {
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.drawImage(bgImage, startX, startY, barWidth, barHeight, null);
         } else {
             g.setColor(new Color(0, 0, 0, 180));
-            g.fillRoundRect(startX, startY, barWidth, barHeight, 10, 10);
-            g.setColor(new Color(200, 200, 200));
-            g.drawRoundRect(startX, startY, barWidth, barHeight, 10, 10);
+            g.fillRect(startX, startY, barWidth, barHeight);
         }
 
         for (int col = 0; col < slotsX; col++) {
-            int slotX = startX + padding + col * (slotSize + padding);
-            int slotY = startY + padding;
             int slotIndex = col + 1;
+            int slotX = startX + (col * slotWidth);
+            int slotY = startY;
 
-            drawSlot(g, slotX, slotY, hotbar.getSelectedSlot() == slotIndex);
+            if (hotbar.getSelectedSlot() == slotIndex) {
+                g.setColor(new Color(255, 255, 255, 170));
+                g.drawRect(slotX + 1, slotY + 1, slotWidth - 3, slotHeight - 3);
+            }
 
             domain.models.entity.GameObject item = hotbar.getSlot(slotIndex);
             if (item != null) {
                 drawItemInSlot(g, item, slotX, slotY);
             }
-
-            g.setColor(new Color(255, 255, 255, 180));
-            g.setFont(g.getFont().deriveFont(11f));
-            g.drawString(String.valueOf(slotIndex), slotX + 3, slotY + 12);
         }
     }
 
@@ -138,14 +126,6 @@ public class InventoryView {
         }
     }
 
-    /** Draws a single slot rectangle. Gold border for selected slot, grey for normal. */
-    private void drawSlot(Graphics2D g, int x, int y, boolean selected) {
-        g.setColor(selected ? new Color(70, 55, 20, 230) : new Color(45, 45, 45, 210));
-        g.fillRect(x, y, slotSize, slotSize);
-        g.setColor(selected ? new Color(255, 220, 90) : new Color(110, 110, 110));
-        g.drawRect(x, y, slotSize, slotSize);
-    }
-
     /** Draws the sprite (or a colour placeholder) of a game object inside a slot. */
     private void drawItemInSlot(Graphics2D g, domain.models.entity.GameObject item,
                                 int slotX, int slotY) {
@@ -155,15 +135,17 @@ public class InventoryView {
 
         BufferedImage sprite = null;
 
-        if (item instanceof domain.models.item.MapItem) {
-            sprite = ((domain.models.item.MapItem) item).getSprite();
+        if (item instanceof domain.models.item.MapItem mapItem) {
+            sprite = mapItem.getSprite();
         }
         if (sprite == null && item.getImageName() != null && tileManager != null) {
             sprite = tileManager.getTile(item.getImageName());
         }
 
         if (sprite != null) {
-            g.drawImage(sprite, slotX + 2, slotY + 2, slotSize - 4, slotSize - 4, null);
+            int drawX = slotX + (slotWidth - itemSize) / 2;
+            int drawY = slotY + (slotHeight - itemSize) / 2;
+            g.drawImage(sprite, drawX, drawY, itemSize, itemSize, null);
         } else {
             // Colour placeholder
             if (item instanceof domain.models.item.ShadowCloneScroll) {
@@ -171,7 +153,9 @@ public class InventoryView {
             } else {
                 g.setColor(new Color(255, 220, 50)); // yellow — unknown
             }
-            g.fillOval(slotX + 5, slotY + 5, slotSize - 10, slotSize - 10);
+            int drawX = slotX + (slotWidth - itemSize) / 2;
+            int drawY = slotY + (slotHeight - itemSize) / 2;
+            g.fillOval(drawX, drawY, itemSize, itemSize);
         }
     }
 
@@ -183,12 +167,12 @@ public class InventoryView {
         syncHotbarItems();
 
         for (int col = 0; col < slotsX; col++) {
-            int slotX = startX + padding + col * (slotSize + padding);
-            int slotY = startY + padding;
             int slotIndex = col + 1;
+            int slotX = startX + (col * slotWidth);
+            int slotY = startY;
 
-            if (screenX >= slotX && screenX <= slotX + slotSize &&
-                    screenY >= slotY && screenY <= slotY + slotSize) {
+            if (screenX >= slotX && screenX <= slotX + slotWidth &&
+                    screenY >= slotY && screenY <= slotY + slotHeight) {
                 hotbar.setSelectedSlot(slotIndex);
                 return hotbar.getSlot(slotIndex);
             }

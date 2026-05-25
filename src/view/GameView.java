@@ -1038,7 +1038,13 @@ public class GameView extends JPanel {
                     domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
                     if (wall.getDecoration() != null) {
                         domain.models.entity.GameObject deco = wall.getDecoration();
-                        BufferedImage decoImg = tileManager.getTile(deco.getImageName());
+                        String imgName = deco.getImageName();
+                        if (imgName != null && imgName.contains("WallDecoration/torch")) {
+                            long now = System.currentTimeMillis();
+                            int frame = (int) ((now / 120) % 4) + 1;
+                            imgName = "images/WallDecoration/torch" + frame + ".png";
+                        }
+                        BufferedImage decoImg = tileManager.getTile(imgName);
                         if (decoImg != null) {
                             int iw = decoImg.getWidth();
                             int ih = decoImg.getHeight();
@@ -1099,7 +1105,13 @@ public class GameView extends JPanel {
                 domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
                 if (wall.getDecoration() != null) {
                     domain.models.entity.GameObject deco = wall.getDecoration();
-                    BufferedImage decoImg = tileManager.getTile(deco.getImageName());
+                    String imgName = deco.getImageName();
+                    if (imgName != null && imgName.contains("WallDecoration/torch")) {
+                        long now = System.currentTimeMillis();
+                        int frame = (int) ((now / 120) % 4) + 1;
+                        imgName = "images/WallDecoration/torch" + frame + ".png";
+                    }
+                    BufferedImage decoImg = tileManager.getTile(imgName);
                     if (decoImg != null) {
                         int iw = decoImg.getWidth();
                         int ih = decoImg.getHeight();

@@ -34,6 +34,8 @@ import java.util.Random;
 public class DesignModeView extends JPanel {
     private static final int MAX_OBSTACLES = 40;
     private static final int MAX_ITEMS = 30;
+    private static final int MAX_SEARCHABLE_PER_MAP = 6;
+    private static final int MAX_DECORATIVE_PER_MAP = 12;
 
     // ── Callbacks ────────────────────────────────────────────────────────────
     private final Runnable onBackToMenu;
@@ -195,7 +197,7 @@ public class DesignModeView extends JPanel {
                                     currentScale -= 0.05; // scale down by 5%
                                 }
                                 // Clamp between 0.15 and 3.0
-                                currentScale = Math.max(0.15, Math.min(3.0, currentScale));
+                                currentScale = Math.max(0.15, Math.min(2.0, currentScale));
                                 target.setCustomScale(currentScale);
                                 repaint();
                             }
@@ -269,6 +271,59 @@ public class DesignModeView extends JPanel {
                     }
                     final String finalLabel = label;
                     final String relativePath = "images/WallObjects/" + filename;
+                    leftPalette.add(new PaletteItem(finalLabel, relativePath, false,
+                            (x, y) -> new domain.models.staticObjects.WallObject(finalLabel, x, y, relativePath)));
+                }
+            }
+        }
+
+        // DYNAMICALLY SCAN WallDecoration DIRECTORY
+        File wallDecoDir = new File("resources/images/WallDecoration");
+        if (!wallDecoDir.exists()) {
+            wallDecoDir = new File("../resources/images/WallDecoration");
+        }
+        if (wallDecoDir.exists() && wallDecoDir.isDirectory()) {
+            File[] files = wallDecoDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
+            if (files != null) {
+                for (File file : files) {
+                    String filename = file.getName();
+                    // Exclude duplicate torch frames from showing up in the palette
+                    if (filename.toLowerCase().startsWith("torch") && 
+                        (filename.toLowerCase().contains("2") || filename.toLowerCase().contains("3") || filename.toLowerCase().contains("4"))) {
+                        continue;
+                    }
+                    String rawLabel = filename.substring(0, filename.lastIndexOf('.'));
+                    String label = rawLabel;
+                    if ("torch1".equalsIgnoreCase(rawLabel)) {
+                        label = "Wall Torch";
+                    } else if (rawLabel.length() > 0) {
+                        label = Character.toUpperCase(rawLabel.charAt(0)) + rawLabel.substring(1);
+                    }
+                    final String finalLabel = label;
+                    final String relativePath = "images/WallDecoration/" + filename;
+                    leftPalette.add(new PaletteItem(finalLabel, relativePath, false,
+                            (x, y) -> new domain.models.staticObjects.WallObject(finalLabel, x, y, relativePath)));
+                }
+            }
+        }
+
+        // DYNAMICALLY SCAN WallSearchable DIRECTORY
+        File wallSearchDir = new File("resources/images/WallSearchable");
+        if (!wallSearchDir.exists()) {
+            wallSearchDir = new File("../resources/images/WallSearchable");
+        }
+        if (wallSearchDir.exists() && wallSearchDir.isDirectory()) {
+            File[] files = wallSearchDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".png"));
+            if (files != null) {
+                for (File file : files) {
+                    String filename = file.getName();
+                    String rawLabel = filename.substring(0, filename.lastIndexOf('.'));
+                    String label = rawLabel;
+                    if (rawLabel.length() > 0) {
+                        label = Character.toUpperCase(rawLabel.charAt(0)) + rawLabel.substring(1);
+                    }
+                    final String finalLabel = label;
+                    final String relativePath = "images/WallSearchable/" + filename;
                     leftPalette.add(new PaletteItem(finalLabel, relativePath, false,
                             (x, y) -> new domain.models.staticObjects.WallObject(finalLabel, x, y, relativePath)));
                 }
@@ -515,6 +570,41 @@ public class DesignModeView extends JPanel {
             }
         }
 
+        if (obj instanceof domain.models.staticObjects.WallObject) {
+            String img = obj.getImageName();
+            if (img != null) {
+                if (img.contains("WallSearchable/")) {
+                    boolean replacingSearchable = false;
+                    if (existing instanceof WallTile) {
+                        GameObject currentDeco = ((WallTile) existing).getDecoration();
+                        if (currentDeco != null && currentDeco.getImageName() != null && currentDeco.getImageName().contains("WallSearchable/")) {
+                            replacingSearchable = true;
+                        }
+                    }
+                    if (!replacingSearchable && countWallSearchable() >= MAX_SEARCHABLE_PER_MAP) {
+                        if (e.getID() != MouseEvent.MOUSE_DRAGGED) {
+                            showMaxWallDialog();
+                        }
+                        return;
+                    }
+                } else if (img.contains("WallDecoration/")) {
+                    boolean replacingDecorative = false;
+                    if (existing instanceof WallTile) {
+                        GameObject currentDeco = ((WallTile) existing).getDecoration();
+                        if (currentDeco != null && currentDeco.getImageName() != null && currentDeco.getImageName().contains("WallDecoration/")) {
+                            replacingDecorative = true;
+                        }
+                    }
+                    if (!replacingDecorative && countWallDecorative() >= MAX_DECORATIVE_PER_MAP) {
+                        if (e.getID() != MouseEvent.MOUSE_DRAGGED) {
+                            showMaxWallDialog();
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
         boolean replacingSameCategory = false;
         if (isItem(obj)) {
             if (isItem(existing)) {
@@ -582,6 +672,42 @@ public class DesignModeView extends JPanel {
         return count;
     }
 
+    private int countWallSearchable() {
+        int count = 0;
+        int w = map.getWidth();
+        int h = map.getHeight();
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof WallTile) {
+                    GameObject deco = ((WallTile) obj).getDecoration();
+                    if (deco != null && deco.getImageName() != null && deco.getImageName().contains("WallSearchable/")) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    private int countWallDecorative() {
+        int count = 0;
+        int w = map.getWidth();
+        int h = map.getHeight();
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof WallTile) {
+                    GameObject deco = ((WallTile) obj).getDecoration();
+                    if (deco != null && deco.getImageName() != null && deco.getImageName().contains("WallDecoration/")) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
     private boolean isItem(GameObject obj) {
         if (obj == null)
             return false;
@@ -598,8 +724,7 @@ public class DesignModeView extends JPanel {
                 || obj instanceof domain.models.entity.Column
                 || obj instanceof domain.models.entity.Sign
                 || obj instanceof domain.models.staticObjects.Decoration
-                || obj instanceof domain.models.entity.SearchableObject
-                || obj instanceof domain.models.staticObjects.WallObject;
+                || obj instanceof domain.models.entity.SearchableObject;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1059,13 +1184,53 @@ public class DesignModeView extends JPanel {
 
             if (!wallTiles.isEmpty()) {
                 java.util.Collections.shuffle(wallTiles);
-                int numWallObjects = rand.nextInt(3) + 2; // Place 2 to 4 random WallObjects
+                int numWallObjects = rand.nextInt(5) + 6; // Place 6 to 10 random WallObjects for a lush, premium look
                 int placedWallObjs = 0;
+                int placedSearchables = 0;
+                int placedDecoratives = 0;
                 for (int[] pos : wallTiles) {
                     if (placedWallObjs >= numWallObjects)
                         break;
-                    PaletteItem selectedItem = wallObjectItems.get(rand.nextInt(wallObjectItems.size()));
+                    // Filter candidates dynamically based on limits
+                    List<PaletteItem> validCandidates = new ArrayList<>();
+                    for (PaletteItem item : wallObjectItems) {
+                        GameObject dummy = item.factory.apply(0, 0);
+                        String img = dummy.getImageName();
+                        if (img != null) {
+                            if (img.contains("WallSearchable/") && placedSearchables < MAX_SEARCHABLE_PER_MAP) {
+                                validCandidates.add(item);
+                            } else if (img.contains("WallDecoration/") && placedDecoratives < MAX_DECORATIVE_PER_MAP) {
+                                validCandidates.add(item);
+                            }
+                        }
+                    }
+                    if (validCandidates.isEmpty())
+                        break;
+
+                    PaletteItem selectedItem = validCandidates.get(rand.nextInt(validCandidates.size()));
                     GameObject wallObj = selectedItem.factory.apply(pos[0], pos[1]);
+
+                    String img = wallObj.getImageName();
+                    if (img != null) {
+                        if (img.contains("WallSearchable/")) {
+                            placedSearchables++;
+                        } else if (img.contains("WallDecoration/")) {
+                            placedDecoratives++;
+                        }
+                    }
+
+                    // If it is a flag or banner, set its scale to render at exactly 30 pixels (30.0 / 42.0)
+                    if (wallObj.getImageName() != null &&
+                        (wallObj.getImageName().toLowerCase().contains("flag") ||
+                         wallObj.getImageName().toLowerCase().contains("banner"))) {
+                        wallObj.setCustomScale(30.0 / 42.0);
+                    } else {
+                        // Do not overwrite tailored customScale set by constructor, unless it's default
+                        // 1.0
+                        if (wallObj.getCustomScale() == 1.0) {
+                            wallObj.setCustomScale(1.6);
+                        }
+                    }
                     map.placeObject(wallObj, pos[0], pos[1]);
                     placedWallObjs++;
                 }
@@ -1459,11 +1624,17 @@ public class DesignModeView extends JPanel {
             }
 
             BufferedImage icon = getIcon(item);
-            if (item.iconPath != null && item.iconPath.startsWith("torch/")) {
-                long now = System.currentTimeMillis();
-                int[] frames = { 1, 2, 3, 4, 6, 7, 8 };
-                int frame = frames[(int) ((now / 120) % frames.length)];
-                icon = tileManager.getTile("torch/torch_" + frame);
+            if (item.iconPath != null) {
+                if (item.iconPath.startsWith("torch/")) {
+                    long now = System.currentTimeMillis();
+                    int[] frames = { 1, 2, 3, 4, 6, 7, 8 };
+                    int frame = frames[(int) ((now / 120) % frames.length)];
+                    icon = tileManager.getTile("torch/torch_" + frame);
+                } else if (item.iconPath.contains("WallDecoration/torch")) {
+                    long now = System.currentTimeMillis();
+                    int frame = (int) ((now / 120) % 4) + 1;
+                    icon = tileManager.getTile("images/WallDecoration/torch" + frame + ".png");
+                }
             }
             drawIconFit(g, icon, bounds.x, bounds.y, bounds.width);
 
@@ -1667,7 +1838,13 @@ public class DesignModeView extends JPanel {
                     WallTile wall = (WallTile) obj;
                     if (wall.getDecoration() != null) {
                         GameObject deco = wall.getDecoration();
-                        BufferedImage decoImg = tileManager.getTile(deco.getImageName());
+                        String imgName = deco.getImageName();
+                        if (imgName != null && imgName.contains("WallDecoration/torch")) {
+                            long now = System.currentTimeMillis();
+                            int frame = (int) ((now / 120) % 4) + 1;
+                            imgName = "images/WallDecoration/torch" + frame + ".png";
+                        }
+                        BufferedImage decoImg = tileManager.getTile(imgName);
                         if (decoImg != null) {
                             int iw = decoImg.getWidth();
                             int ih = decoImg.getHeight();
@@ -2081,6 +2258,13 @@ public class DesignModeView extends JPanel {
         Window parentWindow = SwingUtilities.getWindowAncestor(this);
         Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
         MaxObstacleDialog dialog = new MaxObstacleDialog(parentFrame);
+        dialog.setVisible(true);
+    }
+
+    private void showMaxWallDialog() {
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+        MaxWallDialog dialog = new MaxWallDialog(parentFrame);
         dialog.setVisible(true);
     }
 

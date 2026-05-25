@@ -1564,26 +1564,27 @@ public class DesignModeView extends JPanel {
         if (map == null || tileManager == null)
             return;
 
+        // PASS 1: Draw all floors and base walls (WITHOUT decorations)
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 int px = mapOffsetX + x * tileSize;
                 int py = mapOffsetY + y * tileSize;
-
                 GameObject obj = map.getObjectAt(x, y);
                 if (obj == null)
                     continue;
 
-                // Zemin tile'larını önce çiz
+                // Draw floor background first
                 if (obj instanceof domain.models.item.MapItem ||
                         obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
                         obj instanceof Door || obj instanceof Decoration ||
-                        obj instanceof SearchableObject || obj instanceof Sign) {
+                        obj instanceof SearchableObject || obj instanceof Sign ||
+                        obj instanceof FloorTile) {
                     BufferedImage floor = tileManager.getTile("floor");
                     if (floor != null)
                         g.drawImage(floor, px, py, tileSize, tileSize, null);
                 }
 
-                // Normal wall tile or wall side tile
+                // Draw base walls
                 if (obj instanceof WallTile) {
                     String imgName = obj.getImageName();
                     int tlX;
@@ -1614,58 +1615,41 @@ public class DesignModeView extends JPanel {
                                 g.drawImage(tImg, px, py - wallOffset, 2 * tileSize, 2 * tileSize + wallOffset, null);
                             }
                         }
-                        // Draw decoration for this sub-tile if any
-                        WallTile wall = (WallTile) obj;
-                        if (wall.getDecoration() != null) {
-                            GameObject deco = wall.getDecoration();
-                            BufferedImage decoImg = tileManager.getTile(deco.getImageName());
-                            if (decoImg != null) {
-                                int iw = decoImg.getWidth();
-                                int ih = decoImg.getHeight();
-                                int dw = tileSize;
-                                if (deco instanceof Decoration) {
-                                    dw = (int) (tileSize * 0.7);
-                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                    dw = Math.max(tileSize - 6, 4);
-                                }
-                                dw = (int) (dw * deco.getCustomScale());
-                                int dh = (int) (ih * ((double) dw / iw));
-                                int drawX = px + (tileSize - dw) / 2;
-                                int drawY;
-                                if (deco instanceof domain.models.staticObjects.WallObject) {
-                                    int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
-                                    drawY = py - wallOffset / 2 + (tileSize - dh) / 2;
-                                } else {
-                                    drawY = py + tileSize - dh;
-                                }
-                                g.drawImage(decoImg, drawX, drawY, dw, dh, null);
+                    } else {
+                        if ("wall/wall_side".equals(obj.getImageName())) {
+                            BufferedImage tImg = tileManager.getTile("wall/wall_side");
+                            if (tImg != null) {
+                                int sw = Math.max(tileSize / 3, 4) + 6;
+                                int dx = (x == 0) ? px + tileSize - sw : px;
+                                g.drawImage(tImg, dx, py - 6, sw, tileSize + 6, null);
+                            }
+                        } else if ("wall/wall_1".equals(obj.getImageName())) {
+                            BufferedImage tImg = tileManager.getTile(obj.getImageName());
+                            if (tImg != null) {
+                                g.drawImage(tImg, px, py - 8, tileSize, tileSize + 8, null);
+                            }
+                        } else {
+                            BufferedImage tImg = tileManager.getTile(obj.getImageName());
+                            if (tImg != null) {
+                                g.drawImage(tImg, px, py - 6, tileSize, tileSize + 6, null);
                             }
                         }
-                        continue;
                     }
                 }
+            }
+        }
 
+        // PASS 2: Draw all interactive entities, items, obstacles, and wall decorations on top
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                int px = mapOffsetX + x * tileSize;
+                int py = mapOffsetY + y * tileSize;
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj == null)
+                    continue;
+
+                // 1. Draw Wall Decorations
                 if (obj instanceof WallTile) {
-                    if ("wall/wall_side".equals(obj.getImageName())) {
-                        BufferedImage tImg = tileManager.getTile("wall/wall_side");
-                        if (tImg != null) {
-                            int sw = Math.max(tileSize / 3, 4) + 6; // 6 pixels wider
-                            int dx = (x == 0) ? px + tileSize - sw : px;
-                            g.drawImage(tImg, dx, py - 6, sw, tileSize + 6, null); // 6 pixels taller
-                        }
-                    } else if ("wall/wall_1".equals(obj.getImageName())) {
-                        BufferedImage tImg = tileManager.getTile(obj.getImageName());
-                        if (tImg != null) {
-                            g.drawImage(tImg, px, py - 8, tileSize, tileSize + 8, null); // 8 pixels taller
-                        }
-                    } else {
-                        BufferedImage tImg = tileManager.getTile(obj.getImageName());
-                        if (tImg != null) {
-                            g.drawImage(tImg, px, py - 6, tileSize, tileSize + 6, null); // 6 pixels taller
-                        }
-                    }
-
-                    // DRAW WALL MOUNTED DECORATION:
                     WallTile wall = (WallTile) obj;
                     if (wall.getDecoration() != null) {
                         GameObject deco = wall.getDecoration();
@@ -1673,11 +1657,36 @@ public class DesignModeView extends JPanel {
                         if (decoImg != null) {
                             int iw = decoImg.getWidth();
                             int ih = decoImg.getHeight();
+
+                            // Check if this WallTile is part of a 2x2 block
+                            String imgName = obj.getImageName();
+                            int tlX;
+                            if (x == 0) {
+                                tlX = 0;
+                            } else if (x == map.getWidth() - 1) {
+                                tlX = map.getWidth() - 1;
+                            } else {
+                                tlX = 1 + ((x - 1) / 2) * 2;
+                            }
+                            int tlY = (y / 2) * 2;
+                            boolean in2x2Block = (isSameWall(map, tlX, tlY, imgName) &&
+                                    isSameWall(map, tlX + 1, tlY, imgName) &&
+                                    isSameWall(map, tlX, tlY + 1, imgName) &&
+                                    isSameWall(map, tlX + 1, tlY + 1, imgName));
+
                             int dw = tileSize;
-                            if (deco instanceof Decoration) {
-                                dw = (int) (tileSize * 0.4); // torch should be much smaller!
-                            } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                dw = Math.max(tileSize - 6, 4); // make it 3 bits/pixels smaller on each side!
+                            if (in2x2Block) {
+                                if (deco instanceof Decoration) {
+                                    dw = (int) (tileSize * 0.7);
+                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                                    dw = Math.max(tileSize - 6, 4);
+                                }
+                            } else {
+                                if (deco instanceof Decoration) {
+                                    dw = (int) (tileSize * 0.4);
+                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                                    dw = Math.max(tileSize - 6, 4);
+                                }
                             }
                             dw = (int) (dw * deco.getCustomScale());
                             int dh = (int) (ih * ((double) dw / iw));
@@ -1685,62 +1694,61 @@ public class DesignModeView extends JPanel {
                             int drawY;
                             if (deco instanceof domain.models.staticObjects.WallObject) {
                                 int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
-                                drawY = py - wallOffset / 2 + (tileSize - dh) / 2; // Center in wall vertically
+                                drawY = py - wallOffset / 2 + (tileSize - dh) / 2;
                             } else {
                                 drawY = py + tileSize - dh;
                             }
                             g.drawImage(decoImg, drawX, drawY, dw, dh, null);
                         }
                     }
-                    continue;
-                }
-
-                // Tile veya item sprite
-                BufferedImage tImg = null;
-                if (obj instanceof domain.models.item.MapItem) {
-                    tImg = ((domain.models.item.MapItem) obj).getSprite();
-                } else {
-                    String imgName = obj.getImageName();
-                    if (obj instanceof Decoration && imgName != null && imgName.startsWith("torch/")) {
-                        long now = System.currentTimeMillis();
-                        int[] frames = { 1, 2, 3, 4, 6, 7, 8 };
-                        int frame = frames[(int) ((now / 120) % frames.length)];
-                        imgName = "torch/torch_" + frame;
-                    }
-                    tImg = tileManager.getTile(imgName);
-                }
-
-                if (tImg != null) {
-                    if (obj instanceof domain.models.item.MapItem) {
-                        int maxDim = (int) (tileSize * 0.65);
-                        int iw = tImg.getWidth();
-                        int ih = tImg.getHeight();
-                        double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
-                        int dw = (int) (iw * scale * obj.getCustomScale());
-                        int dh = (int) (ih * scale * obj.getCustomScale());
-                        int drawX = px + (tileSize - dw) / 2;
-                        int drawY = py + (tileSize - dh) / 2;
-                        g.drawImage(tImg, drawX, drawY, dw, dh, null);
-                    } else if (obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
-                            obj instanceof Door || obj instanceof Decoration ||
-                            obj instanceof SearchableObject || obj instanceof Sign) {
-                        int iw = tImg.getWidth();
-                        int ih = tImg.getHeight();
-                        int dw = tileSize;
-                        if (obj instanceof Decoration) {
-                            dw = (int) (tileSize * 0.4); // torch should be much smaller!
-                        }
-                        dw = (int) (dw * obj.getCustomScale());
-                        int dh = (int) (ih * ((double) dw / iw));
-                        int drawX = px + (tileSize - dw) / 2;
-                        int drawY = py + tileSize - dh;
-                        g.drawImage(tImg, drawX, drawY, dw, dh, null);
-                    } else {
-                        g.drawImage(tImg, px, py, tileSize, tileSize, null);
-                    }
                 } else if (!(obj instanceof FloorTile)) {
-                    g.setColor(new Color(180, 100, 200, 180));
-                    g.fillRect(px + 4, py + 4, tileSize - 8, tileSize - 8);
+                    // 2. Draw all non-wall objects (Items, Obstacles, etc.)
+                    BufferedImage tImg = null;
+                    if (obj instanceof domain.models.item.MapItem) {
+                        tImg = ((domain.models.item.MapItem) obj).getSprite();
+                    } else {
+                        String imgName = obj.getImageName();
+                        if (obj instanceof Decoration && imgName != null && imgName.startsWith("torch/")) {
+                            long now = System.currentTimeMillis();
+                            int[] frames = { 1, 2, 3, 4, 6, 7, 8 };
+                            int frame = frames[(int) ((now / 120) % frames.length)];
+                            imgName = "torch/torch_" + frame;
+                        }
+                        tImg = tileManager.getTile(imgName);
+                    }
+
+                    if (tImg != null) {
+                        if (obj instanceof domain.models.item.MapItem) {
+                            int maxDim = (int) (tileSize * 0.65);
+                            int iw = tImg.getWidth();
+                            int ih = tImg.getHeight();
+                            double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
+                            int dw = (int) (iw * scale * obj.getCustomScale());
+                            int dh = (int) (ih * scale * obj.getCustomScale());
+                            int drawX = px + (tileSize - dw) / 2;
+                            int drawY = py + (tileSize - dh) / 2;
+                            g.drawImage(tImg, drawX, drawY, dw, dh, null);
+                        } else if (obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
+                                obj instanceof Door || obj instanceof Decoration ||
+                                obj instanceof SearchableObject || obj instanceof Sign) {
+                            int iw = tImg.getWidth();
+                            int ih = tImg.getHeight();
+                            int dw = tileSize;
+                            if (obj instanceof Decoration) {
+                                dw = (int) (tileSize * 0.4);
+                            }
+                            dw = (int) (dw * obj.getCustomScale());
+                            int dh = (int) (ih * ((double) dw / iw));
+                            int drawX = px + (tileSize - dw) / 2;
+                            int drawY = py + tileSize - dh;
+                            g.drawImage(tImg, drawX, drawY, dw, dh, null);
+                        } else {
+                            g.drawImage(tImg, px, py, tileSize, tileSize, null);
+                        }
+                    } else {
+                        g.setColor(new Color(180, 100, 200, 180));
+                        g.fillRect(px + 4, py + 4, tileSize - 8, tileSize - 8);
+                    }
                 }
             }
         }

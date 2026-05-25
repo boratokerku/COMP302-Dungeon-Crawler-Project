@@ -43,7 +43,7 @@ public class GameMap extends Grid {
                     }
                 }
                 // --- ALT DUVAR (yan duvarların arasında) ---
-                else if (j == cols - 1) {
+                else if (j >= cols - 2) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_2"), i, j);
                 }
                 // --- ZEMİN ---
@@ -83,9 +83,11 @@ public class GameMap extends Grid {
 
         GameObject existing = getObjectAt(x, y);
 
-        // Rule: WallObject can only be placed on a WallTile
+        // Rule: WallObject can only be placed on a WallTile on the top or bottom wall (excluding side walls)
         if (obj instanceof domain.models.staticObjects.WallObject) {
-            if (!(existing instanceof domain.models.tile.WallTile)) {
+            if (!(existing instanceof domain.models.tile.WallTile) ||
+                (y != 0 && y != 1 && y != cols - 2 && y != cols - 1) ||
+                x == 0 || x == rows - 1) {
                 return false;
             }
         }

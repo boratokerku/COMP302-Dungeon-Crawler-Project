@@ -125,27 +125,34 @@ public class EnemySpawner {
      */
     private int[] findEdgeTile(List<Entity> allEntities) {
         List<int[]> candidates = new ArrayList<>();
-
-        int w = map.getWidth();  // 13 sütun (x: 0..12, duvarlar 0 ve 12'de)
-        int h = map.getHeight(); // 10 satır  (y: 0..9,  duvarlar 0 ve 9'da)
-
-        // Üst iç kenar: y=1, x=1..11 — y=0 duvar, y=1 duvara komşu ilk zemin
-        for (int x = 1; x < w - 1; x++) {
-            if (isFreeFloor(x, 1, allEntities)) candidates.add(new int[]{x, 1});
+        int w = map.getWidth();
+        int h = map.getHeight();
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                if (isFreeFloor(x, y, allEntities)) {
+                    // Check if adjacent to a wall
+                    boolean nextToWall = false;
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx;
+                            int ny = y + dy;
+                            if (map.isValidPosition(nx, ny)) {
+                                domain.models.entity.GameObject neighbor = map.getObjectAt(nx, ny);
+                                if (neighbor instanceof domain.models.tile.WallTile) {
+                                    nextToWall = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (nextToWall) break;
+                    }
+                    if (nextToWall) {
+                        candidates.add(new int[]{x, y});
+                    }
+                }
+            }
         }
-        // Alt iç kenar: y=8, x=1..11 — y=9 duvar, y=8 duvara komşu son zemin
-        for (int x = 1; x < w - 1; x++) {
-            if (isFreeFloor(x, h - 2, allEntities)) candidates.add(new int[]{x, h - 2});
-        }
-        // Sol iç kenar: x=1, y=2..7 — köşeler üst/alt listelerde zaten sayıldı
-        for (int y = 2; y < h - 2; y++) {
-            if (isFreeFloor(1, y, allEntities)) candidates.add(new int[]{1, y});
-        }
-        // Sağ iç kenar: x=11, y=2..7 — köşeler üst/alt listelerde zaten sayıldı
-        for (int y = 2; y < h - 2; y++) {
-            if (isFreeFloor(w - 2, y, allEntities)) candidates.add(new int[]{w - 2, y});
-        }
-
         if (candidates.isEmpty()) return null;
         return candidates.get(random.nextInt(candidates.size()));
     }

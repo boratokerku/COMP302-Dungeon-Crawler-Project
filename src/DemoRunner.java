@@ -53,6 +53,7 @@ public class DemoRunner {
                                     origDeco.getImageName());
                         }
                         if (newDeco != null) {
+                            newDeco.setCustomScale(origDeco.getCustomScale());
                             newWall.setDecoration(newDeco);
                             newDeco.setMap(copy);
                         }
@@ -114,6 +115,13 @@ public class DemoRunner {
                             so.getOpenImageName()), x, y);
                 } else {
                     copy.placeObject(obj, x, y);
+                }
+
+                if (!(obj instanceof domain.models.tile.WallTile)) {
+                    domain.models.entity.GameObject clonedObj = copy.getObjectAt(x, y);
+                    if (clonedObj != null) {
+                        clonedObj.setCustomScale(obj.getCustomScale());
+                    }
                 }
             }
         }
@@ -388,11 +396,15 @@ public class DemoRunner {
         // Level Door (to Level 2: The Depths) - Kilitli, Level Key gerektirir
         LevelManager.placeRandomLevelDoor(map, "Level Gate");
 
-        // Level Key to unlock Level Gate
-        map.placeObject(new domain.models.staticObjects.LevelKey(15, 12), 15, 12);
+        // WallObjects (Chains on top wall)
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 1", 10, 1, "images/WallObjects/chain1.png"), 10, 1);
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 2", 18, 1, "images/WallObjects/chain2.png"), 18, 1);
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 3", 26, 1, "images/WallObjects/chain3.png"), 26, 1);
 
-        // Initialize level manager
-        levelManager = new LevelManager();
+        // Çıkış Kapısı (Exit Door) - Kilitli olarak yerleştirildi!
+        map.placeObject(new domain.models.staticObjects.Door("Exit Door", 35, 8, true), 35, 8);
+        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 1, 8, "torch/torch_1"), 1, 8);
+        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 36, 8, "torch/torch_1"), 36, 8);
 
         List<Entity> entities = new ArrayList<>();
         entities.add(hero);

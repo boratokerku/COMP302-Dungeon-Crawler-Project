@@ -81,7 +81,8 @@ public class DemoRunner {
                             new domain.models.staticObjects.Decoration(obj.getName(), x, y, obj.getImageName()), x, y);
                 } else if (obj instanceof domain.models.staticObjects.LevelKey) {
                     domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) obj;
-                    copy.placeObject(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()), x, y);
+                    copy.placeObject(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()), x,
+                            y);
                 } else if (obj instanceof domain.models.item.VictoryCoin) {
                     copy.placeObject(new domain.models.item.VictoryCoin(x, y), x, y);
                 } else if (obj instanceof domain.models.staticObjects.KeyItem) {
@@ -242,7 +243,7 @@ public class DemoRunner {
         // Place static Level Door and Level Key for Adventure mode progression
         LevelManager.placeRandomLevelDoor(map, "Level Gate");
         map.placeObject(new domain.models.staticObjects.LevelKey(15, 12), 15, 12);
-        
+
         // Initialize level manager for level progression
         levelManager = new LevelManager();
 
@@ -397,9 +398,12 @@ public class DemoRunner {
         LevelManager.placeRandomLevelDoor(map, "Level Gate");
 
         // WallObjects (Chains on top wall)
-        map.placeObject(new domain.models.staticObjects.WallObject("Chain 1", 10, 1, "images/WallObjects/chain1.png"), 10, 1);
-        map.placeObject(new domain.models.staticObjects.WallObject("Chain 2", 18, 1, "images/WallObjects/chain2.png"), 18, 1);
-        map.placeObject(new domain.models.staticObjects.WallObject("Chain 3", 26, 1, "images/WallObjects/chain3.png"), 26, 1);
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 1", 10, 1, "images/WallObjects/chain1.png"),
+                10, 1);
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 2", 18, 1, "images/WallObjects/chain2.png"),
+                18, 1);
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 3", 26, 1, "images/WallObjects/chain3.png"),
+                26, 1);
 
         // Çıkış Kapısı (Exit Door) - Kilitli olarak yerleştirildi!
         map.placeObject(new domain.models.staticObjects.Door("Exit Door", 35, 8, true), 35, 8);
@@ -422,7 +426,7 @@ public class DemoRunner {
     private static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
         initialDesignedMap = null;
         activeGameMode = domain.models.GameMode.ADVENTURE;
-        
+
         // Initialize level manager with loaded level
         levelManager = new LevelManager();
         levelManager.setCurrentLevel(state.currentLevel);
@@ -635,7 +639,7 @@ public class DemoRunner {
             List<String> inventoryScrollTypes,
             GameState state,
             domain.models.GameMode mode) {
-        final GameMap[] mapRef = new GameMap[]{map};
+        final GameMap[] mapRef = new GameMap[] { map };
         AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();
 
@@ -704,8 +708,10 @@ public class DemoRunner {
         final Runnable advanceLevelRunnable = () -> {
             if (levelManager != null) {
                 // Freeze the game first by stopping the timers
-                if (logicRef[0] != null) logicRef[0].stop();
-                if (renderRef[0] != null) renderRef[0].stop();
+                if (logicRef[0] != null)
+                    logicRef[0].stop();
+                if (renderRef[0] != null)
+                    renderRef[0].stop();
 
                 // Show confirmation popup on Event Dispatch Thread
                 int choice = javax.swing.JOptionPane.showConfirmDialog(
@@ -713,32 +719,32 @@ public class DemoRunner {
                         "Would you like to move on to the next level?",
                         "Next Level Transition",
                         javax.swing.JOptionPane.YES_NO_OPTION,
-                        javax.swing.JOptionPane.QUESTION_MESSAGE
-                );
+                        javax.swing.JOptionPane.QUESTION_MESSAGE);
 
                 if (choice == javax.swing.JOptionPane.YES_OPTION) {
                     GameMap newMap = levelManager.advanceLevel();
                     if (newMap != null) {
                         mapRef[0] = newMap;
                         hero.setCurrentMap(newMap);
-                        
+
                         hero.setPosition(2, 2);
                         newMap.placeObject(hero, 2, 2);
-                        
+
                         gameView.setGameMap(newMap);
                         inputHandler.setGameMap(newMap);
                         mouseHandler.setGameMap(newMap);
                         spawner.setGameMap(newMap);
                         scrollSpawner.setGameMap(newMap);
-                        
+
                         entities.clear();
                         entities.add(hero);
-                        
+
                         levelManager.populateEnemies(levelManager.getCurrentLevel(), newMap, entities, hero);
                         spawner.clearSpawnedEnemies();
                         inputHandler.setShadowClone(null);
-                        
-                        view.GameView.addFloatingText(2, 2, "Level " + levelManager.getCurrentLevel(), java.awt.Color.CYAN);
+
+                        view.GameView.addFloatingText(2, 2, "Level " + levelManager.getCurrentLevel(),
+                                java.awt.Color.CYAN);
                         System.out.println("Transitioned to Level " + levelManager.getCurrentLevel());
                         gameView.repaint();
                     }
@@ -764,8 +770,10 @@ public class DemoRunner {
                 }
 
                 // Resume the timers
-                if (logicRef[0] != null) logicRef[0].start();
-                if (renderRef[0] != null) renderRef[0].start();
+                if (logicRef[0] != null)
+                    logicRef[0].start();
+                if (renderRef[0] != null)
+                    renderRef[0].start();
             }
         };
         domain.models.staticObjects.LevelDoor.setOpenCallback(advanceLevelRunnable);
@@ -777,12 +785,12 @@ public class DemoRunner {
             if (renderRef[0] != null)
                 renderRef[0].stop();
             inputHandler.disableInput();
-            
+
             javax.swing.JOptionPane.showMessageDialog(frame,
                     "🏆 VICTORY! You have conquered the Dungeon! 🏆\n\nYou have defeated the Final Boss and secured the Victory Coin!",
                     "Victory!",
                     javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            
+
             cardLayout.show(mainPanel, "Menu");
         });
 
@@ -1062,7 +1070,8 @@ public class DemoRunner {
                                         && !(enemy instanceof domain.models.entity.Projectile)) {
                                     boolean hit = false;
                                     if (enemy instanceof domain.models.entity.FinalBoss) {
-                                        hit = ((domain.models.entity.FinalBoss) enemy).occupiesTile(proj.getX(), proj.getY());
+                                        hit = ((domain.models.entity.FinalBoss) enemy).occupiesTile(proj.getX(),
+                                                proj.getY());
                                     } else {
                                         hit = (proj.getX() == enemy.getX() && proj.getY() == enemy.getY());
                                     }
@@ -1092,7 +1101,8 @@ public class DemoRunner {
                                                     loot = domain.models.item.MapItem.createRandomItem(enemy.getX(),
                                                             enemy.getY());
                                                 } else if (dropType == 1) {
-                                                    loot = new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
+                                                    loot = new domain.models.item.PotionItem(enemy.getX(),
+                                                            enemy.getY());
                                                 } else {
                                                     int locked = countLockedChests(mapRef[0]);
                                                     int keys = countKeys(mapRef[0], hero);
@@ -1101,8 +1111,10 @@ public class DemoRunner {
                                                                 enemy.getY());
                                                     } else {
                                                         loot = rand.nextBoolean()
-                                                            ? domain.models.item.MapItem.createRandomItem(enemy.getX(), enemy.getY())
-                                                            : new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
+                                                                ? domain.models.item.MapItem
+                                                                        .createRandomItem(enemy.getX(), enemy.getY())
+                                                                : new domain.models.item.PotionItem(enemy.getX(),
+                                                                        enemy.getY());
                                                     }
                                                 }
                                             }

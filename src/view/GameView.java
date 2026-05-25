@@ -1043,6 +1043,29 @@ public class GameView extends JPanel {
                     obj instanceof domain.models.entity.SearchableObject ||
                     obj instanceof domain.models.entity.Sign) {
 
+                if (obj instanceof domain.models.staticObjects.LevelDoor) {
+                    int tx = offsetX + (x * tileSize);
+                    int ty = offsetY + (yVal * tileSize);
+                    java.awt.Paint oldPaint = g2d.getPaint();
+                    java.awt.Stroke oldStroke = g2d.getStroke();
+                    
+                    g2d.setColor(new Color(0, 255, 200, 30));
+                    g2d.fillOval(tx + 6, ty + 6, tileSize - 12, tileSize - 12);
+                    
+                    g2d.setStroke(new java.awt.BasicStroke(3f));
+                    g2d.setColor(new Color(0, 255, 200, 180));
+                    g2d.drawOval(tx + 6, ty + 6, tileSize - 12, tileSize - 12);
+                    
+                    g2d.setColor(new Color(255, 255, 255, 200));
+                    g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 11));
+                    String markerText = "LVL";
+                    int textW = g2d.getFontMetrics().stringWidth(markerText);
+                    g2d.drawString(markerText, tx + (tileSize - textW) / 2, ty + tileSize / 2 + 4);
+                    
+                    g2d.setStroke(oldStroke);
+                    g2d.setPaint(oldPaint);
+                }
+
                 // Kullanıcı talebi: Obstacle'lar yarı saydam değil opak olmalı
                 // (AlphaComposite kaldırıldı)
 

@@ -786,6 +786,8 @@ public class DemoRunner {
                 renderRef[0].stop();
             inputHandler.disableInput();
 
+            util.helpers.SoundManager.playVictory();
+
             javax.swing.JOptionPane.showMessageDialog(frame,
                     "🏆 VICTORY! You have conquered the Dungeon! 🏆\n\nYou have defeated the Final Boss and secured the Victory Coin!",
                     "Victory!",
@@ -895,6 +897,11 @@ public class DemoRunner {
                     inputHandler.disableInput();
 
                     boolean isVictory = cyanAlive;
+                    if (isVictory) {
+                        util.helpers.SoundManager.playVictory();
+                    } else {
+                        util.helpers.SoundManager.playGameOver();
+                    }
                     String headingText = isVictory ? "YOU WIN" : "GAME OVER";
                     String subHeadingText = isVictory ? "Orange Team has been defeated. You win!"
                             : "Cyan Team has been defeated. Game Over!";
@@ -946,6 +953,8 @@ public class DemoRunner {
                         renderRef[0].stop();
                     inputHandler.disableInput();
 
+                    util.helpers.SoundManager.playVictory();
+
                     javax.swing.JOptionPane.showMessageDialog(frame,
                             "🌟 TEBRİKLER! 🌟\n\nTüm düşmanları yendin ve Çıkış Kapısı'nı açarak COMP302 Zindanından başarıyla kaçtın!\nPhase I başarıyla tamamlandı!",
                             "Zafer!",
@@ -960,6 +969,8 @@ public class DemoRunner {
                     if (renderRef[0] != null)
                         renderRef[0].stop(); // FPS motorunu durdur
                     inputHandler.disableInput(); // Oyuncunun tuş basmalarını engelle
+
+                    util.helpers.SoundManager.playGameOver();
 
                     // Reset to default Adventure mode style
                     gameOverMenu.setupGameOverMenu("GAME OVER", "You have succumbed to your fate.", true, false);

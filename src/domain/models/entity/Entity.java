@@ -4,12 +4,15 @@ import java.awt.Point;
 
 public abstract class Entity extends GameObject {
     protected int hp;
+    protected int maxHp;
     protected boolean alive = true;
     protected domain.models.Team team = domain.models.Team.NONE;
+    protected long lastHitTime = 0;
 
     public Entity(int x, int y, int hp) {
         super(x, y, "entity", true); 
         this.hp = hp;
+        this.maxHp = hp;
     }
 
     public domain.models.Team getTeam() {
@@ -49,15 +52,38 @@ public abstract class Entity extends GameObject {
         this.alive = this.hp > 0;
     }
 
+    public int getMaxHp() {
+        return maxHp;
+    }
+
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
+    }
+
+    public long getLastHitTime() {
+        return lastHitTime;
+    }
+
+    public void setLastHitTime(long lastHitTime) {
+        this.lastHitTime = lastHitTime;
+    }
+
     public boolean isAlive() {
         return alive;
     }
 
     public void takeDamage(int amount) {
         this.hp -= amount;
+        this.lastHitTime = System.currentTimeMillis();
         if (this.hp <= 0) {
             this.hp = 0;
             this.alive = false;
+        }
+
+        if (this instanceof Hero) {
+            util.helpers.SoundManager.playPlayerHit();
+        } else if (this instanceof Knight || this instanceof Sorcerer || this instanceof FinalBoss) {
+            util.helpers.SoundManager.playEnemyHit();
         }
     }
 

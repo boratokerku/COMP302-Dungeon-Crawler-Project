@@ -55,7 +55,7 @@ public class LevelManager {
      * Enemies are added separately by the caller (DemoRunner).
      */
     public GameMap generateLevel(int level) {
-        GameMap map = new GameMap(22, 16);
+        GameMap map = new GameMap(28, 20);
 
         switch (level) {
             case 2:
@@ -95,6 +95,9 @@ public class LevelManager {
     // ── Level 2: The Depths ──────────────────────────────────────────────────
 
     private void generateDepths(GameMap map) {
+        int w = map.getWidth();
+        int h = map.getHeight();
+
         // Tighter corridors with more columns
         // Column pairs forming corridors
         map.placeObject(new Column("Column", 5, 3, "colon/gray_colon_whole"), 5, 3);
@@ -115,6 +118,12 @@ public class LevelManager {
         map.placeObject(new Column("Column", 16, 10, "colon/gray_colon_whole"), 16, 10);
         map.placeObject(new Column("Column", 16, 12, "colon/gray_colon_whole"), 16, 12);
 
+        map.placeObject(new Column("Column", 22, 3, "colon/gray_colon_whole"), 22, 3);
+        map.placeObject(new Column("Column", 22, 5, "colon/gray_colon_whole"), 22, 5);
+        map.placeObject(new Column("Column", 22, 7, "colon/gray_colon_whole"), 22, 7);
+        map.placeObject(new Column("Column", 22, 10, "colon/gray_colon_whole"), 22, 10);
+        map.placeObject(new Column("Column", 22, 12, "colon/gray_colon_whole"), 22, 12);
+
         // Crates as obstacles
         map.placeObject(new Crate("Crate", 3, 4), 3, 4);
         map.placeObject(new Crate("Crate", 8, 8), 8, 8);
@@ -122,21 +131,21 @@ public class LevelManager {
         map.placeObject(new Crate("Crate", 18, 11), 18, 11);
 
         // Chests with loot
-        map.placeObject(new Chest("Depths Chest", 19, 2, true), 19, 2);
-        map.placeObject(new Chest("Depths Chest", 2, 13, true), 2, 13);
+        map.placeObject(new Chest("Depths Chest", w - 3, 2, true), w - 3, 2);
+        map.placeObject(new Chest("Depths Chest", 2, h - 3, true), 2, h - 3);
 
         // Keys to match chests
         map.placeObject(new KeyItem(7, 4), 7, 4);
-        map.placeObject(new KeyItem(14, 11), 14, 11);
+        map.placeObject(new KeyItem(w - 8, h - 5), w - 8, h - 5);
 
         // Potions scattered
         map.placeObject(new PotionItem(3, 8), 3, 8);
-        map.placeObject(new PotionItem(18, 4), 18, 4);
+        map.placeObject(new PotionItem(w - 4, 4), w - 4, 4);
 
         // Torches for atmosphere
         map.placeObject(new Decoration("Torch", 3, 1, "torch/torch_1"), 3, 1);
-        map.placeObject(new Decoration("Torch", 10, 1, "torch/torch_1"), 10, 1);
-        map.placeObject(new Decoration("Torch", 17, 1, "torch/torch_1"), 17, 1);
+        map.placeObject(new Decoration("Torch", w / 2, 1, "torch/torch_1"), w / 2, 1);
+        map.placeObject(new Decoration("Torch", w - 5, 1, "torch/torch_1"), w - 5, 1);
 
         // Level Door to Boss Arena (locked, needs Level Key)
         placeRandomLevelDoor(map, "Boss Gate");
@@ -146,38 +155,45 @@ public class LevelManager {
     }
 
     private void populateDepthsEnemies(GameMap map, List<Entity> entities, Hero hero) {
+        int w = map.getWidth();
+        int h = map.getHeight();
         // 2 Knights + 2 Sorcerers for The Depths
         entities.add(new Knight(8, 3));
-        entities.add(new Knight(14, 10));
-        entities.add(new Sorcerer(18, 5));
-        entities.add(new Sorcerer(4, 11));
+        entities.add(new Knight(w - 8, h - 6));
+        entities.add(new Sorcerer(w - 4, 5));
+        entities.add(new Sorcerer(4, h - 5));
     }
 
     // ── Level 3: Boss Arena ──────────────────────────────────────────────────
 
     private void generateBossArena(GameMap map) {
+        int w = map.getWidth();
+        int h = map.getHeight();
+
         // Open arena with 4 corner columns
         map.placeObject(new Column("Column", 4, 3, "colon/gray_colon_whole"), 4, 3);
-        map.placeObject(new Column("Column", 17, 3, "colon/gray_colon_whole"), 17, 3);
-        map.placeObject(new Column("Column", 4, 12, "colon/gray_colon_whole"), 4, 12);
-        map.placeObject(new Column("Column", 17, 12, "colon/gray_colon_whole"), 17, 12);
+        map.placeObject(new Column("Column", w - 5, 3, "colon/gray_colon_whole"), w - 5, 3);
+        map.placeObject(new Column("Column", 4, h - 4, "colon/gray_colon_whole"), 4, h - 4);
+        map.placeObject(new Column("Column", w - 5, h - 4, "colon/gray_colon_whole"), w - 5, h - 4);
 
         // Torches on every wall for dramatic boss fight lighting
         map.placeObject(new Decoration("Torch", 4, 1, "torch/torch_1"), 4, 1);
-        map.placeObject(new Decoration("Torch", 8, 1, "torch/torch_1"), 8, 1);
-        map.placeObject(new Decoration("Torch", 13, 1, "torch/torch_1"), 13, 1);
-        map.placeObject(new Decoration("Torch", 17, 1, "torch/torch_1"), 17, 1);
+        map.placeObject(new Decoration("Torch", w / 3, 1, "torch/torch_1"), w / 3, 1);
+        map.placeObject(new Decoration("Torch", 2 * w / 3, 1, "torch/torch_1"), 2 * w / 3, 1);
+        map.placeObject(new Decoration("Torch", w - 5, 1, "torch/torch_1"), w - 5, 1);
 
         // Some potions for the boss fight
         map.placeObject(new PotionItem(2, 2), 2, 2);
-        map.placeObject(new PotionItem(19, 2), 19, 2);
-        map.placeObject(new PotionItem(2, 13), 2, 13);
-        map.placeObject(new PotionItem(19, 13), 19, 13);
+        map.placeObject(new PotionItem(w - 3, 2), w - 3, 2);
+        map.placeObject(new PotionItem(2, h - 3), 2, h - 3);
+        map.placeObject(new PotionItem(w - 3, h - 3), w - 3, h - 3);
     }
 
     private void populateBossArenaEnemies(GameMap map, List<Entity> entities, Hero hero) {
         // FinalBoss spawns in the center of the arena
-        FinalBoss boss = new FinalBoss(10, 7);
+        int w = map.getWidth();
+        int h = map.getHeight();
+        FinalBoss boss = new FinalBoss(w / 2 - 1, h / 2 - 1);
         entities.add(boss);
     }
 

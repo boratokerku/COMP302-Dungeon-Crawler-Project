@@ -191,7 +191,7 @@ public class DemoRunner {
 
     // ── Design Mode ──────────────────────────────────────────────────────────
     private static void startDesignMode(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
-        GameMap map = new GameMap(22, 16);
+        GameMap map = new GameMap(30, 20);
         TileManager tileManager = new TileManager();
 
         DesignModeView designView = new DesignModeView(

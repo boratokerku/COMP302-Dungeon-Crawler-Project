@@ -35,11 +35,11 @@ public class GameMap extends Grid {
                     placeObject(new domain.models.tile.WallTile("wall/wall_side"), i, j);
                 }
                 // --- ÜST DUVAR (yan duvarların arasında) ---
-                else if (j == 0) {
+                else if (j <= 1) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_1"), i, j);
                 }
                 // --- ALT DUVAR (yan duvarların arasında) ---
-                else if (j == cols - 1) {
+                else if (j >= cols - 2) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_2"), i, j);
                 }
                 // --- ZEMİN ---
@@ -79,9 +79,11 @@ public class GameMap extends Grid {
 
         GameObject existing = getObjectAt(x, y);
 
-        // Rule: WallObject can only be placed on a WallTile
+        // Rule: WallObject can only be placed on a WallTile on the top or bottom wall (excluding side walls)
         if (obj instanceof domain.models.staticObjects.WallObject) {
-            if (!(existing instanceof domain.models.tile.WallTile)) {
+            if (!(existing instanceof domain.models.tile.WallTile) ||
+                (y != 0 && y != 1 && y != cols - 2 && y != cols - 1) ||
+                x == 0 || x == rows - 1) {
                 return false;
             }
         }
@@ -91,8 +93,8 @@ public class GameMap extends Grid {
                 ((domain.models.tile.WallTile) existing).setDecoration(null);
                 return true;
             }
-            // Rule: Only WallObjects can be placed on wall tiles
-            if (obj instanceof domain.models.staticObjects.WallObject) {
+            // Rule: WallObjects and Decorations can be placed on wall tiles
+            if (obj instanceof domain.models.staticObjects.WallObject || obj instanceof domain.models.staticObjects.Decoration) {
                 ((domain.models.tile.WallTile) existing).setDecoration(obj);
                 obj.setPosition(x, y);
                 obj.setMap(this);

@@ -12,6 +12,10 @@ public abstract class GameObject {
     
     private domain.models.map.GameMap map;
     private java.util.List<domain.logic.Action> actions = new java.util.ArrayList<>();
+    protected double customScale = 1.0;
+
+    public double getCustomScale() { return customScale; }
+    public void setCustomScale(double scale) { this.customScale = scale; }
 
     // Keep strict backwards compatibility for original constructor
     public GameObject(int x, int y, String imageName, boolean passable) {

@@ -51,6 +51,7 @@ public class DemoRunner {
                                     origDeco.getImageName());
                         }
                         if (newDeco != null) {
+                            newDeco.setCustomScale(origDeco.getCustomScale());
                             newWall.setDecoration(newDeco);
                             newDeco.setMap(copy);
                         }
@@ -105,6 +106,13 @@ public class DemoRunner {
                             so.getOpenImageName()), x, y);
                 } else {
                     copy.placeObject(obj, x, y);
+                }
+
+                if (!(obj instanceof domain.models.tile.WallTile)) {
+                    domain.models.entity.GameObject clonedObj = copy.getObjectAt(x, y);
+                    if (clonedObj != null) {
+                        clonedObj.setCustomScale(obj.getCustomScale());
+                    }
                 }
             }
         }
@@ -333,7 +341,7 @@ public class DemoRunner {
 
         // Sandıklar (Chests) uzak köşelerde
         map.placeObject(new domain.models.entity.Chest("Main Chest", 35, 2, true), 35, 2);
-        map.placeObject(new domain.models.entity.Chest("Hidden Chest", 2, 16, true), 2, 16);
+        map.placeObject(new domain.models.entity.Chest("Hidden Chest", 2, 14, true), 2, 14);
 
         // Sütunlar (Columns) geniş alanın ortasında bir ana salon oluşturacak şekilde
         map.placeObject(new domain.models.entity.Column("Column", 12, 8, "colon/gray_colon_whole"), 12, 8);
@@ -366,6 +374,11 @@ public class DemoRunner {
         // Dekorasyonlar (Torches)
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 6, 1, "torch/torch_1"), 6, 1);
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 30, 1, "torch/torch_1"), 30, 1);
+
+        // WallObjects (Chains on top wall)
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 1", 10, 1, "images/WallObjects/chain1.png"), 10, 1);
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 2", 18, 1, "images/WallObjects/chain2.png"), 18, 1);
+        map.placeObject(new domain.models.staticObjects.WallObject("Chain 3", 26, 1, "images/WallObjects/chain3.png"), 26, 1);
 
         // Çıkış Kapısı (Exit Door) - Kilitli olarak yerleştirildi!
         map.placeObject(new domain.models.staticObjects.Door("Exit Door", 35, 8, true), 35, 8);

@@ -143,9 +143,13 @@ public class InventoryView {
         }
 
         if (sprite != null) {
-            int drawX = slotX + (slotWidth - itemSize) / 2;
-            int drawY = slotY + (slotHeight - itemSize) / 2;
-            g.drawImage(sprite, drawX, drawY, itemSize, itemSize, null);
+            int renderSize = itemSize;
+            if (item instanceof domain.models.item.PotionItem || item instanceof domain.models.item.RingItem) {
+                renderSize = (int) (itemSize * 0.7); // Potions & rings render 30% smaller
+            }
+            int drawX = slotX + (slotWidth - renderSize) / 2;
+            int drawY = slotY + (slotHeight - renderSize) / 2;
+            g.drawImage(sprite, drawX, drawY, renderSize, renderSize, null);
         } else {
             // Colour placeholder
             if (item instanceof domain.models.item.ShadowCloneScroll) {

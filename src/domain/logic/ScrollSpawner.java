@@ -13,7 +13,7 @@ public class ScrollSpawner {
     private static final long SPAWN_INTERVAL_MS = 15_000; // 15 saniyede bir scroll çıkar
 
     private long lastSpawnTime;
-    private final GameMap map;
+    private GameMap map;
     private final List<Entity> entities;
     private final controller.InputHandler inputHandler;
     private final Random random = new Random();
@@ -23,6 +23,10 @@ public class ScrollSpawner {
         this.entities = entities;
         this.inputHandler = inputHandler;
         this.lastSpawnTime = System.currentTimeMillis();
+    }
+
+    public void setGameMap(GameMap map) {
+        this.map = map;
     }
 
     public long getTimeLeft() {

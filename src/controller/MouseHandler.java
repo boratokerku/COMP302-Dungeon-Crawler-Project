@@ -12,15 +12,19 @@ import java.awt.event.MouseWheelEvent;
 public class MouseHandler extends MouseAdapter {
 
     private final Hero hero;
-    private final GameMap gameMap;
+    private domain.models.map.GameMap gameMap;
     private final view.GameView gameView;
     private final ActionMenu actionMenu;
 
-    public MouseHandler(Hero hero, GameMap gameMap, view.GameView gameView, ActionMenu actionMenu) {
+    public MouseHandler(Hero hero, domain.models.map.GameMap gameMap, view.GameView gameView, ActionMenu actionMenu) {
         this.hero = hero;
         this.gameMap = gameMap;
         this.gameView = gameView;
         this.actionMenu = actionMenu;
+    }
+
+    public void setGameMap(domain.models.map.GameMap map) {
+        this.gameMap = map;
     }
 
     @Override

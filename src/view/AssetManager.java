@@ -17,6 +17,7 @@ public class AssetManager {
     private BufferedImage projectileArrow;
     private BufferedImage projectileFireball;
     private BufferedImage projectileSorcererFireball;
+    private BufferedImage bossSprite;
 
     private AssetManager() {
         heroWalkRight = new SpriteAnimation(120);
@@ -27,6 +28,7 @@ public class AssetManager {
         loadHeroAnimations();
         loadEnemyAnimations();
         loadItems();
+        loadBossSprite();
     }
 
     // Singleton Pattern implementation
@@ -138,10 +140,11 @@ public class AssetManager {
     public BufferedImage getSprite(String key) {
         if (key == null) return null;
         switch (key) {
-            case "knight":   return knightWalk.getCurrentFrame();
-            case "sorcerer": return sorcererWalk.getCurrentFrame();
-            case "hero":     return heroIdle.getCurrentFrame();
-            default:         return null;
+            case "knight":    return knightWalk.getCurrentFrame();
+            case "sorcerer":  return sorcererWalk.getCurrentFrame();
+            case "hero":      return heroIdle.getCurrentFrame();
+            case "finalboss": return bossSprite;
+            default:          return null;
         }
     }
 
@@ -163,5 +166,20 @@ public class AssetManager {
 
     public BufferedImage getProjectileSorcererFireball() {
         return projectileSorcererFireball;
+    }
+
+    public BufferedImage getBossSprite() {
+        return bossSprite;
+    }
+
+    private void loadBossSprite() {
+        try {
+            File f = findFile("resources/images/hakan_ayral.png");
+            if (f != null) {
+                bossSprite = makeWhiteTransparent(ImageIO.read(f));
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading Boss sprite: " + e.getMessage());
+        }
     }
 }

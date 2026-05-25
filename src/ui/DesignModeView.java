@@ -46,11 +46,11 @@ public class DesignModeView extends JPanel {
 
     // ── Layout ───────────────────────────────────────────────────────────────
     // Layout and sizing constants for panels
-    private static final int ICON_SIZE    = 48;   // px — item ikonu
-    private static final int ICON_GAP     = 3;    // px — ikonlar arası
-    private static final int BOTTOM_BTN_H = 48;   // px — alt buton şeridi
+    private static final int ICON_SIZE = 48; // px — item ikonu
+    private static final int ICON_GAP = 3; // px — ikonlar arası
+    private static final int BOTTOM_BTN_H = 48; // px — alt buton şeridi
 
-    private int tileSize   = 32;
+    private int tileSize = 32;
     private int mapOffsetX = 0;
     private int mapOffsetY = 0;
 
@@ -63,7 +63,7 @@ public class DesignModeView extends JPanel {
     private final List<PaletteItem> topPalette = new ArrayList<>();
     private final List<PaletteItem> rightPalette = new ArrayList<>();
     private String selectedPanel = null; // "LEFT", "TOP", "RIGHT"
-    private int selectedPaletteIdx = -1;   // seçili item (-1 = hiçbiri)
+    private int selectedPaletteIdx = -1; // seçili item (-1 = hiçbiri)
 
     private static final int LEFT_PANEL_W = 64;
     private static final int RIGHT_PANEL_W = 64;
@@ -90,10 +90,14 @@ public class DesignModeView extends JPanel {
     }
 
     private PaletteItem getSelectedPaletteItem() {
-        if (selectedPanel == null || selectedPaletteIdx < 0) return null;
-        if ("LEFT".equals(selectedPanel)) return leftPalette.get(selectedPaletteIdx);
-        if ("RIGHT".equals(selectedPanel)) return rightPalette.get(selectedPaletteIdx);
-        if ("TOP".equals(selectedPanel)) return topPalette.get(selectedPaletteIdx);
+        if (selectedPanel == null || selectedPaletteIdx < 0)
+            return null;
+        if ("LEFT".equals(selectedPanel))
+            return leftPalette.get(selectedPaletteIdx);
+        if ("RIGHT".equals(selectedPanel))
+            return rightPalette.get(selectedPaletteIdx);
+        if ("TOP".equals(selectedPanel))
+            return topPalette.get(selectedPaletteIdx);
         return null;
     }
 
@@ -115,13 +119,13 @@ public class DesignModeView extends JPanel {
     // ─────────────────────────────────────────────────────────────────────────
 
     public DesignModeView(GameMap map, TileManager tileManager,
-                          Runnable onBackToMenu,
-                          java.util.function.Consumer<GameMap> onPlayMap,
-                          java.util.function.Consumer<GameMap> onPlayTeamMatchMap) {
-        this.map         = map;
+            Runnable onBackToMenu,
+            java.util.function.Consumer<GameMap> onPlayMap,
+            java.util.function.Consumer<GameMap> onPlayTeamMatchMap) {
+        this.map = map;
         this.tileManager = tileManager;
         this.onBackToMenu = onBackToMenu;
-        this.onPlayMap    = onPlayMap;
+        this.onPlayMap = onPlayMap;
         this.onPlayTeamMatchMap = onPlayTeamMatchMap;
 
         setBackground(new Color(42, 22, 38));
@@ -154,7 +158,7 @@ public class DesignModeView extends JPanel {
         BufferedImage icon;
 
         PaletteItem(String label, String iconPath, boolean isTileIcon,
-                    java.util.function.BiFunction<Integer, Integer, GameObject> factory) {
+                java.util.function.BiFunction<Integer, Integer, GameObject> factory) {
             this.label = label;
             this.iconPath = iconPath;
             this.isTileIcon = isTileIcon;
@@ -164,13 +168,19 @@ public class DesignModeView extends JPanel {
 
     private void buildPalette() {
         // LEFT PALETTE (Obstacles & Wall-Mounted Objects)
-        leftPalette.add(new PaletteItem("Crate",    "crate",                    true,  (x,y) -> new Crate("Crate", x, y)));
-        leftPalette.add(new PaletteItem("DbCrate",  "double_crate",             true,  (x,y) -> new DoubleCrate("DoubleCrate", x, y)));
-        leftPalette.add(new PaletteItem("Column",   "colon/gray_colon_whole",   true,  (x,y) -> new Column("Column", x, y, "colon/gray_colon_whole")));
-        leftPalette.add(new PaletteItem("PurpleCol","colon/purple_colon_whole", true,  (x,y) -> new Column("Column", x, y, "colon/purple_colon_whole")));
-        leftPalette.add(new PaletteItem("Sign",     "sign/sign_brown",          true,  (x,y) -> new Sign("Sign", x, y, "sign/sign_brown")));
-        leftPalette.add(new PaletteItem("SignOrg",  "sign/sign_orange",          true,  (x,y) -> new Sign("Sign", x, y, "sign/sign_orange")));
-        leftPalette.add(new PaletteItem("Torch",    "torch/torch_1",            true,  (x,y) -> new Decoration("Torch", x, y, "torch/torch_1")));
+        leftPalette.add(new PaletteItem("Crate", "crate", true, (x, y) -> new Crate("Crate", x, y)));
+        leftPalette
+                .add(new PaletteItem("DbCrate", "double_crate", true, (x, y) -> new DoubleCrate("DoubleCrate", x, y)));
+        leftPalette.add(new PaletteItem("Column", "colon/gray_colon_whole", true,
+                (x, y) -> new Column("Column", x, y, "colon/gray_colon_whole")));
+        leftPalette.add(new PaletteItem("PurpleCol", "colon/purple_colon_whole", true,
+                (x, y) -> new Column("Column", x, y, "colon/purple_colon_whole")));
+        leftPalette.add(
+                new PaletteItem("Sign", "sign/sign_brown", true, (x, y) -> new Sign("Sign", x, y, "sign/sign_brown")));
+        leftPalette.add(new PaletteItem("SignOrg", "sign/sign_orange", true,
+                (x, y) -> new Sign("Sign", x, y, "sign/sign_orange")));
+        leftPalette.add(new PaletteItem("Torch", "torch/torch_1", true,
+                (x, y) -> new Decoration("Torch", x, y, "torch/torch_1")));
 
         // DYNAMICALLY SCAN WallObjects DIRECTORY
         File wallDir = new File("resources/images/WallObjects");
@@ -190,34 +200,54 @@ public class DesignModeView extends JPanel {
                     }
                     final String finalLabel = label;
                     final String relativePath = "images/WallObjects/" + filename;
-                    leftPalette.add(new PaletteItem(finalLabel, relativePath, false, (x, y) -> new domain.models.staticObjects.WallObject(finalLabel, x, y, relativePath)));
+                    leftPalette.add(new PaletteItem(finalLabel, relativePath, false,
+                            (x, y) -> new domain.models.staticObjects.WallObject(finalLabel, x, y, relativePath)));
                 }
             }
         }
 
         // TOP PALETTE (Usables & Collectibles)
-        topPalette.add(new PaletteItem("RedPotion", "images/items/potion/red_potion.png",    false, (x,y) -> new PotionItem("Red Potion", x, y, "images/items/potion/red_potion.png")));
-        topPalette.add(new PaletteItem("BluePotion","images/items/potion/blue_potion.png",   false, (x,y) -> new PotionItem("Blue Potion", x, y, "images/items/potion/blue_potion.png")));
-        topPalette.add(new PaletteItem("GreenPotion","images/items/potion/green_potion.png", false, (x,y) -> new PotionItem("Green Potion", x, y, "images/items/potion/green_potion.png")));
-        topPalette.add(new PaletteItem("GoldKey",   "images/items/key/golden_key_1.png",     false, (x,y) -> new KeyItem("Golden Key", x, y, "images/items/key/golden_key_1.png")));
-        topPalette.add(new PaletteItem("Sword",     "images/weapons/knight_sword.png",        false, (x,y) -> new SwordItem(x, y)));
-        topPalette.add(new PaletteItem("WdSword",   "images/weapons/wooden_sword.png",        false, (x,y) -> new WoodenSwordItem(x, y)));
-        topPalette.add(new PaletteItem("Axe",       "images/weapons/axe.png",                 false, (x,y) -> new AxeItem(x, y)));
-        topPalette.add(new PaletteItem("Bow",       "images/weapons/bow.png",                 false, (x,y) -> new BowItem(x, y)));
-        topPalette.add(new PaletteItem("FireWand",  "images/weapons/fire_wand.png",           false, (x,y) -> new FireWandItem(x, y)));
-        topPalette.add(new PaletteItem("Katana",    "images/weapons/samurai_sword.png",       false, (x,y) -> new SamuraiSwordItem(x, y)));
-        topPalette.add(new PaletteItem("DiamSword", "images/weapons/diamond_sword_1.png",     false, (x,y) -> new DiamondSwordItem(x, y)));
-        topPalette.add(new PaletteItem("Armor",     "images/items/steel_armor.png",           false, (x,y) -> new ArmorItem(x, y)));
-        topPalette.add(new PaletteItem("Ring",      "images/items/ring/green_ring.png",       false, (x,y) -> new RingItem(x, y)));
+        topPalette.add(new PaletteItem("RedPotion", "images/items/potion/red_potion.png", false,
+                (x, y) -> new PotionItem("Red Potion", x, y, "images/items/potion/red_potion.png")));
+        topPalette.add(new PaletteItem("BluePotion", "images/items/potion/blue_potion.png", false,
+                (x, y) -> new PotionItem("Blue Potion", x, y, "images/items/potion/blue_potion.png")));
+        topPalette.add(new PaletteItem("GreenPotion", "images/items/potion/green_potion.png", false,
+                (x, y) -> new PotionItem("Green Potion", x, y, "images/items/potion/green_potion.png")));
+        topPalette.add(new PaletteItem("GoldKey", "images/items/key/golden_key_1.png", false,
+                (x, y) -> new KeyItem("Golden Key", x, y, "images/items/key/golden_key_1.png")));
+        topPalette
+                .add(new PaletteItem("Sword", "images/weapons/knight_sword.png", false, (x, y) -> new SwordItem(x, y)));
+        topPalette.add(new PaletteItem("WdSword", "images/weapons/wooden_sword.png", false,
+                (x, y) -> new WoodenSwordItem(x, y)));
+        topPalette.add(new PaletteItem("Axe", "images/weapons/axe.png", false, (x, y) -> new AxeItem(x, y)));
+        topPalette.add(new PaletteItem("Bow", "images/weapons/bow.png", false, (x, y) -> new BowItem(x, y)));
+        topPalette.add(
+                new PaletteItem("FireWand", "images/weapons/fire_wand.png", false, (x, y) -> new FireWandItem(x, y)));
+        topPalette.add(new PaletteItem("Katana", "images/weapons/samurai_sword.png", false,
+                (x, y) -> new SamuraiSwordItem(x, y)));
+        topPalette.add(new PaletteItem("DiamSword", "images/weapons/diamond_sword_1.png", false,
+                (x, y) -> new DiamondSwordItem(x, y)));
+        topPalette.add(new PaletteItem("Armor", "images/items/steel_armor.png", false, (x, y) -> new ArmorItem(x, y)));
+        topPalette
+                .add(new PaletteItem("Ring", "images/items/ring/green_ring.png", false, (x, y) -> new RingItem(x, y)));
 
         // RIGHT PALETTE (Searchable Containers)
-        rightPalette.add(new PaletteItem("BrChest",  "containers/chest_brown",          true,  (x,y) -> new SearchableObject("Brown Chest", x, y, "containers/chest_brown", "containers/empty_chest_1")));
-        rightPalette.add(new PaletteItem("RedChest", "containers/chest_red",            true,  (x,y) -> new SearchableObject("Red Chest", x, y, "containers/chest_red", "containers/empty_chest_2")));
-        rightPalette.add(new PaletteItem("WhChest",  "containers/chest_white",          true,  (x,y) -> new SearchableObject("White Chest", x, y, "containers/chest_white", "containers/empty_chest_3")));
-        rightPalette.add(new PaletteItem("GoldChest","containers/gold_chest_closed",    true,  (x,y) -> new SearchableObject("Gold Chest", x, y, "containers/gold_chest_closed", "containers/gold_chest_empty")));
-        rightPalette.add(new PaletteItem("SilvChest","containers/silver_chest_closed",  true,  (x,y) -> new SearchableObject("Silver Chest", x, y, "containers/silver_chest_closed", "containers/silver_chest_empty")));
-        rightPalette.add(new PaletteItem("Bag",      "containers/bag",                  true,  (x,y) -> new SearchableObject("Bag", x, y, "containers/bag", "storage/bag - empty")));
-        rightPalette.add(new PaletteItem("MagBag",   "containers/magical_bag",          true,  (x,y) -> new SearchableObject("Magical Bag", x, y, "containers/magical_bag", "storage/bag - empty")));
+        rightPalette.add(new PaletteItem("BrChest", "containers/chest_brown", true, (x,
+                y) -> new SearchableObject("Brown Chest", x, y, "containers/chest_brown", "containers/empty_chest_1")));
+        rightPalette.add(new PaletteItem("RedChest", "containers/chest_red", true,
+                (x, y) -> new SearchableObject("Red Chest", x, y, "containers/chest_red", "containers/empty_chest_2")));
+        rightPalette.add(new PaletteItem("WhChest", "containers/chest_white", true, (x,
+                y) -> new SearchableObject("White Chest", x, y, "containers/chest_white", "containers/empty_chest_3")));
+        rightPalette.add(new PaletteItem("GoldChest", "containers/gold_chest_closed", true,
+                (x, y) -> new SearchableObject("Gold Chest", x, y, "containers/gold_chest_closed",
+                        "containers/gold_chest_empty")));
+        rightPalette.add(new PaletteItem("SilvChest", "containers/silver_chest_closed", true,
+                (x, y) -> new SearchableObject("Silver Chest", x, y, "containers/silver_chest_closed",
+                        "containers/silver_chest_empty")));
+        rightPalette.add(new PaletteItem("Bag", "containers/bag", true,
+                (x, y) -> new SearchableObject("Bag", x, y, "containers/bag", "storage/bag - empty")));
+        rightPalette.add(new PaletteItem("MagBag", "containers/magical_bag", true,
+                (x, y) -> new SearchableObject("Magical Bag", x, y, "containers/magical_bag", "storage/bag - empty")));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -241,14 +271,22 @@ public class DesignModeView extends JPanel {
     }
 
     private void buildActionButtons() {
-        actionBtns.add(new ActionBtn("▶  Play",          new Color(60, 140, 60),   "images/DesignModeImages/DesignModeButtons/PlayButton.png",          this::doPlay));
-        actionBtns.add(new ActionBtn("▶  Team Match",    new Color(60, 100, 160),  "images/DesignModeImages/DesignModeButtons/PlayTeamMatchButton.png", this::doPlayTeamMatch));
-        actionBtns.add(new ActionBtn("⚄  +5 Random",     new Color(80, 60, 130),   "images/DesignModeImages/DesignModeButtons/PlusFiveRandomButton.png", this::doAddRandom));
-        actionBtns.add(new ActionBtn("🎲  Gen Map",      new Color(110, 50, 130),  "images/DesignModeImages/DesignModeButtons/GenerateRandomMapButton.png", this::doGenerateRandomMap));
-        actionBtns.add(new ActionBtn("💾  Save Map",      new Color(50, 90, 150),   "images/DesignModeImages/DesignModeButtons/SaveMapButton.png",       this::doSave));
-        actionBtns.add(new ActionBtn("📂  Load Map",      new Color(100, 80, 30),   "images/DesignModeImages/DesignModeButtons/LoadMapButton.png",       this::doLoad));
-        actionBtns.add(new ActionBtn("🗑  Clear Map",     new Color(140, 60, 40),   "images/DesignModeImages/DesignModeButtons/ClearMapButton.png",      this::doClear));
-        actionBtns.add(new ActionBtn("✖  Exit Menu",     new Color(80, 30, 50),    "images/DesignModeImages/DesignModeButtons/ExitToMainMenuButton.png", onBackToMenu::run));
+        actionBtns.add(new ActionBtn("▶  Play", new Color(60, 140, 60),
+                "images/DesignModeImages/DesignModeButtons/PlayButton.png", this::doPlay));
+        actionBtns.add(new ActionBtn("▶  Team Match", new Color(60, 100, 160),
+                "images/DesignModeImages/DesignModeButtons/PlayTeamMatchButton.png", this::doPlayTeamMatch));
+        actionBtns.add(new ActionBtn("⚄  +5 Random", new Color(80, 60, 130),
+                "images/DesignModeImages/DesignModeButtons/PlusFiveRandomButton.png", this::doAddRandom));
+        actionBtns.add(new ActionBtn("🎲  Gen Map", new Color(110, 50, 130),
+                "images/DesignModeImages/DesignModeButtons/GenerateRandomMapButton.png", this::doGenerateRandomMap));
+        actionBtns.add(new ActionBtn("💾  Save Map", new Color(50, 90, 150),
+                "images/DesignModeImages/DesignModeButtons/SaveMapButton.png", this::doSave));
+        actionBtns.add(new ActionBtn("📂  Load Map", new Color(100, 80, 30),
+                "images/DesignModeImages/DesignModeButtons/LoadMapButton.png", this::doLoad));
+        actionBtns.add(new ActionBtn("🗑  Clear Map", new Color(140, 60, 40),
+                "images/DesignModeImages/DesignModeButtons/ClearMapButton.png", this::doClear));
+        actionBtns.add(new ActionBtn("✖  Exit Menu", new Color(80, 30, 50),
+                "images/DesignModeImages/DesignModeButtons/ExitToMainMenuButton.png", onBackToMenu::run));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -257,12 +295,26 @@ public class DesignModeView extends JPanel {
 
     private void setupMouseListeners() {
         addMouseListener(new MouseAdapter() {
-            @Override public void mousePressed(MouseEvent e) { handlePress(e); }
-            @Override public void mouseReleased(MouseEvent e) { isDragging = false; }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                handlePress(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                isDragging = false;
+            }
         });
         addMouseMotionListener(new MouseMotionAdapter() {
-            @Override public void mouseMoved(MouseEvent e)    { handleMove(e); }
-            @Override public void mouseDragged(MouseEvent e)  { handleDrag(e); }
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                handleMove(e);
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                handleDrag(e);
+            }
         });
     }
 
@@ -292,13 +344,14 @@ public class DesignModeView extends JPanel {
     }
 
     private void handleDrag(MouseEvent e) {
-        if (!isDragging) return;
+        if (!isDragging)
+            return;
         int mx = e.getX();
         int my = e.getY();
         int bottomStart = getHeight() - BOTTOM_BTN_H;
 
         boolean inViewport = (mx >= LEFT_PANEL_W && mx < getWidth() - RIGHT_PANEL_W &&
-                              my >= TOP_PANEL_H && my < bottomStart);
+                my >= TOP_PANEL_H && my < bottomStart);
 
         if (inViewport) {
             updateHover(mx, my);
@@ -331,10 +384,13 @@ public class DesignModeView extends JPanel {
     }
 
     private void updateHover(int mx, int my) {
-        if (tileSize <= 0) { hoverTileX = hoverTileY = -1; return; }
+        if (tileSize <= 0) {
+            hoverTileX = hoverTileY = -1;
+            return;
+        }
         int bottomStart = getHeight() - BOTTOM_BTN_H;
         boolean inViewport = (mx >= LEFT_PANEL_W && mx < getWidth() - RIGHT_PANEL_W &&
-                              my >= TOP_PANEL_H && my < bottomStart);
+                my >= TOP_PANEL_H && my < bottomStart);
 
         if (!inViewport) {
             hoverTileX = hoverTileY = -1;
@@ -352,9 +408,11 @@ public class DesignModeView extends JPanel {
     }
 
     private void placeOrErase(MouseEvent e) {
-        if (hoverTileX < 0 || hoverTileY < 0) return;
+        if (hoverTileX < 0 || hoverTileY < 0)
+            return;
         PaletteItem item = getSelectedPaletteItem();
-        if (item == null) return;
+        if (item == null)
+            return;
 
         boolean isRight = javax.swing.SwingUtilities.isRightMouseButton(e);
         boolean isLeft = javax.swing.SwingUtilities.isLeftMouseButton(e);
@@ -365,7 +423,8 @@ public class DesignModeView extends JPanel {
             return;
         }
 
-        if (!isLeft) return;
+        if (!isLeft)
+            return;
 
         GameObject existing = map.getObjectAt(hoverTileX, hoverTileY);
         GameObject obj = item.factory.apply(hoverTileX, hoverTileY);
@@ -412,7 +471,8 @@ public class DesignModeView extends JPanel {
 
     private void eraseAt(int tx, int ty) {
         GameObject existing = map.getObjectAt(tx, ty);
-        if (existing == null) return;
+        if (existing == null)
+            return;
         if (existing instanceof WallTile) {
             map.placeObject(null, tx, ty);
         } else {
@@ -451,21 +511,23 @@ public class DesignModeView extends JPanel {
     }
 
     private boolean isItem(GameObject obj) {
-        if (obj == null) return false;
+        if (obj == null)
+            return false;
         return obj instanceof domain.models.item.MapItem
-            || obj instanceof domain.models.staticObjects.KeyItem;
+                || obj instanceof domain.models.staticObjects.KeyItem;
     }
 
     private boolean isObstacle(GameObject obj) {
-        if (obj == null) return false;
+        if (obj == null)
+            return false;
         return obj instanceof domain.models.entity.Chest
-            || obj instanceof domain.models.entity.Crate
-            || obj instanceof domain.models.entity.DoubleCrate
-            || obj instanceof domain.models.entity.Column
-            || obj instanceof domain.models.entity.Sign
-            || obj instanceof domain.models.staticObjects.Decoration
-            || obj instanceof domain.models.entity.SearchableObject
-            || obj instanceof domain.models.staticObjects.WallObject;
+                || obj instanceof domain.models.entity.Crate
+                || obj instanceof domain.models.entity.DoubleCrate
+                || obj instanceof domain.models.entity.Column
+                || obj instanceof domain.models.entity.Sign
+                || obj instanceof domain.models.staticObjects.Decoration
+                || obj instanceof domain.models.entity.SearchableObject
+                || obj instanceof domain.models.staticObjects.WallObject;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -529,15 +591,13 @@ public class DesignModeView extends JPanel {
                     return leftPalette.get(i);
                 }
             }
-        }
-        else if (mx >= getWidth() - RIGHT_PANEL_W && my >= TOP_PANEL_H && my < bottomStart) {
+        } else if (mx >= getWidth() - RIGHT_PANEL_W && my >= TOP_PANEL_H && my < bottomStart) {
             for (int i = 0; i < rightPalette.size(); i++) {
                 if (getRightItemBounds(i).contains(mx, my)) {
                     return rightPalette.get(i);
                 }
             }
-        }
-        else if (my < TOP_PANEL_H) {
+        } else if (my < TOP_PANEL_H) {
             for (int i = 0; i < topPalette.size(); i++) {
                 if (getTopItemBounds(i).contains(mx, my)) {
                     return topPalette.get(i);
@@ -546,7 +606,6 @@ public class DesignModeView extends JPanel {
         }
         return null;
     }
-
 
     // ─────────────────────────────────────────────────────────────────────────
     // ACTION BUTTON HANDLING
@@ -561,13 +620,56 @@ public class DesignModeView extends JPanel {
         }
     }
 
-    // ── 1. Play ──────────────────────────────────────────────────────────────
+    private int countLockedChests() {
+        int count = 0;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof Chest && ((Chest) obj).isLocked()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private int countKeys() {
+        int count = 0;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof KeyItem) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private boolean validateChestKeyCounts() {
+        int lockedChests = countLockedChests();
+        int keys = countKeys();
+        if (keys != lockedChests) {
+            showMsg("Validation Error: The number of keys placed on the map (" + keys
+                    + ") must be equal to the number of locked chests (" + lockedChests + ").",
+                    "Invalid Map");
+            return false;
+        }
+        return true;
+    }
+
     private void doPlay() {
-        if (onPlayMap != null) onPlayMap.accept(map);
+        if (!validateChestKeyCounts())
+            return;
+        if (onPlayMap != null)
+            onPlayMap.accept(map);
     }
 
     private void doPlayTeamMatch() {
-        if (onPlayTeamMatchMap != null) onPlayTeamMatchMap.accept(map);
+        if (!validateChestKeyCounts())
+            return;
+        if (onPlayTeamMatchMap != null)
+            onPlayTeamMatchMap.accept(map);
     }
 
     // ── 2. Add 5 Random Items + 1 Hidden ─────────────────────────────────────
@@ -623,10 +725,12 @@ public class DesignModeView extends JPanel {
         } while (roll >= 8 && count < 20); // sonsuz döngü koruması
     }
 
-    // ── 3. Save Map ──────────────────────────────────────────────────────────
     private void doSave() {
+        if (!validateChestKeyCounts())
+            return;
         String name = JOptionPane.showInputDialog(this, "Harita adı girin:", "Save Map", JOptionPane.PLAIN_MESSAGE);
-        if (name == null || name.trim().isEmpty()) return;
+        if (name == null || name.trim().isEmpty())
+            return;
         name = name.trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
 
         try {
@@ -654,16 +758,20 @@ public class DesignModeView extends JPanel {
             return;
         }
         String[] names = new String[files.length];
-        for (int i = 0; i < files.length; i++) names[i] = files[i].getName().replace(".mapjson","");
+        for (int i = 0; i < files.length; i++)
+            names[i] = files[i].getName().replace(".mapjson", "");
 
         String chosen = (String) JOptionPane.showInputDialog(
                 this, "Yüklenecek haritayı seçin:", "Load Map",
                 JOptionPane.PLAIN_MESSAGE, null, names, names[0]);
-        if (chosen == null) return;
+        if (chosen == null)
+            return;
 
         try (FileReader fr = new FileReader("saves/maps/" + chosen + ".mapjson")) {
             StringBuilder sb = new StringBuilder();
-            int c; while ((c = fr.read()) != -1) sb.append((char)c);
+            int c;
+            while ((c = fr.read()) != -1)
+                sb.append((char) c);
             loadMapFromJson(sb.toString());
             repaint();
             showMsg("Harita yüklendi: " + chosen, "Yükleme Başarılı");
@@ -679,7 +787,8 @@ public class DesignModeView extends JPanel {
         ClearMapDialog dialog = new ClearMapDialog(parentFrame);
         dialog.setVisible(true);
 
-        if (!dialog.isConfirmed()) return;
+        if (!dialog.isConfirmed())
+            return;
 
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
@@ -688,7 +797,8 @@ public class DesignModeView extends JPanel {
                     ((WallTile) obj).setDecoration(null);
                     continue;
                 }
-                if (obj == null || obj instanceof FloorTile) continue;
+                if (obj == null || obj instanceof FloorTile)
+                    continue;
                 // Sadece yerleştirilen objeleri sil → FloorTile ile değiştir
                 map.placeObject(new FloorTile(), x, y);
             }
@@ -702,9 +812,14 @@ public class DesignModeView extends JPanel {
         int w = map.getWidth();
         int h = map.getHeight();
 
-        // 1. Zemin ve duvarları sıfırla
+        // 1. Zemin ve duvarları sıfırla (mevcut duvar dekorasyonlarını temizle)
         for (int x = 0; x < w; x++) {
             for (int y = 0; y < h; y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof WallTile) {
+                    ((WallTile) obj).setDecoration(null);
+                }
+
                 if (x == 0 || x == w - 1) {
                     map.placeObject(new domain.models.tile.WallTile("wall/wall_side"), x, y);
                 } else if (y == 0) {
@@ -748,6 +863,7 @@ public class DesignModeView extends JPanel {
 
         // 5. Sandıklar (Chests) - 2 ila 4 adet
         int numChests = rand.nextInt(3) + 2; // 2 - 4
+        int lockedChestCount = 0;
         for (int i = 0; i < numChests; i++) {
             int cx, cy;
             int attempts = 0;
@@ -759,6 +875,8 @@ public class DesignModeView extends JPanel {
 
             if (attempts < 100) {
                 boolean locked = (i == 0); // en az 1 tanesi kilitli sandık olsun
+                if (locked)
+                    lockedChestCount++;
                 map.placeObject(new Chest("Chest", cx, cy, locked), cx, cy);
                 reserved[cx][cy] = true;
             }
@@ -781,19 +899,19 @@ public class DesignModeView extends JPanel {
             }
         }
 
-
-
         // 6. Anahtar (KeyItem)
-        int keyX, keyY;
-        int attempts = 0;
-        do {
-            keyX = rand.nextInt(w - 4) + 2;
-            keyY = rand.nextInt(h - 4) + 2;
-            attempts++;
-        } while ((reserved[keyX][keyY] || !isFarEnough(keyX, keyY)) && attempts < 100);
-        if (attempts < 100) {
-            map.placeObject(new KeyItem(keyX, keyY), keyX, keyY);
-            reserved[keyX][keyY] = true;
+        for (int i = 0; i < lockedChestCount; i++) {
+            int keyX, keyY;
+            int attempts = 0;
+            do {
+                keyX = rand.nextInt(w - 4) + 2;
+                keyY = rand.nextInt(h - 4) + 2;
+                attempts++;
+            } while ((reserved[keyX][keyY] || !isFarEnough(keyX, keyY)) && attempts < 100);
+            if (attempts < 100) {
+                map.placeObject(new KeyItem(keyX, keyY), keyX, keyY);
+                reserved[keyX][keyY] = true;
+            }
         }
 
         // 7. Diğer Eşyalar (Potions, Weapons, Armors, Rings)
@@ -859,11 +977,11 @@ public class DesignModeView extends JPanel {
             for (int x = 1; x < w - 1; x++) {
                 GameObject topWall = map.getObjectAt(x, 0);
                 if (topWall instanceof WallTile && ((WallTile) topWall).getDecoration() == null) {
-                    wallTiles.add(new int[]{x, 0});
+                    wallTiles.add(new int[] { x, 0 });
                 }
                 GameObject botWall = map.getObjectAt(x, h - 1);
                 if (botWall instanceof WallTile && ((WallTile) botWall).getDecoration() == null) {
-                    wallTiles.add(new int[]{x, h - 1});
+                    wallTiles.add(new int[] { x, h - 1 });
                 }
             }
 
@@ -872,7 +990,8 @@ public class DesignModeView extends JPanel {
                 int numWallObjects = rand.nextInt(3) + 2; // Place 2 to 4 random WallObjects
                 int placedWallObjs = 0;
                 for (int[] pos : wallTiles) {
-                    if (placedWallObjs >= numWallObjects) break;
+                    if (placedWallObjs >= numWallObjects)
+                        break;
                     PaletteItem selectedItem = wallObjectItems.get(rand.nextInt(wallObjectItems.size()));
                     GameObject wallObj = selectedItem.factory.apply(pos[0], pos[1]);
                     map.placeObject(wallObj, pos[0], pos[1]);
@@ -885,13 +1004,14 @@ public class DesignModeView extends JPanel {
     }
 
     private boolean isFarEnough(int tx, int ty) {
-        int[][] dirs = {{0,0}, {-1,0}, {1,0}, {0,-1}, {0,1}};
+        int[][] dirs = { { 0, 0 }, { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
         for (int[] d : dirs) {
             int nx = tx + d[0];
             int ny = ty + d[1];
             if (map.isValidPosition(nx, ny)) {
                 GameObject obj = map.getObjectAt(nx, ny);
-                if (obj != null && !(obj instanceof domain.models.tile.FloorTile) && !(obj instanceof domain.models.tile.WallTile)) {
+                if (obj != null && !(obj instanceof domain.models.tile.FloorTile)
+                        && !(obj instanceof domain.models.tile.WallTile)) {
                     return false;
                 }
             }
@@ -907,7 +1027,9 @@ public class DesignModeView extends JPanel {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
         sb.append("  \"name\": \"").append(name).append("\",\n");
-        sb.append("  \"timestamp\": \"").append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date())).append("\",\n");
+        sb.append("  \"timestamp\": \"")
+                .append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date()))
+                .append("\",\n");
         sb.append("  \"width\": ").append(map.getWidth()).append(",\n");
         sb.append("  \"height\": ").append(map.getHeight()).append(",\n");
         sb.append("  \"objects\": [\n");
@@ -916,7 +1038,8 @@ public class DesignModeView extends JPanel {
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj == null || obj instanceof FloorTile) continue;
+                if (obj == null || obj instanceof FloorTile)
+                    continue;
 
                 if (obj instanceof WallTile) {
                     WallTile wall = (WallTile) obj;
@@ -924,40 +1047,44 @@ public class DesignModeView extends JPanel {
                     if (deco != null) {
                         String type = objectType(deco);
                         if (type != null) {
-                            if (!first) sb.append(",\n");
+                            if (!first)
+                                sb.append(",\n");
                             first = false;
                             sb.append("    {\"type\":\"").append(type)
-                              .append("\",\"name\":\"").append(escape(deco.getName()))
-                              .append("\",\"x\":").append(x)
-                              .append(",\"y\":").append(y)
-                              .append(",\"isWallMounted\":true")
-                              .append(",\"imageName\":\"").append(escape(deco.getImageName())).append("\"}");
+                                    .append("\",\"name\":\"").append(escape(deco.getName()))
+                                    .append("\",\"x\":").append(x)
+                                    .append(",\"y\":").append(y)
+                                    .append(",\"isWallMounted\":true")
+                                    .append(",\"imageName\":\"").append(escape(deco.getImageName())).append("\"}");
                         }
                     }
                     continue;
                 }
 
                 String type = objectType(obj);
-                if (type == null) continue;
-                if (!first) sb.append(",\n");
+                if (type == null)
+                    continue;
+                if (!first)
+                    sb.append(",\n");
                 first = false;
                 sb.append("    {\"type\":\"").append(type)
-                  .append("\",\"name\":\"").append(escape(obj.getName()))
-                  .append("\",\"x\":").append(x)
-                  .append(",\"y\":").append(y);
+                        .append("\",\"name\":\"").append(escape(obj.getName()))
+                        .append("\",\"x\":").append(x)
+                        .append(",\"y\":").append(y);
 
                 if (obj instanceof Chest) {
-                    sb.append(",\"isLocked\":").append(((Chest)obj).isLocked());
+                    sb.append(",\"isLocked\":").append(((Chest) obj).isLocked());
                 }
                 if (obj instanceof Door) {
-                    sb.append(",\"isLocked\":").append(((Door)obj).isLocked());
+                    sb.append(",\"isLocked\":").append(((Door) obj).isLocked());
                 }
                 if (obj instanceof Column || obj instanceof Sign || obj instanceof Decoration) {
                     sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
                 }
                 if (obj instanceof SearchableObject) {
-                    sb.append(",\"openImageName\":\"").append(escape(((SearchableObject)obj).getOpenImageName())).append("\"")
-                      .append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
+                    sb.append(",\"openImageName\":\"").append(escape(((SearchableObject) obj).getOpenImageName()))
+                            .append("\"")
+                            .append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
                 }
                 if (obj instanceof PotionItem || obj instanceof KeyItem) {
                     sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
@@ -970,26 +1097,46 @@ public class DesignModeView extends JPanel {
     }
 
     private String objectType(GameObject obj) {
-        if (obj instanceof domain.models.staticObjects.WallObject) return "WallObject";
-        if (obj instanceof PotionItem)       return "PotionItem";
-        if (obj instanceof SwordItem)        return "SwordItem";
-        if (obj instanceof WoodenSwordItem)  return "WoodenSwordItem";
-        if (obj instanceof SamuraiSwordItem) return "SamuraiSwordItem";
-        if (obj instanceof DiamondSwordItem) return "DiamondSwordItem";
-        if (obj instanceof AxeItem)          return "AxeItem";
-        if (obj instanceof BowItem)          return "BowItem";
-        if (obj instanceof FireWandItem)     return "FireWandItem";
-        if (obj instanceof ArmorItem)        return "ArmorItem";
-        if (obj instanceof RingItem)         return "RingItem";
-        if (obj instanceof KeyItem)          return "KeyItem";
-        if (obj instanceof Chest)            return "Chest";
-        if (obj instanceof DoubleCrate)      return "DoubleCrate";
-        if (obj instanceof Crate)            return "Crate";
-        if (obj instanceof Column)           return "Column";
-        if (obj instanceof Sign)             return "Sign";
-        if (obj instanceof Door)             return "Door";
-        if (obj instanceof Decoration)       return "Decoration";
-        if (obj instanceof SearchableObject) return "SearchableObject";
+        if (obj instanceof domain.models.staticObjects.WallObject)
+            return "WallObject";
+        if (obj instanceof PotionItem)
+            return "PotionItem";
+        if (obj instanceof SwordItem)
+            return "SwordItem";
+        if (obj instanceof WoodenSwordItem)
+            return "WoodenSwordItem";
+        if (obj instanceof SamuraiSwordItem)
+            return "SamuraiSwordItem";
+        if (obj instanceof DiamondSwordItem)
+            return "DiamondSwordItem";
+        if (obj instanceof AxeItem)
+            return "AxeItem";
+        if (obj instanceof BowItem)
+            return "BowItem";
+        if (obj instanceof FireWandItem)
+            return "FireWandItem";
+        if (obj instanceof ArmorItem)
+            return "ArmorItem";
+        if (obj instanceof RingItem)
+            return "RingItem";
+        if (obj instanceof KeyItem)
+            return "KeyItem";
+        if (obj instanceof Chest)
+            return "Chest";
+        if (obj instanceof DoubleCrate)
+            return "DoubleCrate";
+        if (obj instanceof Crate)
+            return "Crate";
+        if (obj instanceof Column)
+            return "Column";
+        if (obj instanceof Sign)
+            return "Sign";
+        if (obj instanceof Door)
+            return "Door";
+        if (obj instanceof Decoration)
+            return "Decoration";
+        if (obj instanceof SearchableObject)
+            return "SearchableObject";
         return null;
     }
 
@@ -1009,7 +1156,8 @@ public class DesignModeView extends JPanel {
         // Basit JSON ayrıştırıcı — her nesne kaydı satır bazında işlenir
         for (String line : json.split("\n")) {
             line = line.trim();
-            if (!line.startsWith("{\"type\"")) continue;
+            if (!line.startsWith("{\"type\""))
+                continue;
             String type = jsonStr(line, "type");
             String name = jsonStr(line, "name");
             int x = jsonInt(line, "x");
@@ -1020,41 +1168,42 @@ public class DesignModeView extends JPanel {
             boolean isWallMounted = "true".equals(jsonStr(line, "isWallMounted"));
 
             GameObject obj = switch (type) {
-                case "PotionItem"       -> imgName != null && !imgName.isEmpty()
-                                              ? new PotionItem(name, x, y, imgName)
-                                              : new PotionItem(x, y);
-                case "SwordItem"        -> new SwordItem(x, y);
-                case "WoodenSwordItem"  -> new WoodenSwordItem(x, y);
+                case "PotionItem" -> imgName != null && !imgName.isEmpty()
+                        ? new PotionItem(name, x, y, imgName)
+                        : new PotionItem(x, y);
+                case "SwordItem" -> new SwordItem(x, y);
+                case "WoodenSwordItem" -> new WoodenSwordItem(x, y);
                 case "SamuraiSwordItem" -> new SamuraiSwordItem(x, y);
                 case "DiamondSwordItem" -> new DiamondSwordItem(x, y);
-                case "AxeItem"          -> new AxeItem(x, y);
-                case "BowItem"          -> new BowItem(x, y);
-                case "FireWandItem"     -> new FireWandItem(x, y);
-                case "ArmorItem"        -> new ArmorItem(x, y);
-                case "RingItem"         -> new RingItem(x, y);
-                case "KeyItem"          -> imgName != null && !imgName.isEmpty()
-                                              ? new KeyItem(name, x, y, imgName)
-                                              : new KeyItem(x, y);
-                case "Chest"            -> new Chest(name, x, y, locked);
-                case "DoubleCrate"      -> new DoubleCrate(name, x, y);
-                case "Crate"            -> new Crate(name, x, y);
-                case "Column"           -> imgName != null && !imgName.isEmpty()
-                                              ? new Column(name, x, y, imgName)
-                                              : new Column(name, x, y);
-                case "Sign"             -> imgName != null && !imgName.isEmpty()
-                                              ? new Sign(name, x, y, imgName)
-                                              : new Sign(name, x, y);
-                case "Door"             -> new Door(name, x, y, locked);
-                case "Decoration"       -> imgName != null && !imgName.isEmpty()
-                                              ? new Decoration(name, x, y, imgName)
-                                              : new Decoration(name, x, y, "torch/torch_1");
+                case "AxeItem" -> new AxeItem(x, y);
+                case "BowItem" -> new BowItem(x, y);
+                case "FireWandItem" -> new FireWandItem(x, y);
+                case "ArmorItem" -> new ArmorItem(x, y);
+                case "RingItem" -> new RingItem(x, y);
+                case "KeyItem" -> imgName != null && !imgName.isEmpty()
+                        ? new KeyItem(name, x, y, imgName)
+                        : new KeyItem(x, y);
+                case "Chest" -> new Chest(name, x, y, locked);
+                case "DoubleCrate" -> new DoubleCrate(name, x, y);
+                case "Crate" -> new Crate(name, x, y);
+                case "Column" -> imgName != null && !imgName.isEmpty()
+                        ? new Column(name, x, y, imgName)
+                        : new Column(name, x, y);
+                case "Sign" -> imgName != null && !imgName.isEmpty()
+                        ? new Sign(name, x, y, imgName)
+                        : new Sign(name, x, y);
+                case "Door" -> new Door(name, x, y, locked);
+                case "Decoration" -> imgName != null && !imgName.isEmpty()
+                        ? new Decoration(name, x, y, imgName)
+                        : new Decoration(name, x, y, "torch/torch_1");
                 case "SearchableObject" -> imgName != null && !imgName.isEmpty()
-                                              ? new SearchableObject(name, x, y, imgName, openImgName)
-                                              : new SearchableObject(name, x, y);
-                case "WallObject"       -> new domain.models.staticObjects.WallObject(name, x, y, imgName);
-                default                 -> null;
+                        ? new SearchableObject(name, x, y, imgName, openImgName)
+                        : new SearchableObject(name, x, y);
+                case "WallObject" -> new domain.models.staticObjects.WallObject(name, x, y, imgName);
+                default -> null;
             };
-            if (obj != null) map.placeObject(obj, x, y);
+            if (obj != null)
+                map.placeObject(obj, x, y);
         }
     }
 
@@ -1086,10 +1235,14 @@ public class DesignModeView extends JPanel {
     private void calculateLayout() {
         int mapAreaX = LEFT_PANEL_W;
         int mapAreaY = TOP_PANEL_H;
-        int mapAreaW = getWidth() - LEFT_PANEL_W - RIGHT_PANEL_W;
-        int mapAreaH = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
+        int fullW = getWidth() - LEFT_PANEL_W - RIGHT_PANEL_W;
+        int fullH = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
 
-        if (mapAreaW <= 0 || mapAreaH <= 0) return;
+        int mapAreaW = (int) (fullW * 0.92);
+        int mapAreaH = (int) (fullH * 0.92);
+
+        if (mapAreaW <= 0 || mapAreaH <= 0)
+            return;
 
         int tw = mapAreaW / map.getWidth();
         int th = mapAreaH / map.getHeight();
@@ -1097,8 +1250,8 @@ public class DesignModeView extends JPanel {
 
         int mapW = tileSize * map.getWidth();
         int mapH = tileSize * map.getHeight();
-        mapOffsetX = mapAreaX + (mapAreaW - mapW) / 2;
-        mapOffsetY = mapAreaY + (mapAreaH - mapH) / 2 - 10;
+        mapOffsetX = mapAreaX + (fullW - mapW) / 2;
+        mapOffsetY = mapAreaY + (fullH - mapH) / 2 - 10;
     }
 
     private void paintTopPanel(Graphics2D g) {
@@ -1106,13 +1259,26 @@ public class DesignModeView extends JPanel {
         int H = TOP_PANEL_H;
 
         BufferedImage bgImg = tileManager.getTile("carpet/red_carpet_middle");
-        if (bgImg != null) {
-            int iw = bgImg.getWidth();
-            int ih = bgImg.getHeight();
-            int tileW = (int) (iw * ((double) H / ih));
-            for (int tx = 0; tx < W; tx += tileW) {
-                g.drawImage(bgImg, tx, 0, tileW, H, null);
-            }
+        BufferedImage botImg = tileManager.getTile("carpet/red_carpet_bottom");
+        if (bgImg != null && botImg != null) {
+            // Left end cap: rotate 90 degrees counter-clockwise
+            java.awt.geom.AffineTransform oldTx = g.getTransform();
+            g.translate(H / 2.0, H / 2.0);
+            g.rotate(Math.toRadians(-90));
+            g.drawImage(botImg, -H / 2, -H / 2, H, H, null);
+            g.setTransform(oldTx);
+
+            // Middle body
+            g.drawImage(bgImg, H, 0, W - H * 2, H, null);
+
+            // Right end cap: rotate 90 degrees clockwise
+            oldTx = g.getTransform();
+            g.translate(W - H + H / 2.0, H / 2.0);
+            g.rotate(Math.toRadians(90));
+            g.drawImage(botImg, -H / 2, -H / 2, H, H, null);
+            g.setTransform(oldTx);
+        } else if (bgImg != null) {
+            g.drawImage(bgImg, 0, 0, W, H, null);
         } else {
             // Retro gradient background fallback (dark red/purple)
             GradientPaint bg = new GradientPaint(
@@ -1163,25 +1329,9 @@ public class DesignModeView extends JPanel {
         int H = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
         int Y = TOP_PANEL_H;
 
-        BufferedImage topImg = tileManager.getTile("carpet/red_carpet_top");
-        BufferedImage midImg = tileManager.getTile("carpet/red_carpet_middle");
-        BufferedImage botImg = tileManager.getTile("carpet/red_carpet_bottom");
-
-        if (topImg != null && midImg != null && botImg != null) {
-            // Draw top cap (Height = 32 pixels)
-            g.drawImage(topImg, 0, Y, W, 32, null);
-
-            // Draw bottom cap (Height = 32 pixels)
-            g.drawImage(botImg, 0, Y + H - 32, W, 32, null);
-
-            // Draw tiled middle body (without vertical stretching)
-            int yStart = Y + 32;
-            int yEnd = Y + H - 32;
-            int spriteHeight = midImg.getHeight();
-            for (int y = yStart; y < yEnd; y += spriteHeight) {
-                int drawHeight = Math.min(spriteHeight, yEnd - y);
-                g.drawImage(midImg, 0, y, W, y + drawHeight, 0, 0, midImg.getWidth(), drawHeight, null);
-            }
+        BufferedImage bgImg = tileManager.getTile("carpet/red_carpet_middle");
+        if (bgImg != null) {
+            g.drawImage(bgImg, 0, Y, W, H, null);
         } else {
             // Gradient background fallback
             GradientPaint bg = new GradientPaint(
@@ -1211,7 +1361,7 @@ public class DesignModeView extends JPanel {
             BufferedImage icon = getIcon(item);
             if (item.iconPath != null && item.iconPath.startsWith("torch/")) {
                 long now = System.currentTimeMillis();
-                int[] frames = {1, 2, 3, 4, 6, 7, 8};
+                int[] frames = { 1, 2, 3, 4, 6, 7, 8 };
                 int frame = frames[(int) ((now / 120) % frames.length)];
                 icon = tileManager.getTile("torch/torch_" + frame);
             }
@@ -1235,25 +1385,9 @@ public class DesignModeView extends JPanel {
         int X = getWidth() - W;
         int Y = TOP_PANEL_H;
 
-        BufferedImage topImg = tileManager.getTile("carpet/red_carpet_top");
-        BufferedImage midImg = tileManager.getTile("carpet/red_carpet_middle");
-        BufferedImage botImg = tileManager.getTile("carpet/red_carpet_bottom");
-
-        if (topImg != null && midImg != null && botImg != null) {
-            // Draw top cap (Height = 32 pixels)
-            g.drawImage(topImg, X, Y, W, 32, null);
-
-            // Draw bottom cap (Height = 32 pixels)
-            g.drawImage(botImg, X, Y + H - 32, W, 32, null);
-
-            // Draw tiled middle body (without vertical stretching)
-            int yStart = Y + 32;
-            int yEnd = Y + H - 32;
-            int spriteHeight = midImg.getHeight();
-            for (int y = yStart; y < yEnd; y += spriteHeight) {
-                int drawHeight = Math.min(spriteHeight, yEnd - y);
-                g.drawImage(midImg, X, y, X + W, y + drawHeight, 0, 0, midImg.getWidth(), drawHeight, null);
-            }
+        BufferedImage bgImg = tileManager.getTile("carpet/red_carpet_middle");
+        if (bgImg != null) {
+            g.drawImage(bgImg, X, Y, W, H, null);
         } else {
             // Gradient background fallback
             GradientPaint bg = new GradientPaint(
@@ -1336,7 +1470,8 @@ public class DesignModeView extends JPanel {
     }
 
     private void paintMap(Graphics2D g) {
-        if (map == null || tileManager == null) return;
+        if (map == null || tileManager == null)
+            return;
 
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
@@ -1344,15 +1479,17 @@ public class DesignModeView extends JPanel {
                 int py = mapOffsetY + y * tileSize;
 
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj == null) continue;
+                if (obj == null)
+                    continue;
 
                 // Zemin tile'larını önce çiz
                 if (obj instanceof domain.models.item.MapItem ||
-                    obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
-                    obj instanceof Door || obj instanceof Decoration ||
-                    obj instanceof SearchableObject || obj instanceof Sign) {
+                        obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
+                        obj instanceof Door || obj instanceof Decoration ||
+                        obj instanceof SearchableObject || obj instanceof Sign) {
                     BufferedImage floor = tileManager.getTile("floor");
-                    if (floor != null) g.drawImage(floor, px, py, tileSize, tileSize, null);
+                    if (floor != null)
+                        g.drawImage(floor, px, py, tileSize, tileSize, null);
                 }
 
                 // Normal wall tile or wall side tile
@@ -1385,11 +1522,11 @@ public class DesignModeView extends JPanel {
                             int iw = decoImg.getWidth();
                             int ih = decoImg.getHeight();
                             int dw = tileSize;
-                             if (deco instanceof Decoration) {
-                                 dw = (int) (tileSize * 0.4); // torch should be much smaller!
-                             } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                 dw = Math.max(tileSize - 6, 4); // make it 3 bits/pixels smaller on each side!
-                             }
+                            if (deco instanceof Decoration) {
+                                dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                            } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                                dw = Math.max(tileSize - 6, 4); // make it 3 bits/pixels smaller on each side!
+                            }
                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = px + (tileSize - dw) / 2;
                             int drawY;
@@ -1413,7 +1550,7 @@ public class DesignModeView extends JPanel {
                     String imgName = obj.getImageName();
                     if (obj instanceof Decoration && imgName != null && imgName.startsWith("torch/")) {
                         long now = System.currentTimeMillis();
-                        int[] frames = {1, 2, 3, 4, 6, 7, 8};
+                        int[] frames = { 1, 2, 3, 4, 6, 7, 8 };
                         int frame = frames[(int) ((now / 120) % frames.length)];
                         imgName = "torch/torch_" + frame;
                     }
@@ -1422,7 +1559,11 @@ public class DesignModeView extends JPanel {
 
                 if (tImg != null) {
                     if (obj instanceof domain.models.item.MapItem) {
-                        int maxDim = (int) (tileSize * 0.65);
+                        double scaleMult = 1.30;
+                        if (obj instanceof domain.models.item.PotionItem || obj instanceof domain.models.item.RingItem) {
+                            scaleMult *= 0.7; // Potions & rings render 30% smaller
+                        }
+                        int maxDim = (int) (tileSize * scaleMult);
                         int iw = tImg.getWidth();
                         int ih = tImg.getHeight();
                         double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
@@ -1432,17 +1573,19 @@ public class DesignModeView extends JPanel {
                         int drawY = py + (tileSize - dh) / 2;
                         g.drawImage(tImg, drawX, drawY, dw, dh, null);
                     } else if (obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
-                               obj instanceof Door || obj instanceof Decoration ||
-                               obj instanceof SearchableObject || obj instanceof Sign) {
+                            obj instanceof Door || obj instanceof Decoration ||
+                            obj instanceof SearchableObject || obj instanceof Sign) {
                         int iw = tImg.getWidth();
                         int ih = tImg.getHeight();
                         int dw = tileSize;
                         if (obj instanceof Decoration) {
                             dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                        } else if (obj instanceof Door) {
+                            dw = tileSize * 3;
                         }
                         int dh = (int) (ih * ((double) dw / iw));
                         int drawX = px + (tileSize - dw) / 2;
-                        int drawY = py + tileSize - dh;
+                        int drawY = py + tileSize - dh; // Bottom aligned!
                         g.drawImage(tImg, drawX, drawY, dw, dh, null);
                     } else {
                         g.drawImage(tImg, px, py, tileSize, tileSize, null);
@@ -1457,7 +1600,8 @@ public class DesignModeView extends JPanel {
 
     // ── Hover Highlight ───────────────────────────────────────────────────────
     private void paintHoverHighlight(Graphics2D g) {
-        if (hoverTileX < 0 || hoverTileY < 0) return;
+        if (hoverTileX < 0 || hoverTileY < 0)
+            return;
 
         int px = mapOffsetX + hoverTileX * tileSize;
         int py = mapOffsetY + hoverTileY * tileSize;
@@ -1481,10 +1625,10 @@ public class DesignModeView extends JPanel {
 
     // ── Alt Aksiyon Butonları ─────────────────────────────────────────────────
     private void paintActionButtons(Graphics2D g) {
-        int btnCount  = actionBtns.size();
-        int gap       = 4; // small gap
-        int maxBtnH   = BOTTOM_BTN_H - 6; // 42px
-        
+        int btnCount = actionBtns.size();
+        int gap = 4; // small gap
+        int maxBtnH = BOTTOM_BTN_H - 6; // 42px
+
         // First compute the aspect ratios of all buttons
         double[] aspects = new double[btnCount];
         double sumAspect = 0;
@@ -1492,21 +1636,21 @@ public class DesignModeView extends JPanel {
             aspects[i] = getBtnAspectRatio(actionBtns.get(i));
             sumAspect += aspects[i];
         }
-        
+
         // Start with the maximum height
         int btnH = maxBtnH;
         int totalWidthNeeded = (int) (btnH * sumAspect) + gap * (btnCount - 1);
-        
+
         // If it exceeds the available width, scale down based on width
         int availableWidth = getWidth() - 8;
         if (totalWidthNeeded > availableWidth) {
             btnH = (int) ((availableWidth - gap * (btnCount - 1)) / sumAspect);
             totalWidthNeeded = (int) (btnH * sumAspect) + gap * (btnCount - 1);
         }
-        
+
         // Center the buttons horizontally and vertically
-        int startX    = (getWidth() - totalWidthNeeded) / 2;
-        int startY    = getHeight() - BOTTOM_BTN_H + (BOTTOM_BTN_H - btnH) / 2;
+        int startX = (getWidth() - totalWidthNeeded) / 2;
+        int startY = getHeight() - BOTTOM_BTN_H + (BOTTOM_BTN_H - btnH) / 2;
 
         // Alt şerit arka plan — mor
         g.setColor(new Color(42, 22, 38));
@@ -1553,7 +1697,7 @@ public class DesignModeView extends JPanel {
                 int ly = by + (btnH + fm.getAscent()) / 2 - 2;
                 g.drawString(btn.label, lx, ly);
             }
-            
+
             currentX += btnW + gap;
         }
     }
@@ -1563,17 +1707,20 @@ public class DesignModeView extends JPanel {
 
     private void paintCursor(Graphics2D g) {
         PaletteItem item = getSelectedPaletteItem();
-        if (item == null || item.factory == null) return;
-        if (hoverTileX < 0 || hoverTileY < 0) return;
+        if (item == null || item.factory == null)
+            return;
+        if (hoverTileX < 0 || hoverTileY < 0)
+            return;
 
         BufferedImage icon = getIcon(item);
         if (item.iconPath != null && item.iconPath.startsWith("torch/")) {
             long now = System.currentTimeMillis();
-            int[] frames = {1, 2, 3, 4, 6, 7, 8};
+            int[] frames = { 1, 2, 3, 4, 6, 7, 8 };
             int frame = frames[(int) ((now / 120) % frames.length)];
             icon = tileManager.getTile("torch/torch_" + frame);
         }
-        if (icon == null) return;
+        if (icon == null)
+            return;
 
         int px = mapOffsetX + hoverTileX * tileSize;
         int py = mapOffsetY + hoverTileY * tileSize;
@@ -1583,7 +1730,11 @@ public class DesignModeView extends JPanel {
 
         GameObject dummy = item.factory.apply(0, 0);
         if (dummy instanceof domain.models.item.MapItem) {
-            int maxDim = (int) (tileSize * 0.65);
+            double scaleMult = 1.10;
+            if (dummy instanceof domain.models.item.PotionItem || dummy instanceof domain.models.item.RingItem) {
+                scaleMult *= 0.7; // Potions & rings render 30% smaller
+            }
+            int maxDim = (int) (tileSize * scaleMult);
             int iw = icon.getWidth();
             int ih = icon.getHeight();
             double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
@@ -1593,8 +1744,8 @@ public class DesignModeView extends JPanel {
             int drawY = py + (tileSize - dh) / 2;
             g.drawImage(icon, drawX, drawY, dw, dh, null);
         } else if (dummy instanceof Column || dummy instanceof Chest || dummy instanceof Crate ||
-                   dummy instanceof Door || dummy instanceof Decoration ||
-                   dummy instanceof SearchableObject || dummy instanceof Sign) {
+                dummy instanceof Door || dummy instanceof Decoration ||
+                dummy instanceof SearchableObject || dummy instanceof Sign) {
             int iw = icon.getWidth();
             int ih = icon.getHeight();
             int dw = tileSize;
@@ -1603,7 +1754,7 @@ public class DesignModeView extends JPanel {
             }
             int dh = (int) (ih * ((double) dw / iw));
             int drawX = px + (tileSize - dw) / 2;
-            int drawY = py + tileSize - dh;
+            int drawY = py + tileSize - dh; // Bottom aligned!
             g.drawImage(icon, drawX, drawY, dw, dh, null);
         } else {
             g.drawImage(icon, px, py, tileSize, tileSize, null);
@@ -1617,7 +1768,8 @@ public class DesignModeView extends JPanel {
     // ─────────────────────────────────────────────────────────────────────────
 
     private BufferedImage trimTransparency(BufferedImage img) {
-        if (img == null) return null;
+        if (img == null)
+            return null;
         int width = img.getWidth();
         int height = img.getHeight();
         int minX = width;
@@ -1629,10 +1781,14 @@ public class DesignModeView extends JPanel {
             for (int x = 0; x < width; x++) {
                 int alpha = (img.getRGB(x, y) >> 24) & 0xff;
                 if (alpha > 0) {
-                    if (x < minX) minX = x;
-                    if (x > maxX) maxX = x;
-                    if (y < minY) minY = y;
-                    if (y > maxY) maxY = y;
+                    if (x < minX)
+                        minX = x;
+                    if (x > maxX)
+                        maxX = x;
+                    if (y < minY)
+                        minY = y;
+                    if (y > maxY)
+                        maxY = y;
                 }
             }
         }
@@ -1645,8 +1801,10 @@ public class DesignModeView extends JPanel {
     }
 
     private BufferedImage getBtnSprite(ActionBtn btn) {
-        if (btn.sprite != null) return btn.sprite;
-        if (btn.spritePath == null) return null;
+        if (btn.sprite != null)
+            return btn.sprite;
+        if (btn.spritePath == null)
+            return null;
 
         String key = btn.spritePath;
         if (imgCache.containsKey(key)) {
@@ -1656,15 +1814,16 @@ public class DesignModeView extends JPanel {
 
         BufferedImage img = null;
         String[] paths = {
-            "resources/" + btn.spritePath,
-            "../resources/" + btn.spritePath
+                "resources/" + btn.spritePath,
+                "../resources/" + btn.spritePath
         };
         for (String p : paths) {
             File f = new File(p);
             if (f.exists()) {
                 try {
                     img = ImageIO.read(f);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
                 break;
             }
         }
@@ -1685,11 +1844,16 @@ public class DesignModeView extends JPanel {
     }
 
     private BufferedImage getIcon(PaletteItem item) {
-        if (item.icon != null) return item.icon;
-        if (item.iconPath == null) return null;
+        if (item.icon != null)
+            return item.icon;
+        if (item.iconPath == null)
+            return null;
 
         String key = item.iconPath;
-        if (imgCache.containsKey(key)) { item.icon = imgCache.get(key); return item.icon; }
+        if (imgCache.containsKey(key)) {
+            item.icon = imgCache.get(key);
+            return item.icon;
+        }
 
         BufferedImage img = null;
         if (item.isTileIcon) {
@@ -1697,15 +1861,24 @@ public class DesignModeView extends JPanel {
         } else {
             // Doğrudan dosya
             String[] paths = {
-                "resources/" + item.iconPath,
-                "../resources/" + item.iconPath
+                    "resources/" + item.iconPath,
+                    "../resources/" + item.iconPath
             };
             for (String p : paths) {
                 File f = new File(p);
-                if (f.exists()) { try { img = ImageIO.read(f); } catch (Exception ignored) {} break; }
+                if (f.exists()) {
+                    try {
+                        img = ImageIO.read(f);
+                    } catch (Exception ignored) {
+                    }
+                    break;
+                }
             }
         }
-        if (img != null) { imgCache.put(key, img); item.icon = img; }
+        if (img != null) {
+            imgCache.put(key, img);
+            item.icon = img;
+        }
         return img;
     }
 
@@ -1724,8 +1897,8 @@ public class DesignModeView extends JPanel {
         int iw = icon.getWidth();
         int ih = icon.getHeight();
         float scale = Math.min((float) slotSize / iw, (float) slotSize / ih);
-        int dw = Math.max(1, (int)(iw * scale));
-        int dh = Math.max(1, (int)(ih * scale));
+        int dw = Math.max(1, (int) (iw * scale));
+        int dh = Math.max(1, (int) (ih * scale));
         int dx = slotX + (slotSize - dw) / 2;
         int dy = slotY + (slotSize - dh) / 2;
         g.drawImage(icon, dx, dy, dw, dh, null);
@@ -1737,7 +1910,8 @@ public class DesignModeView extends JPanel {
         for (int x = 0; x < map.getWidth(); x++)
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof FloorTile) free.add(new int[]{x, y});
+                if (obj instanceof FloorTile)
+                    free.add(new int[] { x, y });
             }
         return free;
     }
@@ -1761,12 +1935,15 @@ public class DesignModeView extends JPanel {
     }
 
     // ── Basit JSON yardımcıları ───────────────────────────────────────────────
-    private String escape(String s) { return s == null ? "" : s.replace("\"","\\\""); }
+    private String escape(String s) {
+        return s == null ? "" : s.replace("\"", "\\\"");
+    }
 
     private String jsonStr(String line, String key) {
         String k = "\"" + key + "\":\"";
         int i = line.indexOf(k);
-        if (i < 0) return null;
+        if (i < 0)
+            return null;
         i += k.length();
         int j = line.indexOf("\"", i);
         return j < 0 ? null : line.substring(i, j);
@@ -1775,10 +1952,16 @@ public class DesignModeView extends JPanel {
     private int jsonInt(String line, String key) {
         String k = "\"" + key + "\":";
         int i = line.indexOf(k);
-        if (i < 0) return 0;
+        if (i < 0)
+            return 0;
         i += k.length();
         int j = i;
-        while (j < line.length() && (Character.isDigit(line.charAt(j)) || line.charAt(j) == '-')) j++;
-        try { return Integer.parseInt(line.substring(i, j)); } catch (Exception e) { return 0; }
+        while (j < line.length() && (Character.isDigit(line.charAt(j)) || line.charAt(j) == '-'))
+            j++;
+        try {
+            return Integer.parseInt(line.substring(i, j));
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }

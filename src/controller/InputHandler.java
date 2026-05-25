@@ -35,6 +35,10 @@ public class InputHandler implements KeyListener {
         this.shadowClone = clone;
     }
 
+    public void setGameMap(domain.models.map.GameMap map) {
+        this.map = map;
+    }
+
     public void disableInput() {
         this.inputEnabled = false;
     }
@@ -134,6 +138,26 @@ public class InputHandler implements KeyListener {
                 gameView.repaint();
             }
         } else if (code == KeyEvent.VK_E) {
+            // Önce kendi bulunduğumuz hücreyle etkileşime girmeyi dene
+            domain.models.entity.GameObject selfObj = map.getObjectAt(hero.getX(), hero.getY());
+            if (selfObj != null) {
+                java.util.List<domain.logic.Action> actions = selfObj.getActions();
+                if (actions != null && !actions.isEmpty()) {
+                    java.util.List<domain.logic.Action> available = new java.util.ArrayList<>();
+                    for (domain.logic.Action action : actions) {
+                        if (action.isAvailable(hero, selfObj)) {
+                            available.add(action);
+                        }
+                    }
+                    if (!available.isEmpty()) {
+                        available.get(0).execute(hero, selfObj);
+                        System.out.println(available.get(0).getName() + " executed on " + selfObj.getName() + " on player's tile");
+                        if (gameView != null) gameView.repaint();
+                        return;
+                    }
+                }
+            }
+
             // Çevredeki tüm nesnelerle (3x3 çevre karesi) etkileşime gir
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
@@ -143,6 +167,108 @@ public class InputHandler implements KeyListener {
                     if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
                         domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
                         if (obj != null) {
+                            if (obj instanceof domain.models.staticObjects.Door) {
+                                domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
+                                if (door.isLocked()) {
+                                    boolean isLevelDoor = (door instanceof domain.models.staticObjects.LevelDoor);
+                                    boolean hasKey = false;
+                                    if (isLevelDoor) {
+                                        for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                                            if (item instanceof domain.models.staticObjects.LevelKey) {
+                                                hasKey = true;
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                                            if (item instanceof domain.models.staticObjects.KeyItem) {
+                                                hasKey = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    String keyTypeStr = isLevelDoor ? "Level Key" : "Key";
+                                    String[] options = new String[]{hasKey ? "Open (Uses " + keyTypeStr + ")" : "Open (Need " + keyTypeStr + ")", "Cancel"};
+
+                                    int choice = javax.swing.JOptionPane.showOptionDialog(
+                                            gameView,
+                                            "What would you like to do with " + door.getName() + "?",
+                                            "Select Interaction",
+                                            javax.swing.JOptionPane.DEFAULT_OPTION,
+                                            javax.swing.JOptionPane.QUESTION_MESSAGE,
+                                            null,
+                                            options,
+                                            options[0]
+                                    );
+
+                                    if (choice == 0) {
+                                        if (isLevelDoor) {
+                                            domain.models.staticObjects.LevelDoor levelDoor = (domain.models.staticObjects.LevelDoor) door;
+                                            boolean success = levelDoor.tryUnlockWithKey(hero);
+                                            if (success) {
+                                                view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
+                                            } else {
+                                                javax.swing.JOptionPane.showMessageDialog(
+                                                        gameView,
+                                                        "This door is locked! You need a Level Key to open it.",
+                                                        "Door Locked",
+                                                        javax.swing.JOptionPane.WARNING_MESSAGE
+                                                );
+                                                view.GameView.addFloatingText(nx, ny, "Level Key Required", java.awt.Color.RED);
+                                            }
+                                        } else {
+                                            // Normal door
+                                            domain.models.staticObjects.KeyItem keyToUse = null;
+                                            for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                                                if (item instanceof domain.models.staticObjects.KeyItem) {
+                                                    keyToUse = (domain.models.staticObjects.KeyItem) item;
+                                                    break;
+                                                }
+                                            }
+
+                                            if (keyToUse != null) {
+                                                if (keyToUse.isSingleUse()) {
+                                                    hero.getInventory().removeItem(keyToUse);
+                                                }
+                                                door.unlock();
+                                                door.open();
+                                                System.out.println("Unlocked door using key!");
+                                                view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
+                                            } else {
+                                                javax.swing.JOptionPane.showMessageDialog(
+                                                        gameView,
+                                                        "This door is locked! You need a Key to open it.",
+                                                        "Door Locked",
+                                                        javax.swing.JOptionPane.WARNING_MESSAGE
+                                                );
+                                                view.GameView.addFloatingText(nx, ny, "Key Required", java.awt.Color.RED);
+                                            }
+                                        }
+                                        if (gameView != null) gameView.repaint();
+                                    }
+                                    return;
+                                } else {
+                                    // Door is unlocked (open). If it is a LevelDoor, add "New Level" interaction choice
+                                    if (door instanceof domain.models.staticObjects.LevelDoor) {
+                                        String[] options = new String[]{"New Level", "Cancel"};
+                                        int choice = javax.swing.JOptionPane.showOptionDialog(
+                                                gameView,
+                                                "What would you like to do with " + door.getName() + "?",
+                                                "Select Interaction",
+                                                javax.swing.JOptionPane.DEFAULT_OPTION,
+                                                javax.swing.JOptionPane.QUESTION_MESSAGE,
+                                                null,
+                                                options,
+                                                options[0]
+                                        );
+                                        if (choice == 0) {
+                                            domain.models.staticObjects.LevelDoor.triggerOpenTransition();
+                                        }
+                                        return;
+                                    }
+                                }
+                            }
                             java.util.List<domain.logic.Action> actions = obj.getActions();
                             if (actions != null && !actions.isEmpty()) {
                                 // Kullanılabilir eylemleri filtrele

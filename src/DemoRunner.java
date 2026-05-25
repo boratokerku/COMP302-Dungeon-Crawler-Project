@@ -234,6 +234,10 @@ public class DemoRunner {
         // Place static Level Door and Level Key for Adventure mode progression
         LevelManager.placeRandomLevelDoor(map, "Level Gate");
         map.placeObject(new domain.models.staticObjects.LevelKey(15, 12), 15, 12);
+        
+        // Initialize level manager for level progression
+        levelManager = new LevelManager();
+
         Hero hero = new Hero(4, 4);
         hero.setCurrentMap(map);
         Knight knight = new Knight(12, 10);
@@ -681,40 +685,78 @@ public class DemoRunner {
             scrollSpawner.setTimeLeft(state.scrollSpawnTimeLeft);
         }
 
-        final Runnable advanceLevelRunnable = () -> {
-            if (levelManager != null) {
-                GameMap newMap = levelManager.advanceLevel();
-                if (newMap != null) {
-                    mapRef[0] = newMap;
-                    hero.setCurrentMap(newMap);
-                    
-                    hero.setPosition(2, 2);
-                    newMap.placeObject(hero, 2, 2);
-                    
-                    gameView.setGameMap(newMap);
-                    inputHandler.setGameMap(newMap);
-                    mouseHandler.setGameMap(newMap);
-                    spawner.setGameMap(newMap);
-                    scrollSpawner.setGameMap(newMap);
-                    
-                    entities.clear();
-                    entities.add(hero);
-                    
-                    levelManager.populateEnemies(levelManager.getCurrentLevel(), newMap, entities, hero);
-                    spawner.clearSpawnedEnemies();
-                    inputHandler.setShadowClone(null);
-                    
-                    view.GameView.addFloatingText(2, 2, "Level " + levelManager.getCurrentLevel(), java.awt.Color.CYAN);
-                    System.out.println("Transitioned to Level " + levelManager.getCurrentLevel());
-                    gameView.repaint();
-                }
-            }
-        };
-        domain.models.staticObjects.LevelDoor.setOpenCallback(advanceLevelRunnable);
-
         // Timer referans tutucular — lambda içinden timer'a erişmek için (pause/resume)
         final javax.swing.Timer[] logicRef = new javax.swing.Timer[1];
         final javax.swing.Timer[] renderRef = new javax.swing.Timer[1];
+
+        final Runnable advanceLevelRunnable = () -> {
+            if (levelManager != null) {
+                // Freeze the game first by stopping the timers
+                if (logicRef[0] != null) logicRef[0].stop();
+                if (renderRef[0] != null) renderRef[0].stop();
+
+                // Show confirmation popup on Event Dispatch Thread
+                int choice = javax.swing.JOptionPane.showConfirmDialog(
+                        frame,
+                        "Would you like to move on to the next level?",
+                        "Next Level Transition",
+                        javax.swing.JOptionPane.YES_NO_OPTION,
+                        javax.swing.JOptionPane.QUESTION_MESSAGE
+                );
+
+                if (choice == javax.swing.JOptionPane.YES_OPTION) {
+                    GameMap newMap = levelManager.advanceLevel();
+                    if (newMap != null) {
+                        mapRef[0] = newMap;
+                        hero.setCurrentMap(newMap);
+                        
+                        hero.setPosition(2, 2);
+                        newMap.placeObject(hero, 2, 2);
+                        
+                        gameView.setGameMap(newMap);
+                        inputHandler.setGameMap(newMap);
+                        mouseHandler.setGameMap(newMap);
+                        spawner.setGameMap(newMap);
+                        scrollSpawner.setGameMap(newMap);
+                        
+                        entities.clear();
+                        entities.add(hero);
+                        
+                        levelManager.populateEnemies(levelManager.getCurrentLevel(), newMap, entities, hero);
+                        spawner.clearSpawnedEnemies();
+                        inputHandler.setShadowClone(null);
+                        
+                        view.GameView.addFloatingText(2, 2, "Level " + levelManager.getCurrentLevel(), java.awt.Color.CYAN);
+                        System.out.println("Transitioned to Level " + levelManager.getCurrentLevel());
+                        gameView.repaint();
+                    }
+                } else {
+                    // Push hero back if they are standing on the LevelDoor
+                    domain.models.entity.GameObject standingOn = mapRef[0].getObjectAt(hero.getX(), hero.getY());
+                    if (standingOn instanceof domain.models.staticObjects.LevelDoor) {
+                        switch (hero.getDirection()) {
+                            case UP:
+                                hero.setPosition(hero.getX(), hero.getY() + 1);
+                                break;
+                            case DOWN:
+                                hero.setPosition(hero.getX(), hero.getY() - 1);
+                                break;
+                            case LEFT:
+                                hero.setPosition(hero.getX() + 1, hero.getY());
+                                break;
+                            case RIGHT:
+                                hero.setPosition(hero.getX() - 1, hero.getY());
+                                break;
+                        }
+                    }
+                }
+
+                // Resume the timers
+                if (logicRef[0] != null) logicRef[0].start();
+                if (renderRef[0] != null) renderRef[0].start();
+            }
+        };
+        domain.models.staticObjects.LevelDoor.setOpenCallback(advanceLevelRunnable);
 
         // Victory Coin callback to trigger victory sequence
         domain.models.item.VictoryCoin.setVictoryCallback(() -> {

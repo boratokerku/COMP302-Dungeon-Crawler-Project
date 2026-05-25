@@ -1,4 +1,5 @@
 import domain.logic.EnemySpawner;
+import domain.logic.LevelManager;
 import domain.logic.ScrollSpawner;
 import domain.models.GameState;
 import domain.models.entity.*;
@@ -18,6 +19,7 @@ import view.TileManager;
 public class DemoRunner {
     private static GameMap initialDesignedMap = null;
     private static domain.models.GameMode activeGameMode = domain.models.GameMode.ADVENTURE;
+    private static LevelManager levelManager = null;
 
     private static GameMap cloneMap(GameMap original) {
         if (original == null)
@@ -68,12 +70,19 @@ public class DemoRunner {
                     copy.placeObject(new domain.models.entity.Column(obj.getName(), x, y, obj.getImageName()), x, y);
                 } else if (obj instanceof domain.models.entity.Sign) {
                     copy.placeObject(new domain.models.entity.Sign(obj.getName(), x, y, obj.getImageName()), x, y);
+                } else if (obj instanceof domain.models.staticObjects.LevelDoor) {
+                    copy.placeObject(new domain.models.staticObjects.LevelDoor(obj.getName(), x, y), x, y);
                 } else if (obj instanceof domain.models.staticObjects.Door) {
                     domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
                     copy.placeObject(new domain.models.staticObjects.Door(door.getName(), x, y, door.isLocked()), x, y);
                 } else if (obj instanceof domain.models.staticObjects.Decoration) {
                     copy.placeObject(
                             new domain.models.staticObjects.Decoration(obj.getName(), x, y, obj.getImageName()), x, y);
+                } else if (obj instanceof domain.models.staticObjects.LevelKey) {
+                    domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) obj;
+                    copy.placeObject(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()), x, y);
+                } else if (obj instanceof domain.models.item.VictoryCoin) {
+                    copy.placeObject(new domain.models.item.VictoryCoin(x, y), x, y);
                 } else if (obj instanceof domain.models.staticObjects.KeyItem) {
                     domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) obj;
                     copy.placeObject(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()),
@@ -173,7 +182,7 @@ public class DemoRunner {
 
     // ── Design Mode ──────────────────────────────────────────────────────────
     private static void startDesignMode(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
-        GameMap map = new GameMap(38, 22);
+        GameMap map = new GameMap(22, 16);
         TileManager tileManager = new TileManager();
 
         DesignModeView designView = new DesignModeView(
@@ -221,6 +230,10 @@ public class DemoRunner {
             startTeamMatchWithMap(frame, mainPanel, cardLayout, map);
             return;
         }
+
+        // Place static Level Door and Level Key for Adventure mode progression
+        LevelManager.placeRandomLevelDoor(map, "Level Gate");
+        map.placeObject(new domain.models.staticObjects.LevelKey(15, 12), 15, 12);
         Hero hero = new Hero(4, 4);
         hero.setCurrentMap(map);
         Knight knight = new Knight(12, 10);
@@ -319,32 +332,33 @@ public class DemoRunner {
     private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         initialDesignedMap = null;
         activeGameMode = domain.models.GameMode.ADVENTURE;
-        GameMap map = new GameMap(38, 18);
+        GameMap map = new GameMap(22, 16);
         Hero hero = new Hero(4, 4);
         hero.setCurrentMap(map);
         Knight knight = new Knight(12, 8);
-        Sorcerer sorcerer = new Sorcerer(30, 5);
+        Sorcerer sorcerer = new Sorcerer(18, 5);
 
         // Kasalar (Crates) odaların/koridorların köşelerinde
         map.placeObject(new domain.models.entity.Crate("Crate", 2, 2), 2, 2);
         map.placeObject(new domain.models.entity.Crate("Crate", 3, 2), 3, 2);
-        map.placeObject(new domain.models.entity.Crate("Crate", 35, 15), 35, 15);
-        map.placeObject(new domain.models.entity.Crate("Crate", 2, 15), 2, 15);
+        map.placeObject(new domain.models.entity.Crate("Crate", 19, 13), 19, 13);
+        map.placeObject(new domain.models.entity.Crate("Crate", 2, 13), 2, 13);
 
         // Sandıklar (Chests) uzak köşelerde
-        map.placeObject(new domain.models.entity.Chest("Main Chest", 35, 2, true), 35, 2);
-        map.placeObject(new domain.models.entity.Chest("Hidden Chest", 2, 16, true), 2, 16);
+        map.placeObject(new domain.models.entity.Chest("Main Chest", 19, 2, true), 19, 2);
+        map.placeObject(new domain.models.entity.Chest("Hidden Chest", 2, 12, true), 2, 12);
 
         // Sütunlar (Columns) geniş alanın ortasında bir ana salon oluşturacak şekilde
-        map.placeObject(new domain.models.entity.Column("Column", 12, 8, "colon/gray_colon_whole"), 12, 8);
-        map.placeObject(new domain.models.entity.Column("Column", 26, 8, "colon/gray_colon_whole"), 26, 8);
-        map.placeObject(new domain.models.entity.Column("Column", 12, 11, "colon/gray_colon_whole"), 12, 11);
-        map.placeObject(new domain.models.entity.Column("Column", 26, 11, "colon/gray_colon_whole"), 26, 11);
+        map.placeObject(new domain.models.entity.Column("Column", 8, 5, "colon/gray_colon_whole"), 8, 5);
+        map.placeObject(new domain.models.entity.Column("Column", 14, 5, "colon/gray_colon_whole"), 14, 5);
+        map.placeObject(new domain.models.entity.Column("Column", 8, 10, "colon/gray_colon_whole"), 8, 10);
+        map.placeObject(new domain.models.entity.Column("Column", 14, 10, "colon/gray_colon_whole"), 14, 10);
 
         // Eşyalar
-        map.placeObject(new domain.models.item.PotionItem(12, 8), 12, 8);
-        map.placeObject(new domain.models.staticObjects.KeyItem(14, 8), 14, 8);
-        map.placeObject(new domain.models.item.SwordItem(16, 8), 16, 8);
+        map.placeObject(new domain.models.item.PotionItem(9, 5), 9, 5);
+        map.placeObject(new domain.models.staticObjects.KeyItem(10, 8), 10, 8);
+        map.placeObject(new domain.models.staticObjects.KeyItem(10, 9), 10, 9);
+        map.placeObject(new domain.models.item.SwordItem(12, 8), 12, 8);
 
         // =====================================================================
         // TODO: TEMPORARY DEVELOPMENT TEST DROPS - GEÇİCİ GELİŞTİRİCİ TEST SİLAHLARI VE
@@ -365,12 +379,16 @@ public class DemoRunner {
 
         // Dekorasyonlar (Torches)
         map.placeObject(new domain.models.staticObjects.Decoration("Torch", 6, 1, "torch/torch_1"), 6, 1);
-        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 30, 1, "torch/torch_1"), 30, 1);
+        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 16, 1, "torch/torch_1"), 16, 1);
 
-        // Çıkış Kapısı (Exit Door) - Kilitli olarak yerleştirildi!
-        map.placeObject(new domain.models.staticObjects.Door("Exit Door", 35, 8, true), 35, 8);
-        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 1, 8, "torch/torch_1"), 1, 8);
-        map.placeObject(new domain.models.staticObjects.Decoration("Torch", 36, 8, "torch/torch_1"), 36, 8);
+        // Level Door (to Level 2: The Depths) - Kilitli, Level Key gerektirir
+        LevelManager.placeRandomLevelDoor(map, "Level Gate");
+
+        // Level Key to unlock Level Gate
+        map.placeObject(new domain.models.staticObjects.LevelKey(15, 12), 15, 12);
+
+        // Initialize level manager
+        levelManager = new LevelManager();
 
         List<Entity> entities = new ArrayList<>();
         entities.add(hero);
@@ -388,7 +406,12 @@ public class DemoRunner {
     private static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
         initialDesignedMap = null;
         activeGameMode = domain.models.GameMode.ADVENTURE;
-        GameMap map = new GameMap(38, 18);
+        
+        // Initialize level manager with loaded level
+        levelManager = new LevelManager();
+        levelManager.setCurrentLevel(state.currentLevel);
+
+        GameMap map = new GameMap(22, 16);
 
         // Hero oluştur ve durumunu yükle
         Hero hero = new Hero(state.hero.x, state.hero.y);
@@ -449,6 +472,18 @@ public class DemoRunner {
                 if (!rec.alive)
                     clone.takeDamage(999);
                 entities.add(clone);
+            } else if ("FinalBoss".equals(rec.type)) {
+                domain.models.entity.FinalBoss fb = new domain.models.entity.FinalBoss(rec.x, rec.y);
+                fb.setHp(rec.hp);
+                fb.setTeleportTimeLeft(rec.timeLeft);
+                fb.setProjectileTimeLeft(rec.projectileTimeLeft);
+                fb.setPhase80Triggered(rec.hp < 80);
+                fb.setPhase60Triggered(rec.hp < 60);
+                fb.setPhase40Triggered(rec.hp < 40);
+                fb.setPhase20Triggered(rec.hp < 20);
+                if (!rec.alive)
+                    fb.takeDamage(999);
+                entities.add(fb);
             }
         }
 
@@ -553,6 +588,12 @@ public class DemoRunner {
                 if (!isLocked)
                     door.open(); // Eğer kilitli değilse açık görseline geç
                 return door;
+            case "LevelDoor":
+                return new domain.models.staticObjects.LevelDoor(displayName, x, y);
+            case "LevelKey":
+                return new domain.models.staticObjects.LevelKey(x, y);
+            case "VictoryCoin":
+                return new domain.models.item.VictoryCoin(x, y);
             default:
                 System.err.println("Bilinmeyen item tipi: " + type);
                 return null;
@@ -578,6 +619,7 @@ public class DemoRunner {
             List<String> inventoryScrollTypes,
             GameState state,
             domain.models.GameMode mode) {
+        final GameMap[] mapRef = new GameMap[]{map};
         AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();
 
@@ -639,13 +681,60 @@ public class DemoRunner {
             scrollSpawner.setTimeLeft(state.scrollSpawnTimeLeft);
         }
 
+        final Runnable advanceLevelRunnable = () -> {
+            if (levelManager != null) {
+                GameMap newMap = levelManager.advanceLevel();
+                if (newMap != null) {
+                    mapRef[0] = newMap;
+                    hero.setCurrentMap(newMap);
+                    
+                    hero.setPosition(2, 2);
+                    newMap.placeObject(hero, 2, 2);
+                    
+                    gameView.setGameMap(newMap);
+                    inputHandler.setGameMap(newMap);
+                    mouseHandler.setGameMap(newMap);
+                    spawner.setGameMap(newMap);
+                    scrollSpawner.setGameMap(newMap);
+                    
+                    entities.clear();
+                    entities.add(hero);
+                    
+                    levelManager.populateEnemies(levelManager.getCurrentLevel(), newMap, entities, hero);
+                    spawner.clearSpawnedEnemies();
+                    inputHandler.setShadowClone(null);
+                    
+                    view.GameView.addFloatingText(2, 2, "Level " + levelManager.getCurrentLevel(), java.awt.Color.CYAN);
+                    System.out.println("Transitioned to Level " + levelManager.getCurrentLevel());
+                    gameView.repaint();
+                }
+            }
+        };
+        domain.models.staticObjects.LevelDoor.setOpenCallback(advanceLevelRunnable);
+
         // Timer referans tutucular — lambda içinden timer'a erişmek için (pause/resume)
         final javax.swing.Timer[] logicRef = new javax.swing.Timer[1];
         final javax.swing.Timer[] renderRef = new javax.swing.Timer[1];
 
+        // Victory Coin callback to trigger victory sequence
+        domain.models.item.VictoryCoin.setVictoryCallback(() -> {
+            if (logicRef[0] != null)
+                logicRef[0].stop();
+            if (renderRef[0] != null)
+                renderRef[0].stop();
+            inputHandler.disableInput();
+            
+            javax.swing.JOptionPane.showMessageDialog(frame,
+                    "🏆 VICTORY! You have conquered the Dungeon! 🏆\n\nYou have defeated the Final Boss and secured the Victory Coin!",
+                    "Victory!",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            
+            cardLayout.show(mainPanel, "Menu");
+        });
+
         // PauseMenu — JFrame glass pane olarak oyunun üstüne bindiriliyor
         view.PauseMenu pauseMenu = new view.PauseMenu(
-                hero, entities, map, spawner, scrollSpawner,
+                hero, entities, map, spawner, scrollSpawner, levelManager,
                 () -> {
                     if (logicRef[0] != null)
                         logicRef[0].start();
@@ -755,6 +844,16 @@ public class DemoRunner {
                     return;
                 }
             } else {
+                // ── LEVEL TRANSITION CHECK ──
+                if (levelManager != null) {
+                    domain.models.entity.GameObject standingOn = mapRef[0].getObjectAt(hero.getX(), hero.getY());
+                    if (standingOn instanceof domain.models.staticObjects.LevelDoor) {
+                        domain.models.staticObjects.LevelDoor ld = (domain.models.staticObjects.LevelDoor) standingOn;
+                        if (!ld.isLocked()) {
+                            advanceLevelRunnable.run();
+                        }
+                    }
+                }
                 // ADVENTURE WIN KONTROLÜ
                 boolean allEnemiesDefeated = true;
                 for (domain.models.entity.Entity entity : entities) {
@@ -766,9 +865,9 @@ public class DemoRunner {
                 }
 
                 boolean exitReached = false;
-                for (int x = 0; x < map.getWidth(); x++) {
-                    for (int y = 0; y < map.getHeight(); y++) {
-                        domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                for (int x = 0; x < mapRef[0].getWidth(); x++) {
+                    for (int y = 0; y < mapRef[0].getHeight(); y++) {
+                        domain.models.entity.GameObject obj = mapRef[0].getObjectAt(x, y);
                         if (obj instanceof domain.models.staticObjects.Door && "Exit Door".equals(obj.getName())) {
                             domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
                             if (!door.isLocked() && Math.abs(hero.getX() - x) <= 1 && Math.abs(hero.getY() - y) <= 1) {
@@ -816,26 +915,33 @@ public class DemoRunner {
                 // Team match update logic (everyone in entities)
                 for (domain.models.entity.Entity ent : entities) {
                     if (ent instanceof domain.models.entity.Knight && ent.isAlive()) {
-                        ((domain.models.entity.Knight) ent).followHero(hero, map, entities);
+                        ((domain.models.entity.Knight) ent).followHero(hero, mapRef[0], entities);
                     } else if (ent instanceof domain.models.entity.Sorcerer && ent.isAlive()) {
-                        ((domain.models.entity.Sorcerer) ent).followHero(hero, map, entities);
+                        ((domain.models.entity.Sorcerer) ent).followHero(hero, mapRef[0], entities);
                     }
                 }
             } else {
-                if (knight != null)
-                    knight.followHero(hero, map, entities);
-                if (sorcerer != null)
-                    sorcerer.followHero(hero, map, entities);
-
-                spawner.trySpawn(entities);
-
-                for (domain.models.entity.Knight k : spawner.getSpawnedKnights()) {
-                    if (k.isAlive())
-                        k.followHero(hero, map, entities);
+                if (levelManager == null || levelManager.getCurrentLevel() == 1) {
+                    spawner.trySpawn(entities);
                 }
-                for (domain.models.entity.Sorcerer s : spawner.getSpawnedSorcerers()) {
-                    if (s.isAlive())
-                        s.followHero(hero, map, entities);
+
+                java.util.List<domain.models.entity.Entity> minionsToSpawn = new java.util.ArrayList<>();
+                for (domain.models.entity.Entity ent : entities) {
+                    if (ent.isAlive()) {
+                        if (ent instanceof domain.models.entity.Knight) {
+                            ((domain.models.entity.Knight) ent).followHero(hero, mapRef[0], entities);
+                        } else if (ent instanceof domain.models.entity.Sorcerer) {
+                            ((domain.models.entity.Sorcerer) ent).followHero(hero, mapRef[0], entities);
+                        } else if (ent instanceof domain.models.entity.FinalBoss) {
+                            domain.models.entity.FinalBoss boss = (domain.models.entity.FinalBoss) ent;
+                            boss.followHero(hero, mapRef[0], entities);
+                            minionsToSpawn.addAll(boss.pollPendingMinions());
+                            minionsToSpawn.addAll(boss.pollPendingSorcerers());
+                        }
+                    }
+                }
+                if (!minionsToSpawn.isEmpty()) {
+                    entities.addAll(minionsToSpawn);
                 }
             }
 
@@ -851,15 +957,18 @@ public class DemoRunner {
                     }
                 }
             } else {
-                if (sorcerer != null) {
-                    domain.models.entity.Projectile sp = sorcerer.pollPendingProjectile();
-                    if (sp != null)
-                        newProjectiles.add(sp);
-                }
-                for (domain.models.entity.Sorcerer s : spawner.getSpawnedSorcerers()) {
-                    domain.models.entity.Projectile p = s.pollPendingProjectile();
-                    if (p != null)
-                        newProjectiles.add(p);
+                for (domain.models.entity.Entity ent : entities) {
+                    if (ent instanceof domain.models.entity.Sorcerer) {
+                        domain.models.entity.Projectile p = ((domain.models.entity.Sorcerer) ent)
+                                .pollPendingProjectile();
+                        if (p != null)
+                            newProjectiles.add(p);
+                    } else if (ent instanceof domain.models.entity.FinalBoss) {
+                        domain.models.entity.Projectile p = ((domain.models.entity.FinalBoss) ent)
+                                .pollPendingProjectile();
+                        if (p != null)
+                            newProjectiles.add(p);
+                    }
                 }
             }
             entities.addAll(newProjectiles);
@@ -868,7 +977,7 @@ public class DemoRunner {
             for (domain.models.entity.Entity en : entities) {
                 if (en instanceof domain.models.entity.Projectile && en.isAlive()) {
                     domain.models.entity.Projectile proj = (domain.models.entity.Projectile) en;
-                    proj.step(map);
+                    proj.step(mapRef[0]);
 
                     if (mode == domain.models.GameMode.TEAM_MATCH) {
                         for (domain.models.entity.Entity target : entities) {
@@ -897,7 +1006,13 @@ public class DemoRunner {
                             for (domain.models.entity.Entity enemy : entities) {
                                 if (enemy.isAlive() && enemy != hero && !(enemy instanceof ShadowClone)
                                         && !(enemy instanceof domain.models.entity.Projectile)) {
-                                    if (proj.getX() == enemy.getX() && proj.getY() == enemy.getY()) {
+                                    boolean hit = false;
+                                    if (enemy instanceof domain.models.entity.FinalBoss) {
+                                        hit = ((domain.models.entity.FinalBoss) enemy).occupiesTile(proj.getX(), proj.getY());
+                                    } else {
+                                        hit = (proj.getX() == enemy.getX() && proj.getY() == enemy.getY());
+                                    }
+                                    if (hit) {
                                         int def = 0;
                                         if (enemy instanceof domain.models.entity.Knight) {
                                             def = 1; // Knight armor reduces damage by 1
@@ -913,20 +1028,34 @@ public class DemoRunner {
                                         // Handle enemy defeat & loot drop
                                         if (!enemy.isAlive()) {
                                             System.out.println("Enemy defeated by projectile!");
-                                            java.util.Random rand = new java.util.Random();
-                                            int dropType = rand.nextInt(3);
                                             domain.models.entity.GameObject loot = null;
-                                            if (dropType == 0) {
-                                                loot = domain.models.item.MapItem.createRandomItem(enemy.getX(),
-                                                        enemy.getY());
-                                            } else if (dropType == 1) {
-                                                loot = new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
+                                            if (enemy instanceof domain.models.entity.FinalBoss) {
+                                                loot = new domain.models.item.VictoryCoin(enemy.getX(), enemy.getY());
                                             } else {
-                                                loot = new domain.models.staticObjects.KeyItem(enemy.getX(),
-                                                        enemy.getY());
+                                                java.util.Random rand = new java.util.Random();
+                                                int dropType = rand.nextInt(3);
+                                                if (dropType == 0) {
+                                                    loot = domain.models.item.MapItem.createRandomItem(enemy.getX(),
+                                                            enemy.getY());
+                                                } else if (dropType == 1) {
+                                                    loot = new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
+                                                } else {
+                                                    int locked = countLockedChests(mapRef[0]);
+                                                    int keys = countKeys(mapRef[0], hero);
+                                                    if (keys < locked) {
+                                                        loot = new domain.models.staticObjects.KeyItem(enemy.getX(),
+                                                                enemy.getY());
+                                                    } else {
+                                                        loot = rand.nextBoolean()
+                                                            ? domain.models.item.MapItem.createRandomItem(enemy.getX(), enemy.getY())
+                                                            : new domain.models.item.PotionItem(enemy.getX(), enemy.getY());
+                                                    }
+                                                }
                                             }
-                                            map.placeObject(loot, enemy.getX(), enemy.getY());
-                                            System.out.println("Loot dropped: " + loot.getName());
+                                            if (loot != null) {
+                                                mapRef[0].placeObject(loot, enemy.getX(), enemy.getY());
+                                                System.out.println("Loot dropped: " + loot.getName());
+                                            }
                                         }
                                         break;
                                     }
@@ -1084,5 +1213,38 @@ public class DemoRunner {
             }
         }
         return processed;
+    }
+
+    private static int countLockedChests(domain.models.map.GameMap map) {
+        int count = 0;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.entity.Chest && ((domain.models.entity.Chest) obj).isLocked()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private static int countKeys(domain.models.map.GameMap map, domain.models.entity.Hero hero) {
+        int count = 0;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.staticObjects.KeyItem) {
+                    count++;
+                }
+            }
+        }
+        if (hero != null && hero.getInventory() != null) {
+            for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                if (item instanceof domain.models.staticObjects.KeyItem) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 }

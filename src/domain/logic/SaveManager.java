@@ -21,9 +21,11 @@ public class SaveManager {
 
     // Oyunu kaydet — saves/<saveName>.json dosyasına yazar
     public static void save(String saveName, Hero hero, List<Entity> entities, GameMap map,
-                            domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner) {
+                            domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner,
+                            int currentLevel) {
         GameState state = new GameState();
         state.saveName = saveName;
+        state.currentLevel = currentLevel;
         state.timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date());
 
         // Global Timerlar
@@ -89,6 +91,12 @@ public class SaveManager {
                 long projectileLeft  = ((Sorcerer) e).getProjectileTimeLeft();
                 state.enemies.add(new GameState.EnemyRecord(
                         "Sorcerer", e.getX(), e.getY(), e.getHp(), e.isAlive(), teleportLeft, projectileLeft
+                ));
+            } else if (e instanceof domain.models.entity.FinalBoss) {
+                domain.models.entity.FinalBoss fb = (domain.models.entity.FinalBoss) e;
+                state.enemies.add(new GameState.EnemyRecord(
+                        "FinalBoss", e.getX(), e.getY(), e.getHp(), e.isAlive(),
+                        fb.getTeleportTimeLeft(), fb.getProjectileTimeLeft()
                 ));
             } else if (e instanceof domain.models.entity.ShadowClone) {
                 if (e.isAlive()) {

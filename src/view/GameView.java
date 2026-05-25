@@ -144,7 +144,8 @@ public class GameView extends JPanel {
         super.paintComponent(g);
 
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
         // Her çizim döngüsünde ekranın boyutuna göre karelerin (Tile) büyüklüğünü
         // hesapla
@@ -789,18 +790,18 @@ public class GameView extends JPanel {
         for (domain.models.entity.Entity e : entityList) {
             if (e.isAlive() && e instanceof domain.models.entity.Projectile) {
                 domain.models.entity.Projectile proj = (domain.models.entity.Projectile) e;
-                
+
                 if ("ARROW".equalsIgnoreCase(proj.getType())) {
                     BufferedImage arrowImg = assetManager.getProjectileArrow();
                     if (arrowImg != null) {
                         double px = offsetX + (proj.getExactX() * tileSize);
                         double py = offsetY + (proj.getExactY() * tileSize);
-                        
+
                         // atan2 0 açısını Sağa (Right) doğru kabul eder.
-                        // Ok görseli orijinalinde YUKARI (Up) bakıyor. 
+                        // Ok görseli orijinalinde YUKARI (Up) bakıyor.
                         // Bu yüzden +90 derece (Math.PI / 2) offset ekliyoruz.
                         double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) + (Math.PI / 2.0);
-                        
+
                         java.awt.geom.AffineTransform old = g2d.getTransform();
                         g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
                         g2d.rotate(angle);
@@ -808,16 +809,16 @@ public class GameView extends JPanel {
                         g2d.setTransform(old);
                     } else {
                         // Fallback if arrow image fails
-                        int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                        int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
                         int size = tileSize / 2;
                         g2d.setColor(new java.awt.Color(200, 150, 100, 200));
                         g2d.fillOval(px, py, size, size);
                     }
                 } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
                     // Blazing Fireball (Orange-Red glowing orb)
-                    int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                    int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                    int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                    int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
                     int size = tileSize / 2;
                     g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
                     g2d.fillOval(px, py, size, size);
@@ -825,9 +826,9 @@ public class GameView extends JPanel {
                     g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
                 } else if ("BOSS_FIREBALL".equalsIgnoreCase(proj.getType())) {
                     // Boss Fireball — larger, darker, more menacing
-                    int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 6);
-                    int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 6);
-                    int size = (int)(tileSize * 0.67);
+                    int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 6);
+                    int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 6);
+                    int size = (int) (tileSize * 0.67);
                     g2d.setColor(new java.awt.Color(200, 0, 0, 230)); // Crimson core
                     g2d.fillOval(px, py, size, size);
                     g2d.setColor(new java.awt.Color(255, 50, 0, 180)); // Red aura
@@ -836,8 +837,8 @@ public class GameView extends JPanel {
                     g2d.drawOval(px - 5, py - 5, size + 10, size + 10);
                 } else {
                     // Purple Mage Spell
-                    int px = (int)(offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                    int py = (int)(offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                    int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                    int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
                     int size = tileSize / 2;
                     g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
                     g2d.fillOval(px, py, size, size);
@@ -888,41 +889,6 @@ public class GameView extends JPanel {
             for (int y = 0; y < gameMap.getHeight(); y++) {
                 domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
                 if (obj != null) {
-                    if (obj instanceof domain.models.tile.WallTile) {
-                        String imgName = obj.getImageName();
-                        int tlX;
-                        if (x == 0) {
-                            tlX = 0;
-                        } else if (x == gameMap.getWidth() - 1) {
-                            tlX = gameMap.getWidth() - 1;
-                        } else {
-                            tlX = 1 + ((x - 1) / 2) * 2;
-                        }
-                        int tlY = (y / 2) * 2;
-                        boolean in2x2Block = (isSameWall(gameMap, tlX, tlY, imgName) &&
-                                isSameWall(gameMap, tlX + 1, tlY, imgName) &&
-                                isSameWall(gameMap, tlX, tlY + 1, imgName) &&
-                                isSameWall(gameMap, tlX + 1, tlY + 1, imgName));
-                        if (in2x2Block) {
-                            if (x == tlX && y == tlY) {
-                                BufferedImage tImg = tileManager.getTile(imgName);
-                                if (tImg != null) {
-                                    int wallOffset = 0;
-                                    if ("wall/wall_1".equals(imgName)) {
-                                        wallOffset = 8;
-                                    } else if ("wall/wall_side".equals(imgName)) {
-                                        wallOffset = 6;
-                                    } else if ("wall/wall_2".equals(imgName)) {
-                                        wallOffset = 6;
-                                    }
-                                    g2d.drawImage(tImg, offsetX + (x * tileSize), offsetY + (y * tileSize) - wallOffset,
-                                            2 * tileSize, 2 * tileSize + wallOffset, null);
-                                }
-                            }
-                            continue;
-                        }
-                    }
-
                     if (obj instanceof domain.models.item.MapItem ||
                             obj instanceof domain.models.entity.Column ||
                             obj instanceof domain.models.entity.Chest ||
@@ -932,7 +898,8 @@ public class GameView extends JPanel {
                             obj instanceof domain.models.entity.SearchableObject ||
                             obj instanceof domain.models.entity.Sign ||
                             obj instanceof domain.models.tile.FloorTile) {
-                        // Eğer hücrede bir eşya, statik obje veya zemin varsa zemin (FloorTile) çiziyoruz
+                        // Eğer hücrede bir eşya, statik obje veya zemin varsa zemin (FloorTile)
+                        // çiziyoruz
                         BufferedImage floor = tileManager.getTile("floor");
                         if (floor != null) {
                             g2d.drawImage(floor, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize, tileSize,
@@ -948,6 +915,7 @@ public class GameView extends JPanel {
         if (gameMap == null || tileManager == null)
             return;
 
+        // PASS 1: Draw all base walls for the current row (yVal)
         for (int x = 0; x < gameMap.getWidth(); x++) {
             domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
             if (obj instanceof domain.models.tile.WallTile) {
@@ -967,7 +935,7 @@ public class GameView extends JPanel {
                         g2d.drawImage(tileImage, drawX, offsetY + (yVal * tileSize) - 6,
                                 sideWidth, tileSize + 6, null); // 6 pixels taller
                     }
-                    
+
                     domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
                     if (wall.getDecoration() != null) {
                         domain.models.entity.GameObject deco = wall.getDecoration();
@@ -991,89 +959,71 @@ public class GameView extends JPanel {
                             }
                             g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
                         }
-                    } else if (obj instanceof domain.models.tile.WallTile &&
-                            "wall/wall_1".equals(obj.getImageName())) {
-                        BufferedImage tileImage = tileManager.getTile(obj.getImageName());
-                        if (tileImage != null) {
-                            g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize) - 8, tileSize,
-                                    tileSize + 8, null); // 8 pixels taller
-                        }
-                    } else {
-                        // Normal harita objesi (Duvar vs.)
-                        BufferedImage tileImage = tileManager.getTile(obj.getImageName());
-                        if (tileImage != null) {
-                            int offset = (obj instanceof domain.models.tile.WallTile) ? 6 : 0;
-                            if (offset > 0) {
-                                g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize) - offset,
-                                        tileSize,
-                                        tileSize + offset, null);
-                            } else {
-                                g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize,
-                                        tileSize, null);
-                            }
+                    }
+                } else if ("wall/wall_1".equals(obj.getImageName())) {
+                    BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                    if (tileImage != null) {
+                        int dh = (int) (tileSize * 1.5);
+                        int drawY = offsetY + (yVal * tileSize) + tileSize - dh;
+                        g2d.drawImage(tileImage, offsetX + (x * tileSize), drawY, tileSize, dh, null);
+                    }
+                } else if ("wall/wall_2".equals(obj.getImageName())) {
+                    BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                    if (tileImage != null) {
+                        int dh = (int) (tileSize * 1.5);
+                        int drawY = offsetY + (yVal * tileSize) + tileSize - dh;
+                        g2d.drawImage(tileImage, offsetX + (x * tileSize), drawY, tileSize, dh, null);
+                    }
+                } else {
+                    // Normal harita objesi (Duvar vs.)
+                    BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                    if (tileImage != null) {
+                        int offset = (obj instanceof domain.models.tile.WallTile) ? 6 : 0;
+                        if (offset > 0) {
+                            g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize) - offset,
+                                    tileSize,
+                                    tileSize + offset, null);
+                        } else {
+                            g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize), tileSize,
+                                    tileSize, null);
                         }
                     }
                 }
             }
         }
 
-        // PASS 2: Draw all wall-mounted decorations on top of all base walls and floor tiles
+        // PASS 2: Draw all wall-mounted decorations on top of all base walls and floor
+        // tiles for this row (yVal)
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            for (int y = 0; y < gameMap.getHeight(); y++) {
-                domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
-                if (obj instanceof domain.models.tile.WallTile) {
-                    domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
-                    if (wall.getDecoration() != null) {
-                        domain.models.entity.GameObject deco = wall.getDecoration();
-                        BufferedImage decoImg = tileManager.getTile(deco.getImageName());
-                        if (decoImg != null) {
-                            int iw = decoImg.getWidth();
-                            int ih = decoImg.getHeight();
+            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
+            if (obj instanceof domain.models.tile.WallTile) {
+                domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
+                if (wall.getDecoration() != null) {
+                    domain.models.entity.GameObject deco = wall.getDecoration();
+                    BufferedImage decoImg = tileManager.getTile(deco.getImageName());
+                    if (decoImg != null) {
+                        int iw = decoImg.getWidth();
+                        int ih = decoImg.getHeight();
 
-                            // Check if this WallTile is part of a 2x2 block
-                            String imgName = obj.getImageName();
-                            int tlX;
-                            if (x == 0) {
-                                tlX = 0;
-                            } else if (x == gameMap.getWidth() - 1) {
-                                tlX = gameMap.getWidth() - 1;
-                            } else {
-                                tlX = 1 + ((x - 1) / 2) * 2;
-                            }
-                            int tlY = (y / 2) * 2;
-                            boolean in2x2Block = (isSameWall(gameMap, tlX, tlY, imgName) &&
-                                    isSameWall(gameMap, tlX + 1, tlY, imgName) &&
-                                    isSameWall(gameMap, tlX, tlY + 1, imgName) &&
-                                    isSameWall(gameMap, tlX + 1, tlY + 1, imgName));
-
-                            double baseDw = tileSize;
-                            if (in2x2Block) {
-                                if (deco instanceof domain.models.staticObjects.Decoration) {
-                                    baseDw = tileSize * 0.7;
-                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                    baseDw = Math.max(tileSize - 6, 4);
-                                }
-                            } else {
-                                if (deco instanceof domain.models.staticObjects.Decoration) {
-                                    baseDw = tileSize * 0.4;
-                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                    baseDw = Math.max(tileSize - 6, 4);
-                                }
-                            }
-
-                            double factor = (baseDw * deco.getCustomScale()) / iw;
-                            int dw = (int) Math.round(iw * factor);
-                            int dh = (int) Math.round(ih * factor);
-                            int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
-                            int drawY;
-                            if (deco instanceof domain.models.staticObjects.WallObject) {
-                                int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
-                                drawY = offsetY + (y * tileSize) - wallOffset / 2 + (tileSize - dh) / 2;
-                            } else {
-                                drawY = offsetY + (y * tileSize) + tileSize - dh;
-                            }
-                            g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
+                        double baseDw = tileSize;
+                        if (deco instanceof domain.models.staticObjects.Decoration) {
+                            baseDw = tileSize * 0.4;
+                        } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                            baseDw = Math.max(tileSize - 6, 4);
                         }
+
+                        double factor = (baseDw * deco.getCustomScale()) / iw;
+                        int dw = (int) Math.round(iw * factor);
+                        int dh = (int) Math.round(ih * factor);
+                        int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
+                        int drawY;
+                        if (deco instanceof domain.models.staticObjects.WallObject) {
+                            int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
+                            drawY = offsetY + (yVal * tileSize) - wallOffset / 2 + (tileSize - dh) / 2;
+                        } else {
+                            drawY = offsetY + (yVal * tileSize) + tileSize - dh;
+                        }
+                        g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
                     }
                 }
             }
@@ -1163,74 +1113,50 @@ public class GameView extends JPanel {
             return;
 
         for (int x = 0; x < gameMap.getWidth(); x++) {
-           domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
-                        if (wall.getDecoration() != null) {
-                            domain.models.entity.GameObject deco = wall.getDecoration();
-                            BufferedImage decoImg = tileManager.getTile(deco.getImageName());
-                            if (decoImg != null) {
-                                int iw = decoImg.getWidth();
-                                int ih = decoImg.getHeight();
-                                int dw = tileSize;
-                                if (deco instanceof domain.models.staticObjects.Decoration) {
-                                    dw = (int) (tileSize * 0.4);
-                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                    dw = Math.max(tileSize - 6, 4);
-                                }
-                                dw = (int) (dw * deco.getCustomScale());
-                                int dh = (int) (ih * ((double) dw / iw));
-                                int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
-                                int drawY;
-                                if (deco instanceof domain.models.staticObjects.WallObject) {
-                                    drawY = offsetY + (yVal * tileSize) - 4 + (tileSize - dh) / 2; // y -> yVal yapıldı
-                                } else {
-                                    drawY = offsetY + (yVal * tileSize) + tileSize - dh; // y -> yVal yapıldı
-                                }
-                                g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
-                            }
-                        }
-                    } else {
-                        // Normal harita objesi (Duvar vs.)
-                        BufferedImage tileImage = tileManager.getTile(obj.getImageName());
-                        if (tileImage != null) {
-                            int offset = (obj instanceof domain.models.tile.WallTile) ? 6 : 0;
-                            if (offset > 0) {
-                                g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize) - offset, // y -> yVal yapıldı
-                                        tileSize,
-                                        tileSize + offset, null);
-                            } else {
-                                g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize), tileSize, // y -> yVal yapıldı
-                                        tileSize, null);
-                            }
-                        }
+            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
+            if (obj instanceof domain.models.entity.Column ||
+                    obj instanceof domain.models.entity.Chest ||
+                    obj instanceof domain.models.entity.Crate ||
+                    obj instanceof domain.models.staticObjects.Door ||
+                    obj instanceof domain.models.staticObjects.Decoration ||
+                    obj instanceof domain.models.entity.SearchableObject ||
+                    obj instanceof domain.models.entity.Sign) {
 
-                        if (obj instanceof domain.models.tile.WallTile) {
-                            domain.models.tile.WallTile wallObj = (domain.models.tile.WallTile) obj;
-                            if (wallObj.getDecoration() != null) {
-                                domain.models.entity.GameObject deco = wallObj.getDecoration();
-                                BufferedImage decoImg = tileManager.getTile(deco.getImageName());
-                                if (decoImg != null) {
-                                    int iw = decoImg.getWidth();
-                                    int ih = decoImg.getHeight();
-                                    int dw = tileSize;
-                                    if (deco instanceof domain.models.staticObjects.Decoration) {
-                                        dw = (int) (tileSize * 0.4);
-                                    } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                        dw = Math.max(tileSize - 6, 4);
-                                    }
-                                    dw = (int) (dw * deco.getCustomScale());
-                                    int dh = (int) (ih * ((double) dw / iw));
-                                    int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
-                                    int drawY;
-                                    if (deco instanceof domain.models.staticObjects.WallObject) {
-                                        int wallOffset = "wall/wall_2".equals(obj.getImageName()) ? 6 : 0;
-                                        drawY = offsetY + (yVal * tileSize) - wallOffset / 2 + (tileSize - dh) / 2; // y -> yVal yapıldı
-                                    } else {
-                                        drawY = offsetY + (yVal * tileSize) + tileSize - dh; // y -> yVal yapıldı
-                                    }
-                                    g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
-                                }
-                            }
-                        }
+                if (obj instanceof domain.models.staticObjects.LevelDoor) {
+                    int tx = offsetX + (x * tileSize);
+                    int ty = offsetY + (yVal * tileSize);
+                    java.awt.Paint oldPaint = g2d.getPaint();
+                    java.awt.Stroke oldStroke = g2d.getStroke();
+
+                    g2d.setColor(new Color(0, 255, 200, 30));
+                    g2d.fillOval(tx + 6, ty + 6, tileSize - 12, tileSize - 12);
+
+                    g2d.setStroke(new java.awt.BasicStroke(3f));
+                    g2d.setColor(new Color(0, 255, 200, 180));
+                    g2d.drawOval(tx + 6, ty + 6, tileSize - 12, tileSize - 12);
+
+                    g2d.setColor(new Color(255, 255, 255, 200));
+                    g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 11));
+                    String markerText = "LVL";
+                    int textW = g2d.getFontMetrics().stringWidth(markerText);
+                    g2d.drawString(markerText, tx + (tileSize - textW) / 2, ty + tileSize / 2 + 4);
+
+                    g2d.setStroke(oldStroke);
+                    g2d.setPaint(oldPaint);
+                }
+
+                // Kullanıcı talebi: Obstacle'lar yarı saydam değil opak olmalı
+                // (AlphaComposite kaldırıldı)
+
+                BufferedImage sprite = null;
+                if (tileManager != null) {
+                    String imgName = obj.getImageName();
+                    if (obj instanceof domain.models.staticObjects.Decoration && imgName != null
+                            && imgName.startsWith("torch/")) {
+                        long now = System.currentTimeMillis();
+                        int[] frames = { 1, 2, 3, 4, 6, 7, 8 };
+                        int frame = frames[(int) ((now / 120) % frames.length)];
+                        imgName = "torch/torch_" + frame;
                     }
                     sprite = tileManager.getTile(imgName);
                 }
@@ -1238,13 +1164,15 @@ public class GameView extends JPanel {
                 if (sprite != null) {
                     int iw = sprite.getWidth();
                     int ih = sprite.getHeight();
-                    int dw = tileSize;
+                    double baseDw = tileSize;
                     if (obj instanceof domain.models.staticObjects.Decoration) {
-                        dw = (int) (tileSize * 0.4);
+                        baseDw = tileSize * 0.4;
                     } else if (obj instanceof domain.models.staticObjects.Door) {
-                        dw = tileSize * 3;
+                        baseDw = tileSize * 3;
                     }
-                    int dh = (int) (ih * ((double) dw / iw));
+                    double factor = (baseDw * obj.getCustomScale()) / iw;
+                    int dw = (int) Math.round(iw * factor);
+                    int dh = (int) Math.round(ih * factor);
                     int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                     int drawY = offsetY + (yVal * tileSize) + tileSize - dh; // Bottom aligned!
                     g2d.drawImage(sprite, drawX, drawY, dw, dh, null);

@@ -43,7 +43,7 @@ public class GameMap extends Grid {
                     }
                 }
                 // --- ALT DUVAR (yan duvarların arasında) ---
-                else if (j >= cols - 2) {
+                else if (j == cols - 1) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_2"), i, j);
                 }
                 // --- ZEMİN ---

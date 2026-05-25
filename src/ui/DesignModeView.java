@@ -508,8 +508,7 @@ public class DesignModeView extends JPanel {
 
         if (obj instanceof domain.models.staticObjects.WallObject) {
             if (!(existing instanceof WallTile) ||
-                    (hoverTileY != 0 && hoverTileY != 1 && hoverTileY != map.getHeight() - 2
-                            && hoverTileY != map.getHeight() - 1)
+                    (hoverTileY != 0 && hoverTileY != map.getHeight() - 1)
                     ||
                     hoverTileX == 0 || hoverTileX == map.getWidth() - 1) {
                 return; // WallObjects can only be placed on top and bottom non-side wall tiles

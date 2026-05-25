@@ -17,6 +17,9 @@ public class GameState {
     public long enemySpawnTimeLeft = 9000;
     public long scrollSpawnTimeLeft = 15000;
 
+    // Multi-level progression
+    public int currentLevel = 1;
+
     // Alt veri sınıfları
     public HeroRecord hero;
     public List<String> inventoryItems = new ArrayList<>();

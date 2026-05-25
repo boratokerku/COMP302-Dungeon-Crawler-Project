@@ -26,7 +26,7 @@ public class EnemySpawner {
 
     private long lastSpawnTime; // Son spawn denemesinin zamanı (milisaniye)
     private final Random random = new Random();
-    private final GameMap map;
+    private GameMap map;
 
     // Knight ve Sorcerer ayrı listelerde tutulur — DemoRunner instanceof kullanmadan followHero çağırabilsin
     private final List<Knight> spawnedKnights = new ArrayList<>();
@@ -35,6 +35,15 @@ public class EnemySpawner {
     public EnemySpawner(GameMap map) {
         this.map = map;
         this.lastSpawnTime = System.currentTimeMillis();
+    }
+
+    public void setGameMap(GameMap map) {
+        this.map = map;
+    }
+
+    public void clearSpawnedEnemies() {
+        spawnedKnights.clear();
+        spawnedSorcerers.clear();
     }
 
     public long getTimeLeft() {

@@ -259,15 +259,27 @@ public class Hero extends Entity {
 
                 if (!target.isAlive() && map != null) {
                     System.out.println("Enemy defeated!");
-                    java.util.Random rand = new java.util.Random();
-                    int dropType = rand.nextInt(3);
                     domain.models.entity.GameObject loot = null;
-                    if (dropType == 0) {
-                        loot = domain.models.item.MapItem.createRandomItem(target.getX(), target.getY());
-                    } else if (dropType == 1) {
-                        loot = new domain.models.item.PotionItem(target.getX(), target.getY());
+                    if (target instanceof domain.models.entity.FinalBoss) {
+                        loot = new domain.models.item.VictoryCoin(target.getX(), target.getY());
                     } else {
-                        loot = new domain.models.staticObjects.KeyItem(target.getX(), target.getY());
+                        java.util.Random rand = new java.util.Random();
+                        int dropType = rand.nextInt(3);
+                        if (dropType == 0) {
+                            loot = domain.models.item.MapItem.createRandomItem(target.getX(), target.getY());
+                        } else if (dropType == 1) {
+                            loot = new domain.models.item.PotionItem(target.getX(), target.getY());
+                        } else {
+                            int locked = countLockedChests(map);
+                            int keys = countKeys(map, this);
+                            if (keys < locked) {
+                                loot = new domain.models.staticObjects.KeyItem(target.getX(), target.getY());
+                            } else {
+                                loot = rand.nextBoolean()
+                                    ? domain.models.item.MapItem.createRandomItem(target.getX(), target.getY())
+                                    : new domain.models.item.PotionItem(target.getX(), target.getY());
+                            }
+                        }
                     }
                     map.placeObject(loot, target.getX(), target.getY());
                     System.out.println("Loot dropped: " + loot.getName());
@@ -285,6 +297,39 @@ public class Hero extends Entity {
     // Getters
     public Direction getDirection() {
         return currentDirection;
+    }
+
+    private int countLockedChests(domain.models.map.GameMap map) {
+        int count = 0;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.entity.Chest && ((domain.models.entity.Chest) obj).isLocked()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private int countKeys(domain.models.map.GameMap map, Hero hero) {
+        int count = 0;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.staticObjects.KeyItem) {
+                    count++;
+                }
+            }
+        }
+        if (hero != null && hero.getInventory() != null) {
+            for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                if (item instanceof domain.models.staticObjects.KeyItem) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     @Override

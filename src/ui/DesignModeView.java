@@ -693,13 +693,54 @@ public class DesignModeView extends JPanel {
         }
     }
 
-    // ── 1. Play ──────────────────────────────────────────────────────────────
+    private int countLockedChests() {
+        int count = 0;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof Chest && ((Chest) obj).isLocked()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private int countKeys() {
+        int count = 0;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof KeyItem) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    private boolean validateChestKeyCounts() {
+        int lockedChests = countLockedChests();
+        int keys = countKeys();
+        if (keys != lockedChests) {
+            showMsg("Validation Error: The number of keys placed on the map (" + keys
+                    + ") must be equal to the number of locked chests (" + lockedChests + ").",
+                    "Invalid Map");
+            return false;
+        }
+        return true;
+    }
+
     private void doPlay() {
+        if (!validateChestKeyCounts())
+            return;
         if (onPlayMap != null)
             onPlayMap.accept(map);
     }
 
     private void doPlayTeamMatch() {
+        if (!validateChestKeyCounts())
+            return;
         if (onPlayTeamMatchMap != null)
             onPlayTeamMatchMap.accept(map);
     }
@@ -757,8 +798,9 @@ public class DesignModeView extends JPanel {
         } while (roll >= 8 && count < 20); // sonsuz döngü koruması
     }
 
-    // ── 3. Save Map ──────────────────────────────────────────────────────────
     private void doSave() {
+        if (!validateChestKeyCounts())
+            return;
         String name = JOptionPane.showInputDialog(this, "Harita adı girin:", "Save Map", JOptionPane.PLAIN_MESSAGE);
         if (name == null || name.trim().isEmpty())
             return;
@@ -843,9 +885,14 @@ public class DesignModeView extends JPanel {
         int w = map.getWidth();
         int h = map.getHeight();
 
-        // 1. Zemin ve duvarları sıfırla
+        // 1. Zemin ve duvarları sıfırla (mevcut duvar dekorasyonlarını temizle)
         for (int x = 0; x < w; x++) {
             for (int y = 0; y < h; y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof WallTile) {
+                    ((WallTile) obj).setDecoration(null);
+                }
+
                 if (x == 0 || x == w - 1) {
                     map.placeObject(new domain.models.tile.WallTile("wall/wall_side"), x, y);
                 } else if (y <= 1) {
@@ -889,6 +936,7 @@ public class DesignModeView extends JPanel {
 
         // 5. Sandıklar (Chests) - 2 ila 4 adet
         int numChests = rand.nextInt(3) + 2; // 2 - 4
+        int lockedChestCount = 0;
         for (int i = 0; i < numChests; i++) {
             int cx, cy;
             int attempts = 0;
@@ -900,6 +948,8 @@ public class DesignModeView extends JPanel {
 
             if (attempts < 100) {
                 boolean locked = (i == 0); // en az 1 tanesi kilitli sandık olsun
+                if (locked)
+                    lockedChestCount++;
                 map.placeObject(new Chest("Chest", cx, cy, locked), cx, cy);
                 reserved[cx][cy] = true;
             }
@@ -923,16 +973,18 @@ public class DesignModeView extends JPanel {
         }
 
         // 6. Anahtar (KeyItem)
-        int keyX, keyY;
-        int attempts = 0;
-        do {
-            keyX = rand.nextInt(w - 4) + 2;
-            keyY = rand.nextInt(h - 4) + 2;
-            attempts++;
-        } while ((reserved[keyX][keyY] || !isFarEnough(keyX, keyY)) && attempts < 100);
-        if (attempts < 100) {
-            map.placeObject(new KeyItem(keyX, keyY), keyX, keyY);
-            reserved[keyX][keyY] = true;
+        for (int i = 0; i < lockedChestCount; i++) {
+            int keyX, keyY;
+            int attempts = 0;
+            do {
+                keyX = rand.nextInt(w - 4) + 2;
+                keyY = rand.nextInt(h - 4) + 2;
+                attempts++;
+            } while ((reserved[keyX][keyY] || !isFarEnough(keyX, keyY)) && attempts < 100);
+            if (attempts < 100) {
+                map.placeObject(new KeyItem(keyX, keyY), keyX, keyY);
+                reserved[keyX][keyY] = true;
+            }
         }
 
         // 7. Diğer Eşyalar (Potions, Weapons, Armors, Rings)
@@ -1268,8 +1320,11 @@ public class DesignModeView extends JPanel {
     private void calculateLayout() {
         int mapAreaX = LEFT_PANEL_W;
         int mapAreaY = TOP_PANEL_H;
-        int mapAreaW = getWidth() - LEFT_PANEL_W - RIGHT_PANEL_W;
-        int mapAreaH = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
+        int fullW = getWidth() - LEFT_PANEL_W - RIGHT_PANEL_W;
+        int fullH = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
+
+        int mapAreaW = (int) (fullW * 0.92);
+        int mapAreaH = (int) (fullH * 0.92);
 
         if (mapAreaW <= 0 || mapAreaH <= 0)
             return;
@@ -1280,8 +1335,8 @@ public class DesignModeView extends JPanel {
 
         int mapW = tileSize * map.getWidth();
         int mapH = tileSize * map.getHeight();
-        mapOffsetX = mapAreaX + (mapAreaW - mapW) / 2;
-        mapOffsetY = mapAreaY + (mapAreaH - mapH) / 2 - 10;
+        mapOffsetX = mapAreaX + (fullW - mapW) / 2;
+        mapOffsetY = mapAreaY + (fullH - mapH) / 2 - 10;
     }
 
     private void paintTopPanel(Graphics2D g) {
@@ -1289,13 +1344,26 @@ public class DesignModeView extends JPanel {
         int H = TOP_PANEL_H;
 
         BufferedImage bgImg = tileManager.getTile("carpet/red_carpet_middle");
-        if (bgImg != null) {
-            int iw = bgImg.getWidth();
-            int ih = bgImg.getHeight();
-            int tileW = (int) (iw * ((double) H / ih));
-            for (int tx = 0; tx < W; tx += tileW) {
-                g.drawImage(bgImg, tx, 0, tileW, H, null);
-            }
+        BufferedImage botImg = tileManager.getTile("carpet/red_carpet_bottom");
+        if (bgImg != null && botImg != null) {
+            // Left end cap: rotate 90 degrees counter-clockwise
+            java.awt.geom.AffineTransform oldTx = g.getTransform();
+            g.translate(H / 2.0, H / 2.0);
+            g.rotate(Math.toRadians(-90));
+            g.drawImage(botImg, -H / 2, -H / 2, H, H, null);
+            g.setTransform(oldTx);
+
+            // Middle body
+            g.drawImage(bgImg, H, 0, W - H * 2, H, null);
+
+            // Right end cap: rotate 90 degrees clockwise
+            oldTx = g.getTransform();
+            g.translate(W - H + H / 2.0, H / 2.0);
+            g.rotate(Math.toRadians(90));
+            g.drawImage(botImg, -H / 2, -H / 2, H, H, null);
+            g.setTransform(oldTx);
+        } else if (bgImg != null) {
+            g.drawImage(bgImg, 0, 0, W, H, null);
         } else {
             // Retro gradient background fallback (dark red/purple)
             GradientPaint bg = new GradientPaint(
@@ -1360,25 +1428,9 @@ public class DesignModeView extends JPanel {
         int H = getHeight() - TOP_PANEL_H - BOTTOM_BTN_H;
         int Y = TOP_PANEL_H;
 
-        BufferedImage topImg = tileManager.getTile("carpet/red_carpet_top");
-        BufferedImage midImg = tileManager.getTile("carpet/red_carpet_middle");
-        BufferedImage botImg = tileManager.getTile("carpet/red_carpet_bottom");
-
-        if (topImg != null && midImg != null && botImg != null) {
-            // Draw top cap (Height = 32 pixels)
-            g.drawImage(topImg, 0, Y, W, 32, null);
-
-            // Draw bottom cap (Height = 32 pixels)
-            g.drawImage(botImg, 0, Y + H - 32, W, 32, null);
-
-            // Draw tiled middle body (without vertical stretching)
-            int yStart = Y + 32;
-            int yEnd = Y + H - 32;
-            int spriteHeight = midImg.getHeight();
-            for (int y = yStart; y < yEnd; y += spriteHeight) {
-                int drawHeight = Math.min(spriteHeight, yEnd - y);
-                g.drawImage(midImg, 0, y, W, y + drawHeight, 0, 0, midImg.getWidth(), drawHeight, null);
-            }
+        BufferedImage bgImg = tileManager.getTile("carpet/red_carpet_middle");
+        if (bgImg != null) {
+            g.drawImage(bgImg, 0, Y, W, H, null);
         } else {
             // Gradient background fallback
             GradientPaint bg = new GradientPaint(
@@ -1446,25 +1498,9 @@ public class DesignModeView extends JPanel {
         int X = getWidth() - W;
         int Y = TOP_PANEL_H;
 
-        BufferedImage topImg = tileManager.getTile("carpet/red_carpet_top");
-        BufferedImage midImg = tileManager.getTile("carpet/red_carpet_middle");
-        BufferedImage botImg = tileManager.getTile("carpet/red_carpet_bottom");
-
-        if (topImg != null && midImg != null && botImg != null) {
-            // Draw top cap (Height = 32 pixels)
-            g.drawImage(topImg, X, Y, W, 32, null);
-
-            // Draw bottom cap (Height = 32 pixels)
-            g.drawImage(botImg, X, Y + H - 32, W, 32, null);
-
-            // Draw tiled middle body (without vertical stretching)
-            int yStart = Y + 32;
-            int yEnd = Y + H - 32;
-            int spriteHeight = midImg.getHeight();
-            for (int y = yStart; y < yEnd; y += spriteHeight) {
-                int drawHeight = Math.min(spriteHeight, yEnd - y);
-                g.drawImage(midImg, X, y, X + W, y + drawHeight, 0, 0, midImg.getWidth(), drawHeight, null);
-            }
+        BufferedImage bgImg = tileManager.getTile("carpet/red_carpet_middle");
+        if (bgImg != null) {
+            g.drawImage(bgImg, X, Y, W, H, null);
         } else {
             // Gradient background fallback
             GradientPaint bg = new GradientPaint(
@@ -1717,34 +1753,36 @@ public class DesignModeView extends JPanel {
                         tImg = tileManager.getTile(imgName);
                     }
 
-                    if (tImg != null) {
-                        if (obj instanceof domain.models.item.MapItem) {
-                            int maxDim = (int) (tileSize * 0.65);
-                            int iw = tImg.getWidth();
-                            int ih = tImg.getHeight();
-                            double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
-                            int dw = (int) (iw * scale * obj.getCustomScale());
-                            int dh = (int) (ih * scale * obj.getCustomScale());
-                            int drawX = px + (tileSize - dw) / 2;
-                            int drawY = py + (tileSize - dh) / 2;
-                            g.drawImage(tImg, drawX, drawY, dw, dh, null);
-                        } else if (obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
-                                obj instanceof Door || obj instanceof Decoration ||
-                                obj instanceof SearchableObject || obj instanceof Sign) {
-                            int iw = tImg.getWidth();
-                            int ih = tImg.getHeight();
-                            int dw = tileSize;
-                            if (obj instanceof Decoration) {
-                                dw = (int) (tileSize * 0.4);
-                            }
-                            dw = (int) (dw * obj.getCustomScale());
-                            int dh = (int) (ih * ((double) dw / iw));
-                            int drawX = px + (tileSize - dw) / 2;
-                            int drawY = py + tileSize - dh;
-                            g.drawImage(tImg, drawX, drawY, dw, dh, null);
-                        } else {
-                            g.drawImage(tImg, px, py, tileSize, tileSize, null);
+                if (tImg != null) {
+                    if (obj instanceof domain.models.item.MapItem) {
+                        double scaleMult = 1.30;
+                        if (obj instanceof domain.models.item.PotionItem || obj instanceof domain.models.item.RingItem) {
+                            scaleMult *= 0.7; // Potions & rings render 30% smaller
                         }
+                        int maxDim = (int) (tileSize * scaleMult);
+                        int iw = tImg.getWidth();
+                        int ih = tImg.getHeight();
+                        double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
+                        int dw = (int) (iw * scale);
+                        int dh = (int) (ih * scale);
+                        int drawX = px + (tileSize - dw) / 2;
+                        int drawY = py + (tileSize - dh) / 2;
+                        g.drawImage(tImg, drawX, drawY, dw, dh, null);
+                    } else if (obj instanceof Column || obj instanceof Chest || obj instanceof Crate ||
+                            obj instanceof Door || obj instanceof Decoration ||
+                            obj instanceof SearchableObject || obj instanceof Sign) {
+                        int iw = tImg.getWidth();
+                        int ih = tImg.getHeight();
+                        int dw = tileSize;
+                        if (obj instanceof Decoration) {
+                            dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                        } else if (obj instanceof Door) {
+                            dw = tileSize * 3;
+                        }
+                        int dh = (int) (ih * ((double) dw / iw));
+                        int drawX = px + (tileSize - dw) / 2;
+                        int drawY = py + tileSize - dh; // Bottom aligned!
+                        g.drawImage(tImg, drawX, drawY, dw, dh, null);
                     } else {
                         g.setColor(new Color(180, 100, 200, 180));
                         g.fillRect(px + 4, py + 4, tileSize - 8, tileSize - 8);
@@ -1886,7 +1924,11 @@ public class DesignModeView extends JPanel {
 
         GameObject dummy = item.factory.apply(0, 0);
         if (dummy instanceof domain.models.item.MapItem) {
-            int maxDim = (int) (tileSize * 0.65);
+            double scaleMult = 1.10;
+            if (dummy instanceof domain.models.item.PotionItem || dummy instanceof domain.models.item.RingItem) {
+                scaleMult *= 0.7; // Potions & rings render 30% smaller
+            }
+            int maxDim = (int) (tileSize * scaleMult);
             int iw = icon.getWidth();
             int ih = icon.getHeight();
             double scale = Math.min((double) maxDim / iw, (double) maxDim / ih);
@@ -1906,7 +1948,7 @@ public class DesignModeView extends JPanel {
             }
             int dh = (int) (ih * ((double) dw / iw));
             int drawX = px + (tileSize - dw) / 2;
-            int drawY = py + tileSize - dh;
+            int drawY = py + tileSize - dh; // Bottom aligned!
             g.drawImage(icon, drawX, drawY, dw, dh, null);
         } else {
             g.drawImage(icon, px, py, tileSize, tileSize, null);

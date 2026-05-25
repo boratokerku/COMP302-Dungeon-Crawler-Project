@@ -60,6 +60,8 @@ public class UseAction implements Action {
             } else {
                 System.out.println("No adjacent locked doors to unlock!");
             }
+        } else if (target instanceof domain.models.item.VictoryCoin) {
+            domain.models.item.VictoryCoin.triggerVictory();
         }
     }
 }

@@ -156,6 +156,7 @@ public class Sorcerer extends Entity implements Renderable {
         double dx = (diffX / dist) * speed;
         double dy = (diffY / dist) * speed;
 
+        util.helpers.SoundManager.playShoot();
         return new Projectile(this.x, this.y, this.x, this.y, dx, dy, 8, this, "SORCERER_FIREBALL");
     }
 
@@ -191,6 +192,7 @@ public class Sorcerer extends Entity implements Renderable {
         int[] target = emptyTiles.get(random.nextInt(emptyTiles.size()));
         this.x = target[0];
         this.y = target[1];
+        util.helpers.SoundManager.playTeleport();
         System.out.println("Sorcerer ışınlandı! Yeni konum: (" + this.x + ", " + this.y + ")");
     }
 

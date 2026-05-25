@@ -20,6 +20,7 @@ public class EatAction implements Action {
         int maxEnergy = 100;
         hero.setHp(Math.min(maxHp, hero.getHp() + 5));
         hero.setEnergy(Math.min(maxEnergy, hero.getEnergy() + 15));
+        util.helpers.SoundManager.playHeal();
         
         if (target != null) {
             if (target.getMap() != null) {

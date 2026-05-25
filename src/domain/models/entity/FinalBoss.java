@@ -235,6 +235,7 @@ public class FinalBoss extends Entity implements Renderable {
         int[] dest = candidates.get(random.nextInt(candidates.size()));
         this.x = dest[0];
         this.y = dest[1];
+        util.helpers.SoundManager.playTeleport();
         System.out.println("FinalBoss teleported to (" + x + ", " + y + ")");
     }
 
@@ -255,6 +256,7 @@ public class FinalBoss extends Entity implements Renderable {
         double dx = (diffX / dist) * speed;
         double dy = (diffY / dist) * speed;
 
+        util.helpers.SoundManager.playShoot();
         return new Projectile(this.x, this.y, centerX, centerY, dx, dy, 12, this, "BOSS_FIREBALL");
     }
 

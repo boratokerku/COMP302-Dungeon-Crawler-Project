@@ -580,12 +580,47 @@ public class GameView extends JPanel {
         g2d.setTransform(oldTransform);
     }
 
+    private final java.util.Map<BufferedImage, BufferedImage> redTintCache = new java.util.WeakHashMap<>();
+
+    private BufferedImage getRedTintedImage(BufferedImage src) {
+        if (src == null) return null;
+        synchronized (redTintCache) {
+            if (redTintCache.containsKey(src)) {
+                return redTintCache.get(src);
+            }
+            BufferedImage tinted = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            for (int y = 0; y < src.getHeight(); y++) {
+                for (int x = 0; x < src.getWidth(); x++) {
+                    int argb = src.getRGB(x, y);
+                    int a = (argb >> 24) & 0xff;
+                    if (a > 0) {
+                        int g = (argb >> 8) & 0xff;
+                        int b = argb & 0xff;
+                        int nr = 255;
+                        int ng = (int) (g * 0.2);
+                        int nb = (int) (b * 0.2);
+                        int newArgb = (a << 24) | (nr << 16) | (ng << 8) | nb;
+                        tinted.setRGB(x, y, newArgb);
+                    } else {
+                        tinted.setRGB(x, y, 0);
+                    }
+                }
+            }
+            redTintCache.put(src, tinted);
+            return tinted;
+        }
+    }
+
     private void drawHero(Graphics2D g2d, int yVal) {
         if (hero == null || hero.getY() != yVal)
             return;
         BufferedImage frame = assetManager.getHeroSprite(hero.getAnimationState());
 
         if (frame != null) {
+            boolean isHitFlash = (System.currentTimeMillis() - hero.getLastHitTime() < 250);
+            if (isHitFlash) {
+                frame = getRedTintedImage(frame);
+            }
             int iw = frame.getWidth();
             int ih = frame.getHeight();
             int dw = tileSize;
@@ -692,6 +727,10 @@ public class GameView extends JPanel {
                     domain.models.entity.FinalBoss boss = (domain.models.entity.FinalBoss) e;
                     frame = assetManager.getBossSprite();
                     if (frame != null) {
+                        boolean isHitFlash = (System.currentTimeMillis() - boss.getLastHitTime() < 250);
+                        if (isHitFlash) {
+                            frame = getRedTintedImage(frame);
+                        }
                         int bossSize = tileSize * 2; // 2x2 tile footprint
                         int iw = frame.getWidth();
                         int ih = frame.getHeight();
@@ -735,6 +774,10 @@ public class GameView extends JPanel {
                 }
 
                 if (frame != null) {
+                    boolean isHitFlash = (System.currentTimeMillis() - e.getLastHitTime() < 250);
+                    if (isHitFlash) {
+                        frame = getRedTintedImage(frame);
+                    }
                     int iw = frame.getWidth();
                     int ih = frame.getHeight();
                     int dw = tileSize;
@@ -745,6 +788,22 @@ public class GameView extends JPanel {
                     drawTeamAura(g2d, e, dx + dw / 2, dy + dh - 5, tileSize);
 
                     g2d.drawImage(frame, dx, dy, dw, dh, null);
+
+                    // Draw thin health bar above regular enemies
+                    int barW = (int) (dw * 0.8);
+                    int barH = 4;
+                    int barX = dx + (dw - barW) / 2;
+                    int barY = dy - 6;
+                    double ratio = Math.max(0.0, Math.min(1.0, (double) e.getHp() / e.getMaxHp()));
+
+                    g2d.setColor(Color.BLACK);
+                    g2d.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+
+                    g2d.setColor(new Color(150, 0, 0));
+                    g2d.fillRect(barX, barY, barW, barH);
+
+                    g2d.setColor(new Color(0, 220, 0));
+                    g2d.fillRect(barX, barY, (int) (barW * ratio), barH);
                 }
             }
 
@@ -754,6 +813,10 @@ public class GameView extends JPanel {
             if (knight != null && knight.isAlive() && knight.getY() == yVal) {
                 BufferedImage kFrame = assetManager.getKnightSprite();
                 if (kFrame != null) {
+                    boolean isHitFlash = (System.currentTimeMillis() - knight.getLastHitTime() < 250);
+                    if (isHitFlash) {
+                        kFrame = getRedTintedImage(kFrame);
+                    }
                     int iw = kFrame.getWidth();
                     int ih = kFrame.getHeight();
                     int dw = tileSize;
@@ -764,11 +827,31 @@ public class GameView extends JPanel {
                     drawTeamAura(g2d, knight, dx + dw / 2, dy + dh - 5, tileSize);
 
                     g2d.drawImage(kFrame, dx, dy, dw, dh, null);
+
+                    // Draw thin health bar
+                    int barW = (int) (dw * 0.8);
+                    int barH = 4;
+                    int barX = dx + (dw - barW) / 2;
+                    int barY = dy - 6;
+                    double ratio = Math.max(0.0, Math.min(1.0, (double) knight.getHp() / knight.getMaxHp()));
+
+                    g2d.setColor(Color.BLACK);
+                    g2d.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+
+                    g2d.setColor(new Color(150, 0, 0));
+                    g2d.fillRect(barX, barY, barW, barH);
+
+                    g2d.setColor(new Color(0, 220, 0));
+                    g2d.fillRect(barX, barY, (int) (barW * ratio), barH);
                 }
             }
             if (sorcerer != null && sorcerer.isAlive() && sorcerer.getY() == yVal) {
                 BufferedImage sFrame = assetManager.getSorcererSprite();
                 if (sFrame != null) {
+                    boolean isHitFlash = (System.currentTimeMillis() - sorcerer.getLastHitTime() < 250);
+                    if (isHitFlash) {
+                        sFrame = getRedTintedImage(sFrame);
+                    }
                     int iw = sFrame.getWidth();
                     int ih = sFrame.getHeight();
                     int dw = tileSize;
@@ -779,6 +862,22 @@ public class GameView extends JPanel {
                     drawTeamAura(g2d, sorcerer, dx + dw / 2, dy + dh - 5, tileSize);
 
                     g2d.drawImage(sFrame, dx, dy, dw, dh, null);
+
+                    // Draw thin health bar
+                    int barW = (int) (dw * 0.8);
+                    int barH = 4;
+                    int barX = dx + (dw - barW) / 2;
+                    int barY = dy - 6;
+                    double ratio = Math.max(0.0, Math.min(1.0, (double) sorcerer.getHp() / sorcerer.getMaxHp()));
+
+                    g2d.setColor(Color.BLACK);
+                    g2d.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+
+                    g2d.setColor(new Color(150, 0, 0));
+                    g2d.fillRect(barX, barY, barW, barH);
+
+                    g2d.setColor(new Color(0, 220, 0));
+                    g2d.fillRect(barX, barY, (int) (barW * ratio), barH);
                 }
             }
         }

@@ -122,6 +122,7 @@ public class InputHandler implements KeyListener {
                     );
                     
                     entities.add(proj);
+                    util.helpers.SoundManager.playShoot();
                     System.out.println("Hero fired ranged projectile! Type: " + weapon.getProjectileType() + " | Damage: " + dmg);
                     if (gameView != null) gameView.repaint();
                     return;
@@ -131,6 +132,7 @@ public class InputHandler implements KeyListener {
             // Melee fallback
             if (hero.getEnergy() >= 10) {
                 hero.setAnimationState(AnimationState.ATTACK);
+                util.helpers.SoundManager.playSwing();
             }
         } else if (code == KeyEvent.VK_I) {
             if (gameView != null) {
@@ -207,6 +209,7 @@ public class InputHandler implements KeyListener {
                                             domain.models.staticObjects.LevelDoor levelDoor = (domain.models.staticObjects.LevelDoor) door;
                                             boolean success = levelDoor.tryUnlockWithKey(hero);
                                             if (success) {
+                                                util.helpers.SoundManager.playUnlock();
                                                 view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
                                             } else {
                                                 javax.swing.JOptionPane.showMessageDialog(
@@ -233,6 +236,7 @@ public class InputHandler implements KeyListener {
                                                 }
                                                 door.unlock();
                                                 door.open();
+                                                util.helpers.SoundManager.playUnlock();
                                                 System.out.println("Unlocked door using key!");
                                                 view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
                                             } else {

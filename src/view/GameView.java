@@ -144,6 +144,7 @@ public class GameView extends JPanel {
         super.paintComponent(g);
 
         Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
         // Her çizim döngüsünde ekranın boyutuna göre karelerin (Tile) büyüklüğünü
         // hesapla
@@ -190,25 +191,27 @@ public class GameView extends JPanel {
             java.util.Iterator<FloatingText> it = floatingTexts.iterator();
             while (it.hasNext()) {
                 FloatingText ft = it.next();
-                
+
                 // Fade out effect using alpha channel
                 int alphaVal = (int) (ft.alpha * 255);
-                if (alphaVal < 0) alphaVal = 0;
-                if (alphaVal > 255) alphaVal = 255;
-                
+                if (alphaVal < 0)
+                    alphaVal = 0;
+                if (alphaVal > 255)
+                    alphaVal = 255;
+
                 g2d.setColor(new Color(ft.color.getRed(), ft.color.getGreen(), ft.color.getBlue(), alphaVal));
                 g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 22));
-                
+
                 int px = offsetX + (int) (ft.x * tileSize) + tileSize / 4;
                 int py = offsetY + (int) (ft.y * tileSize) - 10;
-                
+
                 g2d.drawString(ft.text, px, py);
-                
+
                 // Advance animation states
                 ft.y += ft.dy;
                 ft.alpha = Math.max(0.0f, ft.alpha - 0.035f);
                 ft.duration--;
-                
+
                 if (ft.duration <= 0) {
                     it.remove();
                 }
@@ -228,33 +231,37 @@ public class GameView extends JPanel {
     private transient boolean hudLoaded = false;
 
     private void loadHUDAssets() {
-        if (hudLoaded) return;
+        if (hudLoaded)
+            return;
         try {
             hpExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_exterior.png"));
             hpIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_interior.png"));
-            
-            energyExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_exterior.png"));
-            energyIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_interior.png"));
-            
+
+            energyExtImg = javax.imageio.ImageIO
+                    .read(new java.io.File("resources/images/HUDScreen/energy_exterior.png"));
+            energyIntImg = javax.imageio.ImageIO
+                    .read(new java.io.File("resources/images/HUDScreen/energy_interior.png"));
+
             manaExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_exterior.png"));
             manaIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_interior.png"));
-            
+
             strExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_exterior.png"));
             strIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_interior.png"));
-            
+
             defExtImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_exterior.png"));
             defIntImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_interior.png"));
-            
+
             hpIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/health_icon.png"));
             energyIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/energy_icon.png"));
             manaIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/mana_icon.png"));
             strIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/str_icon.png"));
             defIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_icon.png"));
-            
+
             mainFrameImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/main_frame.png"));
-            
+
             try {
-                java.awt.Font customFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, new java.io.File("resources/fonts/VT323-Regular.ttf"));
+                java.awt.Font customFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT,
+                        new java.io.File("resources/fonts/VT323-Regular.ttf"));
                 java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(customFont);
                 hudFont = customFont.deriveFont(java.awt.Font.PLAIN, 16f); // Kullanıcı talebi: 16 punto
@@ -268,7 +275,8 @@ public class GameView extends JPanel {
         hudLoaded = true;
     }
 
-    private void drawSingleBar(Graphics2D g, String label, int current, int max, BufferedImage interiorImg, BufferedImage exteriorImg, BufferedImage iconImg, int x, int y, int w, int h) {
+    private void drawSingleBar(Graphics2D g, String label, int current, int max, BufferedImage interiorImg,
+            BufferedImage exteriorImg, BufferedImage iconImg, int x, int y, int w, int h) {
         // 1. Önce Dış Çerçeveyi (Exterior) tam boyutta çiz (w, h)
         if (exteriorImg != null) {
             g.drawImage(exteriorImg, x, y, w, h, null);
@@ -277,70 +285,75 @@ public class GameView extends JPanel {
         // 2. Sonra İç Dolguyu (Interior) hesaplayarak çiz
         if (interiorImg != null && exteriorImg != null) {
             // Pixel-art settings
-            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                    java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
             double ratio = Math.max(0, Math.min(1, current / (double) max));
-            
+
             // Exterior'ın orijinal boyutlarına (848x244) göre ekrandaki ölçek oranını bul
             double scaleW = (double) w / exteriorImg.getWidth();
             double scaleH = (double) h / exteriorImg.getHeight();
-            
+
             // Tüm interior'lar (HP dahil) 740x140 boyutunda kabul edilecek
             int targetIntW = 740;
             int targetIntH = 140;
-            
+
             // Interior'ı Exterior'ın içine orijinal boşluklara göre ortala
             // Kullanıcı talebi: Çok az sola kaydır (+15'ten +10'a düşürüldü)
             int intOrigX = ((exteriorImg.getWidth() - targetIntW) / 2) + 10;
             int intOrigY = ((exteriorImg.getHeight() - targetIntH) / 2) + 14;
-            
+
             // Ekrandaki (scaled) koordinatlar ve boyutlar
             int shrinkX = 1; // Genişlik birazcık artırıldı (sağdan ve soldan 1'er piksel daraltma)
             int intX = x + (int) (intOrigX * scaleW) + shrinkX;
             int intY = y + (int) (intOrigY * scaleH);
             int intW = (int) (targetIntW * scaleW) - (shrinkX * 2);
             int intH = (int) (targetIntH * scaleH);
-            
+
             int visibleW = (int) (intW * ratio);
-            
+
             if (visibleW > 0) {
                 java.awt.Shape oldClip = g.getClip();
                 // Kırpma işlemi sadece interior alanında yapılır
                 g.clipRect(intX, intY, visibleW, intH);
-                
-                // Interior, hesaplanan daha küçük boyutlarla (intW, intH) TAM ÇERÇEVENİN İÇİNE çizilir (ÜZERİNE)
+
+                // Interior, hesaplanan daha küçük boyutlarla (intW, intH) TAM ÇERÇEVENİN İÇİNE
+                // çizilir (ÜZERİNE)
                 g.drawImage(interiorImg, intX, intY, intW, intH, null);
-                
+
                 g.setClip(oldClip);
             }
         }
-        
+
         // Etiketi çerçevenin ÜSTÜNE ortalayarak yaz
         g.setColor(Color.WHITE);
         g.setFont(hudFont != null ? hudFont : new java.awt.Font("SansSerif", java.awt.Font.BOLD, 16));
-        // Kullanıcı talebi: ENG yazısındaki sayıyı yaklaştırmak için ": " yerine ":" kullanıyoruz
+        // Kullanıcı talebi: ENG yazısındaki sayıyı yaklaştırmak için ": " yerine ":"
+        // kullanıyoruz
         String text = label + ":" + current + "/" + max;
         java.awt.FontMetrics fm = g.getFontMetrics();
         int textWidth = fm.stringWidth(text);
-        
+
         int iconSize = 20; // Yazıların yanında ufak bir kare
         int iconSpacing = 3; // Kullanıcı talebi: Yazıları ikonlara yaklaştır (6'dan 3'e düşürüldü)
-        
+
         int totalContentWidth = textWidth;
         if (iconImg != null) {
             totalContentWidth += iconSize + iconSpacing;
         }
-        
+
         int contentStartX = x + (w - totalContentWidth) / 2;
-        
+
         // Kullanıcı talebi: HP'nin ikonunu ve yazısını birazcık daha sağa al
         if ("HP".equals(label)) {
             contentStartX -= 8;
         }
-        
+
         if (iconImg != null) {
-            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            // Yazı baseline (alt çizgi) y-5. İkonu yazının hizasına oturtmak için yukarı çekiyoruz
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                    java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            // Yazı baseline (alt çizgi) y-5. İkonu yazının hizasına oturtmak için yukarı
+            // çekiyoruz
             int iconY = (y - 5) - iconSize + 3; // +3 piksel ufak bir estetik kaydırma
             g.drawImage(iconImg, contentStartX, iconY, iconSize, iconSize, null);
             g.drawString(text, contentStartX + iconSize + iconSpacing, y - 5);
@@ -351,7 +364,7 @@ public class GameView extends JPanel {
 
     private void drawHUD(Graphics2D g) {
         loadHUDAssets();
-        
+
         if (hpExtImg == null) {
             // Fallback
             g.setColor(Color.WHITE);
@@ -361,8 +374,8 @@ public class GameView extends JPanel {
 
         // Haritanın piksel genişliği (sol ve sağ duvar arası mesafe)
         int mapPixelWidth = gameMap != null ? gameMap.getCols() * tileSize : getWidth();
-        
-        int frameW = mapPixelWidth; 
+
+        int frameW = mapPixelWidth;
         int frameH = 100; // Fallback
         int frameX = (getWidth() - frameW) / 2;
         int frameY = 0; // Oyun ekranının tam üstüyle (Y=0) çakışacak biçimde
@@ -371,48 +384,54 @@ public class GameView extends JPanel {
         if (mainFrameImg != null) {
             // Main frame'i harita genişliğine (veya uygun bir orana) göre ölçekle
             frameH = (int) (mainFrameImg.getHeight() * ((double) frameW / mainFrameImg.getWidth()));
-            
+
             // Pixel-art netliğini korumak için
-            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION,
+                    java.awt.RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.drawImage(mainFrameImg, frameX, frameY, frameW, frameH, null);
         } else {
             frameY = offsetY - frameH; // Fallback position above map
         }
-        
+
         // 2. HUD Barları (HP, ENG, vs.)
         // Barları main frame'in İÇİNE ortalamak için hesaplama
         int numBars = 5;
         int gap = 15; // Barlar arası estetik boşluk
         int padding = 60; // Sol ve sağ duvardan boşluk (main frame içine sığması için)
-        
+
         int availableWidth = frameW - (padding * 2);
         int barW = (availableWidth - (gap * (numBars - 1))) / numBars;
         // Çerçevenin orijinal en/boy oranını bozmadan yüksekliği hesapla
         int barH = (int) (hpExtImg.getHeight() * ((double) barW / hpExtImg.getWidth()));
-        
+
         // 5 barın ve aralarındaki boşlukların kapladığı GERÇEK toplam genişlik
         int totalWidth = (barW * numBars) + (gap * (numBars - 1));
-        
+
         // Başlangıç noktası: main frame'in içine yatayda tam merkeze oturt
         int startX = frameX + (frameW - totalWidth) / 2;
-        
-        // Y noktası: main frame'in içine dikeyde tam merkeze oturt ve 7 piksel aşağı kaydır
+
+        // Y noktası: main frame'in içine dikeyde tam merkeze oturt ve 7 piksel aşağı
+        // kaydır
         int y = frameY + (frameH - barH) / 2 + 7;
-        
+
         // 1. Health
         drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
-        
+
         // 2. Energy
-        drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap), y, barW, barH);
-        
+        drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap),
+                y, barW, barH);
+
         // 3. Mana
-        drawSingleBar(g, "MP", hero.getMana(), 80, manaIntImg, manaExtImg, manaIconImg, startX + 2*(barW + gap), y, barW, barH);
-        
+        drawSingleBar(g, "MP", hero.getMana(), 80, manaIntImg, manaExtImg, manaIconImg, startX + 2 * (barW + gap), y,
+                barW, barH);
+
         // 4. STR
-        drawSingleBar(g, "STR", hero.getStr(), 20, strIntImg, strExtImg, strIconImg, startX + 3*(barW + gap), y, barW, barH);
-        
+        drawSingleBar(g, "STR", hero.getStr(), 20, strIntImg, strExtImg, strIconImg, startX + 3 * (barW + gap), y, barW,
+                barH);
+
         // 5. DEF
-        drawSingleBar(g, "DEF", hero.getDef(), 6, defIntImg, defExtImg, defIconImg, startX + 4*(barW + gap), y, barW, barH);
+        drawSingleBar(g, "DEF", hero.getDef(), 6, defIntImg, defExtImg, defIconImg, startX + 4 * (barW + gap), y, barW,
+                barH);
     }
 
     /** Delegates always-visible hotbar drawing to InventoryView. */
@@ -438,18 +457,19 @@ public class GameView extends JPanel {
     private final java.util.Map<String, BufferedImage> weaponImageCache = new java.util.HashMap<>();
 
     private BufferedImage getWeaponImage(String imageName) {
-        if (imageName == null) return null;
+        if (imageName == null)
+            return null;
         if (weaponImageCache.containsKey(imageName)) {
             return weaponImageCache.get(imageName);
         }
         try {
             // Robust multi-path lookup
             String[] pathsToTry = {
-                "resources/" + imageName,
-                "../resources/" + imageName,
-                imageName,
-                "../" + imageName,
-                "src/resources/" + imageName
+                    "resources/" + imageName,
+                    "../resources/" + imageName,
+                    imageName,
+                    "../" + imageName,
+                    "src/resources/" + imageName
             };
             java.io.File f = null;
             for (String p : pathsToTry) {
@@ -483,28 +503,29 @@ public class GameView extends JPanel {
             }
             return;
         }
-        
+
         String path = hero.getEquippedWeapon().getImageName();
         if (!path.equals(lastLoggedWeapon)) {
-            System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon changed to: " + hero.getEquippedWeapon().getName() + " (path: " + path + ")");
+            System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon changed to: "
+                    + hero.getEquippedWeapon().getName() + " (path: " + path + ")");
             lastLoggedWeapon = path;
         }
-        
+
         BufferedImage weaponImg = getWeaponImage(path);
         if (weaponImg == null) {
             System.out.println("[DEBUG] drawEquippedWeapon: weaponImg is null for path: " + path);
             return;
         }
-        
+
         int wSize = dw / 2; // weapon size scales with the hero's width
-        
+
         // Dynamically fetch weapon metadata (or use defaults)
         double pivotX = 0.5;
         double pivotY = 0.5;
         double angleOffset = 0.0;
         int customHandX = 0;
         int customHandY = 0;
-        
+
         domain.models.entity.GameObject equipped = hero.getEquippedWeapon();
         if (equipped instanceof domain.models.item.MapItem) {
             domain.models.item.MapItem item = (domain.models.item.MapItem) equipped;
@@ -514,44 +535,47 @@ public class GameView extends JPanel {
             customHandX = item.getHandOffsetX();
             customHandY = item.getHandOffsetY();
         }
-        
+
         java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
-        
+
         // 1. Translate to the center of the rendered hero frame
         g2d.translate(x + dw / 2, y + dh / 2);
-        
+
         // 2. If facing LEFT, mirror the entire horizontal transformation context!
         if (dir == Direction.LEFT) {
             g2d.scale(-1, 1);
         }
-        
-        // 3. Convert absolute standard hand joint coordinates (23, 8) to standard-relative ratios (based on 64px standard size)
+
+        // 3. Convert absolute standard hand joint coordinates (23, 8) to
+        // standard-relative ratios (based on 64px standard size)
         double ratioX = 23.0 / 64.0;
         double ratioY = 8.0 / 64.0;
         double customRatioX = (double) customHandX / 64.0;
         double customRatioY = (double) customHandY / 64.0;
-        
+
         // Scale offsets dynamically with the current rendered dimensions
         int handX = (int) (ratioX * dw) + (int) (customRatioX * dw);
         int handY = (int) (ratioY * dh) + (int) (customRatioY * dh);
-        
+
         g2d.translate(handX, handY);
-        
-        // 4. Calculate dynamic rotation angle (melee swing angle defaults to 45 deg, or customized per weapon)
+
+        // 4. Calculate dynamic rotation angle (melee swing angle defaults to 45 deg, or
+        // customized per weapon)
         double swingAngle = Math.toRadians(45);
         if (equipped instanceof domain.models.item.MapItem) {
             swingAngle = ((domain.models.item.MapItem) equipped).getBaseRotationAngle();
         }
         double totalAngle = swingAngle + angleOffset;
         g2d.rotate(totalAngle);
-        
+
         // 5. Calculate offset based on weapon pivot points
         int px = (int) (pivotX * wSize);
         int py = (int) (pivotY * wSize);
-        
-        // 6. Draw the weapon icon such that the pivot (px, py) aligns exactly with hand (0,0)
+
+        // 6. Draw the weapon icon such that the pivot (px, py) aligns exactly with hand
+        // (0,0)
         g2d.drawImage(weaponImg, -px, -py, wSize, wSize, null);
-        
+
         g2d.setTransform(oldTransform);
     }
 
@@ -596,7 +620,54 @@ public class GameView extends JPanel {
 
                 BufferedImage frame = null;
 
-                if (e instanceof domain.models.entity.ShadowClone) {
+                if (e instanceof domain.models.entity.Projectile) {
+                    domain.models.entity.Projectile proj = (domain.models.entity.Projectile) e;
+
+                    if ("ARROW".equalsIgnoreCase(proj.getType())) {
+                        BufferedImage arrowImg = assetManager.getProjectileArrow();
+                        if (arrowImg != null) {
+                            double px = offsetX + (proj.getExactX() * tileSize);
+                            double py = offsetY + (proj.getExactY() * tileSize);
+
+                            // atan2 0 açısını Sağa (Right) doğru kabul eder.
+                            // Ok görseli orijinalinde YUKARI (Up) bakıyor.
+                            // Bu yüzden +90 derece (Math.PI / 2) offset ekliyoruz.
+                            double angle = Math.atan2(proj.getDeltaY(), proj.getDeltaX()) + (Math.PI / 2.0);
+
+                            java.awt.geom.AffineTransform old = g2d.getTransform();
+                            g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
+                            g2d.rotate(angle);
+                            g2d.drawImage(arrowImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
+                            g2d.setTransform(old);
+                        } else {
+                            // Fallback if arrow image fails
+                            int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                            int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                            int size = tileSize / 2;
+                            g2d.setColor(new java.awt.Color(200, 150, 100, 200));
+                            g2d.fillOval(px, py, size, size);
+                        }
+                    } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
+                        // Blazing Fireball (Orange-Red glowing orb)
+                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    } else {
+                        // Purple Mage Spell
+                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    }
+                    continue;
+                } else if (e instanceof domain.models.entity.ShadowClone) {
                     // Klon: hero sprite'ı %50 saydamlıkla (görsel ayrım)
                     frame = assetManager.getHeroSprite(domain.models.AnimationState.IDLE);
                     if (frame != null) {
@@ -669,9 +740,9 @@ public class GameView extends JPanel {
                     int dh = (int) (ih * ((double) tileSize / iw));
                     int dx = offsetX + (e.getX() * tileSize);
                     int dy = offsetY + (e.getY() * tileSize) + tileSize - dh;
-                    
+
                     drawTeamAura(g2d, e, dx + dw / 2, dy + dh - 5, tileSize);
-                    
+
                     g2d.drawImage(frame, dx, dy, dw, dh, null);
                 }
             }
@@ -688,9 +759,9 @@ public class GameView extends JPanel {
                     int dh = (int) (ih * ((double) tileSize / iw));
                     int dx = offsetX + (knight.getX() * tileSize);
                     int dy = offsetY + (knight.getY() * tileSize) + tileSize - dh;
-                    
+
                     drawTeamAura(g2d, knight, dx + dw / 2, dy + dh - 5, tileSize);
-                    
+
                     g2d.drawImage(kFrame, dx, dy, dw, dh, null);
                 }
             }
@@ -703,9 +774,9 @@ public class GameView extends JPanel {
                     int dh = (int) (ih * ((double) tileSize / iw));
                     int dx = offsetX + (sorcerer.getX() * tileSize);
                     int dy = offsetY + (sorcerer.getY() * tileSize) + tileSize - dh;
-                    
+
                     drawTeamAura(g2d, sorcerer, dx + dw / 2, dy + dh - 5, tileSize);
-                    
+
                     g2d.drawImage(sFrame, dx, dy, dw, dh, null);
                 }
             }
@@ -778,25 +849,35 @@ public class GameView extends JPanel {
     }
 
     private void drawTeamAura(Graphics2D g2d, domain.models.entity.Entity entity, int cx, int cy, int size) {
-        if (gameMode != domain.models.GameMode.TEAM_MATCH) return;
+        if (gameMode != domain.models.GameMode.TEAM_MATCH)
+            return;
         domain.models.Team team = entity.getTeam();
-        if (team == domain.models.Team.NONE || team == null) return;
-        
-        Color centerColor = (team == domain.models.Team.CYAN) ? new Color(0, 255, 255, 150) : new Color(255, 140, 0, 150);
+        if (team == domain.models.Team.NONE || team == null)
+            return;
+
+        Color centerColor = (team == domain.models.Team.CYAN) ? new Color(0, 255, 255, 150)
+                : new Color(255, 140, 0, 150);
         Color edgeColor = new Color(0, 0, 0, 0);
-        
+
         int radius = size / 2 + 15;
-        
+
         java.awt.geom.Point2D center = new java.awt.geom.Point2D.Float(cx, cy);
-        float[] dist = {0.0f, 1.0f};
-        Color[] colors = {centerColor, edgeColor};
-        
+        float[] dist = { 0.0f, 1.0f };
+        Color[] colors = { centerColor, edgeColor };
+
         java.awt.RadialGradientPaint p = new java.awt.RadialGradientPaint(center, radius, dist, colors);
         java.awt.Paint oldPaint = g2d.getPaint();
         g2d.setPaint(p);
-        
+
         g2d.fillOval(cx - radius, cy - radius / 2, radius * 2, radius);
         g2d.setPaint(oldPaint);
+    }
+
+    private boolean isSameWall(domain.models.map.GameMap map, int x, int y, String imgName) {
+        if (x < 0 || x >= map.getWidth() || y < 0 || y >= map.getHeight())
+            return false;
+        domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+        return obj instanceof domain.models.tile.WallTile && imgName != null && imgName.equals(obj.getImageName());
     }
 
     private void drawMap(Graphics2D g2d) {
@@ -807,6 +888,41 @@ public class GameView extends JPanel {
             for (int y = 0; y < gameMap.getHeight(); y++) {
                 domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
                 if (obj != null) {
+                    if (obj instanceof domain.models.tile.WallTile) {
+                        String imgName = obj.getImageName();
+                        int tlX;
+                        if (x == 0) {
+                            tlX = 0;
+                        } else if (x == gameMap.getWidth() - 1) {
+                            tlX = gameMap.getWidth() - 1;
+                        } else {
+                            tlX = 1 + ((x - 1) / 2) * 2;
+                        }
+                        int tlY = (y / 2) * 2;
+                        boolean in2x2Block = (isSameWall(gameMap, tlX, tlY, imgName) &&
+                                isSameWall(gameMap, tlX + 1, tlY, imgName) &&
+                                isSameWall(gameMap, tlX, tlY + 1, imgName) &&
+                                isSameWall(gameMap, tlX + 1, tlY + 1, imgName));
+                        if (in2x2Block) {
+                            if (x == tlX && y == tlY) {
+                                BufferedImage tImg = tileManager.getTile(imgName);
+                                if (tImg != null) {
+                                    int wallOffset = 0;
+                                    if ("wall/wall_1".equals(imgName)) {
+                                        wallOffset = 8;
+                                    } else if ("wall/wall_side".equals(imgName)) {
+                                        wallOffset = 6;
+                                    } else if ("wall/wall_2".equals(imgName)) {
+                                        wallOffset = 6;
+                                    }
+                                    g2d.drawImage(tImg, offsetX + (x * tileSize), offsetY + (y * tileSize) - wallOffset,
+                                            2 * tileSize, 2 * tileSize + wallOffset, null);
+                                }
+                            }
+                            continue;
+                        }
+                    }
+
                     if (obj instanceof domain.models.item.MapItem ||
                             obj instanceof domain.models.entity.Column ||
                             obj instanceof domain.models.entity.Chest ||
@@ -875,14 +991,37 @@ public class GameView extends JPanel {
                             }
                             g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
                         }
+                    } else if (obj instanceof domain.models.tile.WallTile &&
+                            "wall/wall_1".equals(obj.getImageName())) {
+                        BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                        if (tileImage != null) {
+                            g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize) - 8, tileSize,
+                                    tileSize + 8, null); // 8 pixels taller
+                        }
+                    } else {
+                        // Normal harita objesi (Duvar vs.)
+                        BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                        if (tileImage != null) {
+                            int offset = (obj instanceof domain.models.tile.WallTile) ? 6 : 0;
+                            if (offset > 0) {
+                                g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize) - offset,
+                                        tileSize,
+                                        tileSize + offset, null);
+                            } else {
+                                g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize,
+                                        tileSize, null);
+                            }
+                        }
                     }
-                } else if ("wall/wall_1".equals(obj.getImageName())) {
-                    BufferedImage tileImage = tileManager.getTile(obj.getImageName());
-                    if (tileImage != null) {
-                        g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize) - 8, tileSize,
-                                tileSize + 8, null); // 8 pixels taller
-                    }
-                    
+                }
+            }
+        }
+
+        // PASS 2: Draw all wall-mounted decorations on top of all base walls and floor tiles
+        for (int x = 0; x < gameMap.getWidth(); x++) {
+            for (int y = 0; y < gameMap.getHeight(); y++) {
+                domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
+                if (obj instanceof domain.models.tile.WallTile) {
                     domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
                     if (wall.getDecoration() != null) {
                         domain.models.entity.GameObject deco = wall.getDecoration();
@@ -890,58 +1029,48 @@ public class GameView extends JPanel {
                         if (decoImg != null) {
                             int iw = decoImg.getWidth();
                             int ih = decoImg.getHeight();
-                            int dw = tileSize;
-                            if (deco instanceof domain.models.staticObjects.Decoration) {
-                                dw = (int) (tileSize * 0.4);
-                            } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                dw = Math.max(tileSize - 6, 4);
+
+                            // Check if this WallTile is part of a 2x2 block
+                            String imgName = obj.getImageName();
+                            int tlX;
+                            if (x == 0) {
+                                tlX = 0;
+                            } else if (x == gameMap.getWidth() - 1) {
+                                tlX = gameMap.getWidth() - 1;
+                            } else {
+                                tlX = 1 + ((x - 1) / 2) * 2;
                             }
-                            int dh = (int) (ih * ((double) dw / iw));
+                            int tlY = (y / 2) * 2;
+                            boolean in2x2Block = (isSameWall(gameMap, tlX, tlY, imgName) &&
+                                    isSameWall(gameMap, tlX + 1, tlY, imgName) &&
+                                    isSameWall(gameMap, tlX, tlY + 1, imgName) &&
+                                    isSameWall(gameMap, tlX + 1, tlY + 1, imgName));
+
+                            double baseDw = tileSize;
+                            if (in2x2Block) {
+                                if (deco instanceof domain.models.staticObjects.Decoration) {
+                                    baseDw = tileSize * 0.7;
+                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                                    baseDw = Math.max(tileSize - 6, 4);
+                                }
+                            } else {
+                                if (deco instanceof domain.models.staticObjects.Decoration) {
+                                    baseDw = tileSize * 0.4;
+                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                                    baseDw = Math.max(tileSize - 6, 4);
+                                }
+                            }
+
+                            double factor = (baseDw * deco.getCustomScale()) / iw;
+                            int dw = (int) Math.round(iw * factor);
+                            int dh = (int) Math.round(ih * factor);
                             int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                             int drawY;
                             if (deco instanceof domain.models.staticObjects.WallObject) {
-                                drawY = offsetY + (yVal * tileSize) - 4 + (tileSize - dh) / 2; // wallOffset=8
+                                int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
+                                drawY = offsetY + (y * tileSize) - wallOffset / 2 + (tileSize - dh) / 2;
                             } else {
-                                drawY = offsetY + (yVal * tileSize) + tileSize - dh;
-                            }
-                            g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
-                        }
-                    }
-                } else {
-                    // Normal harita objesi (Duvar vs.)
-                    BufferedImage tileImage = tileManager.getTile(obj.getImageName());
-                    if (tileImage != null) {
-                        int offset = (obj instanceof domain.models.tile.WallTile) ? 6 : 0;
-                        if (offset > 0) {
-                            g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize) - offset, tileSize,
-                                    tileSize + offset, null);
-                        } else {
-                            g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize), tileSize,
-                                    tileSize, null);
-                        }
-                    }
-                    
-                    domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
-                    if (wall.getDecoration() != null) {
-                        domain.models.entity.GameObject deco = wall.getDecoration();
-                        BufferedImage decoImg = tileManager.getTile(deco.getImageName());
-                        if (decoImg != null) {
-                            int iw = decoImg.getWidth();
-                            int ih = decoImg.getHeight();
-                            int dw = tileSize;
-                            if (deco instanceof domain.models.staticObjects.Decoration) {
-                                dw = (int) (tileSize * 0.4);
-                            } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                                dw = Math.max(tileSize - 6, 4);
-                            }
-                            int dh = (int) (ih * ((double) dw / iw));
-                            int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
-                            int drawY;
-                            if (deco instanceof domain.models.staticObjects.WallObject) {
-                                int wallOffset = "wall/wall_2".equals(obj.getImageName()) ? 6 : 0;
-                                drawY = offsetY + (yVal * tileSize) - wallOffset / 2 + (tileSize - dh) / 2;
-                            } else {
-                                drawY = offsetY + (yVal * tileSize) + tileSize - dh;
+                                drawY = offsetY + (y * tileSize) + tileSize - dh;
                             }
                             g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
                         }
@@ -1034,49 +1163,74 @@ public class GameView extends JPanel {
             return;
 
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
-            if (obj instanceof domain.models.entity.Column ||
-                    obj instanceof domain.models.entity.Chest ||
-                    obj instanceof domain.models.entity.Crate ||
-                    obj instanceof domain.models.staticObjects.Door ||
-                    obj instanceof domain.models.staticObjects.Decoration ||
-                    obj instanceof domain.models.entity.SearchableObject ||
-                    obj instanceof domain.models.entity.Sign) {
+           domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
+                        if (wall.getDecoration() != null) {
+                            domain.models.entity.GameObject deco = wall.getDecoration();
+                            BufferedImage decoImg = tileManager.getTile(deco.getImageName());
+                            if (decoImg != null) {
+                                int iw = decoImg.getWidth();
+                                int ih = decoImg.getHeight();
+                                int dw = tileSize;
+                                if (deco instanceof domain.models.staticObjects.Decoration) {
+                                    dw = (int) (tileSize * 0.4);
+                                } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                                    dw = Math.max(tileSize - 6, 4);
+                                }
+                                dw = (int) (dw * deco.getCustomScale());
+                                int dh = (int) (ih * ((double) dw / iw));
+                                int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
+                                int drawY;
+                                if (deco instanceof domain.models.staticObjects.WallObject) {
+                                    drawY = offsetY + (yVal * tileSize) - 4 + (tileSize - dh) / 2; // y -> yVal yapıldı
+                                } else {
+                                    drawY = offsetY + (yVal * tileSize) + tileSize - dh; // y -> yVal yapıldı
+                                }
+                                g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
+                            }
+                        }
+                    } else {
+                        // Normal harita objesi (Duvar vs.)
+                        BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                        if (tileImage != null) {
+                            int offset = (obj instanceof domain.models.tile.WallTile) ? 6 : 0;
+                            if (offset > 0) {
+                                g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize) - offset, // y -> yVal yapıldı
+                                        tileSize,
+                                        tileSize + offset, null);
+                            } else {
+                                g2d.drawImage(tileImage, offsetX + (x * tileSize), offsetY + (yVal * tileSize), tileSize, // y -> yVal yapıldı
+                                        tileSize, null);
+                            }
+                        }
 
-                if (obj instanceof domain.models.staticObjects.LevelDoor) {
-                    int tx = offsetX + (x * tileSize);
-                    int ty = offsetY + (yVal * tileSize);
-                    java.awt.Paint oldPaint = g2d.getPaint();
-                    java.awt.Stroke oldStroke = g2d.getStroke();
-                    
-                    g2d.setColor(new Color(0, 255, 200, 30));
-                    g2d.fillOval(tx + 6, ty + 6, tileSize - 12, tileSize - 12);
-                    
-                    g2d.setStroke(new java.awt.BasicStroke(3f));
-                    g2d.setColor(new Color(0, 255, 200, 180));
-                    g2d.drawOval(tx + 6, ty + 6, tileSize - 12, tileSize - 12);
-                    
-                    g2d.setColor(new Color(255, 255, 255, 200));
-                    g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 11));
-                    String markerText = "LVL";
-                    int textW = g2d.getFontMetrics().stringWidth(markerText);
-                    g2d.drawString(markerText, tx + (tileSize - textW) / 2, ty + tileSize / 2 + 4);
-                    
-                    g2d.setStroke(oldStroke);
-                    g2d.setPaint(oldPaint);
-                }
-
-                // Kullanıcı talebi: Obstacle'lar yarı saydam değil opak olmalı
-                // (AlphaComposite kaldırıldı)
-
-                BufferedImage sprite = null;
-                if (tileManager != null) {
-                    String imgName = obj.getImageName();
-                    if (obj instanceof domain.models.staticObjects.Decoration && imgName != null && imgName.startsWith("torch/")) {
-                        long now = System.currentTimeMillis();
-                        int[] frames = {1, 2, 3, 4, 6, 7, 8};
-                        int frame = frames[(int) ((now / 120) % frames.length)];
-                        imgName = "torch/torch_" + frame;
+                        if (obj instanceof domain.models.tile.WallTile) {
+                            domain.models.tile.WallTile wallObj = (domain.models.tile.WallTile) obj;
+                            if (wallObj.getDecoration() != null) {
+                                domain.models.entity.GameObject deco = wallObj.getDecoration();
+                                BufferedImage decoImg = tileManager.getTile(deco.getImageName());
+                                if (decoImg != null) {
+                                    int iw = decoImg.getWidth();
+                                    int ih = decoImg.getHeight();
+                                    int dw = tileSize;
+                                    if (deco instanceof domain.models.staticObjects.Decoration) {
+                                        dw = (int) (tileSize * 0.4);
+                                    } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                                        dw = Math.max(tileSize - 6, 4);
+                                    }
+                                    dw = (int) (dw * deco.getCustomScale());
+                                    int dh = (int) (ih * ((double) dw / iw));
+                                    int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
+                                    int drawY;
+                                    if (deco instanceof domain.models.staticObjects.WallObject) {
+                                        int wallOffset = "wall/wall_2".equals(obj.getImageName()) ? 6 : 0;
+                                        drawY = offsetY + (yVal * tileSize) - wallOffset / 2 + (tileSize - dh) / 2; // y -> yVal yapıldı
+                                    } else {
+                                        drawY = offsetY + (yVal * tileSize) + tileSize - dh; // y -> yVal yapıldı
+                                    }
+                                    g2d.drawImage(decoImg, drawX, drawY, dw, dh, null);
+                                }
+                            }
+                        }
                     }
                     sprite = tileManager.getTile(imgName);
                 }

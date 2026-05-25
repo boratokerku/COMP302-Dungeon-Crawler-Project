@@ -3,6 +3,8 @@ src/ui/MaxItemDialog.java
 src/ui/MaxObstacleDialog.java
 src/ui/DesignModeView.java
 src/DemoRunner.java
+src/test/HeroAttackTest.java
+src/test/InventoryHotbarTest.java
 src/controller/MouseHandler.java
 src/controller/InputHandler.java
 src/view/TileManager.java
@@ -51,6 +53,7 @@ src/domain/models/tile/WallTile.java
 src/domain/models/tile/Tile.java
 src/domain/models/tile/FloorTile.java
 src/domain/models/staticObjects/Door.java
+src/domain/models/staticObjects/WallObject.java
 src/domain/models/staticObjects/KeyItem.java
 src/domain/models/staticObjects/Crate.java
 src/domain/models/staticObjects/StaticObject.java
@@ -73,6 +76,7 @@ src/domain/models/item/ShadowCloneScroll.java
 src/domain/models/item/Item.java
 src/domain/models/item/Weapon.java
 src/domain/models/inventory/Inventory.java
+src/domain/models/inventory/InventoryHotbar.java
 src/domain/models/GameState.java
 src/domain/models/GameMode.java
 src/domain/models/Direction.java

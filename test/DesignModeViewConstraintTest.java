@@ -10,6 +10,7 @@ import view.TileManager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import javax.swing.SwingUtilities;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
@@ -282,5 +283,15 @@ public class DesignModeViewConstraintTest {
         assertFalse(restartedFloorSo.isSearched(), "Floor searchable should be reset to unsearched on restart");
         assertFalse(restartedFloorSo.isTrapTriggered(), "Floor searchable trap status should be reset to false on restart");
         assertNull(restartedFloorSo.getHiddenItem(), "Floor searchable hidden item should be reset to null on restart");
+    }
+
+    @Test
+    public void testSearchPopupDialog_InstantiationAndState() throws Exception {
+        SwingUtilities.invokeAndWait(() -> {
+            ui.SearchPopupDialog dialog = new ui.SearchPopupDialog(null, "Gargoyle", () -> {});
+            assertNotNull(dialog, "Dialog should be successfully instantiated");
+            assertFalse(dialog.isSearchTriggered(), "Initial searchTriggered should be false");
+            dialog.dispose();
+        });
     }
 }

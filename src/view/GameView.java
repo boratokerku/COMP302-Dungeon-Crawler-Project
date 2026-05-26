@@ -252,8 +252,24 @@ public class GameView extends JPanel {
     private transient BufferedImage defExtImg, defIntImg;
     private transient BufferedImage hpIconImg, energyIconImg, manaIconImg, strIconImg, defIconImg;
     private transient BufferedImage mainFrameImg;
+    private transient BufferedImage pauseButtonImg;
     private transient java.awt.Font hudFont;
     private transient boolean hudLoaded = false;
+
+    private int pauseBtnX, pauseBtnY, pauseBtnW, pauseBtnH;
+
+    public boolean isPauseButtonClicked(int mx, int my) {
+        if (pauseButtonImg == null) return false;
+        return mx >= pauseBtnX && mx <= pauseBtnX + pauseBtnW &&
+               my >= pauseBtnY && my <= pauseBtnY + pauseBtnH;
+    }
+
+    public void triggerPauseMenu() {
+        javax.swing.Action togglePauseAction = this.getActionMap().get("togglePause");
+        if (togglePauseAction != null) {
+            togglePauseAction.actionPerformed(new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "togglePause"));
+        }
+    }
 
     private void loadHUDAssets() {
         if (hudLoaded)
@@ -283,6 +299,14 @@ public class GameView extends JPanel {
             defIconImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/def_icon.png"));
 
             mainFrameImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/main_frame.png"));
+
+            java.io.File f = new java.io.File("resources/images/PopUpImages/PauseButton.png");
+            if (!f.exists()) {
+                f = new java.io.File("../resources/images/PopUpImages/PauseButton.png");
+            }
+            if (f.exists()) {
+                pauseButtonImg = javax.imageio.ImageIO.read(f);
+            }
 
             hudFont = vt323Font.deriveFont(java.awt.Font.PLAIN, 16f); // Kullanıcı talebi: 16 punto
         } catch (Exception e) {
@@ -429,6 +453,20 @@ public class GameView extends JPanel {
         // Y noktası: main frame'in içine dikeyde tam merkeze oturt ve 7 piksel aşağı
         // kaydır
         int y = frameY + (frameH - barH) / 2 + 7;
+
+        // Draw PauseButton to the left of the HUD bar (immediately outside mainFrame) - Much Larger
+        if (pauseButtonImg != null) {
+            pauseBtnH = (int) (frameH * 0.70);
+            pauseBtnW = (int) (pauseButtonImg.getWidth() * ((double) pauseBtnH / pauseButtonImg.getHeight()));
+            // Positioned outside mainFrame (with a 10px gap)
+            pauseBtnX = frameX - pauseBtnW - 10;
+            // Clamp so it doesn't go off-screen if window is narrow
+            if (pauseBtnX < 5) {
+                pauseBtnX = 5;
+            }
+            pauseBtnY = frameY + (frameH - pauseBtnH) / 2;
+            g.drawImage(pauseButtonImg, pauseBtnX, pauseBtnY, pauseBtnW, pauseBtnH, null);
+        }
 
         // 1. Health
         drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);

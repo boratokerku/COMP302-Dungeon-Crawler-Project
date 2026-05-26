@@ -1270,6 +1270,7 @@ public class DemoRunner {
         renderRef[0] = new javax.swing.Timer(16, (e) -> {
             gameView.repaint();
         });
+        mouseHandler.setTimers(logicRef, renderRef);
         renderRef[0].start();
     }
 

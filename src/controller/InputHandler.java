@@ -168,7 +168,44 @@ public class InputHandler implements KeyListener {
                     int ny = hero.getY() + dy;
                     if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
                         domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
+                        if (obj instanceof domain.models.tile.WallTile) {
+                            domain.models.entity.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
+                            if (deco instanceof domain.models.entity.SearchableObject) {
+                                obj = deco;
+                            }
+                        }
                         if (obj != null) {
+                            if (obj instanceof domain.models.entity.SearchableObject) {
+                                java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(gameView);
+                                java.awt.Frame parentFrame = (parentWindow instanceof java.awt.Frame) ? (java.awt.Frame) parentWindow : null;
+
+                                float scale = 0.35f;
+                                int width = Math.round(612 * scale);
+                                int height = Math.round(408 * scale);
+
+                                int objScreenX = gameView.getOffsetX() + obj.getX() * gameView.getTileSize();
+                                int objScreenY = gameView.getOffsetY() + obj.getY() * gameView.getTileSize();
+
+                                java.awt.Point screenLoc = gameView.getLocationOnScreen();
+                                int targetX = screenLoc.x + objScreenX + gameView.getTileSize() + 5;
+                                
+                                // If it exceeds the right bounds of the game view, place it to the left of the item
+                                if (objScreenX + gameView.getTileSize() + 5 + width > gameView.getWidth()) {
+                                    targetX = screenLoc.x + objScreenX - width - 5;
+                                }
+                                int targetY = screenLoc.y + objScreenY + (gameView.getTileSize() - height) / 2;
+
+                                final domain.models.entity.GameObject targetObj = obj;
+                                ui.SearchPopupDialog dialog = new ui.SearchPopupDialog(parentFrame, obj.getName(), () -> {
+                                    domain.logic.SearchAction sa = new domain.logic.SearchAction(null);
+                                    sa.execute(hero, targetObj);
+                                    gameView.repaint();
+                                });
+                                dialog.setLocation(targetX, targetY);
+                                dialog.setVisible(true);
+                                return;
+                            }
+
                             if (obj instanceof domain.models.staticObjects.Door) {
                                 domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
                                 if (door.isLocked()) {

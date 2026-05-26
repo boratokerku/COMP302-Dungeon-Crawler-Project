@@ -51,6 +51,20 @@ public class DemoRunner {
                         } else if (origDeco instanceof domain.models.staticObjects.WallObject) {
                             newDeco = new domain.models.staticObjects.WallObject(origDeco.getName(), x, y,
                                     origDeco.getImageName());
+                        } else if (origDeco instanceof domain.models.entity.SearchableObject) {
+                            domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) origDeco;
+                            domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(so.getName(), x, y,
+                                    so.getImageName(), so.getOpenImageName());
+                            if (so.getHiddenItem() != null) {
+                                if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                                    domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so.getHiddenItem();
+                                    newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
+                                } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
+                                    domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so.getHiddenItem();
+                                    newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                                }
+                            }
+                            newDeco = newSo;
                         }
                         if (newDeco != null) {
                             newDeco.setCustomScale(origDeco.getCustomScale());
@@ -112,8 +126,18 @@ public class DemoRunner {
                     copy.placeObject(new domain.models.item.RingItem(x, y), x, y);
                 } else if (obj instanceof domain.models.entity.SearchableObject) {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
-                    copy.placeObject(new domain.models.entity.SearchableObject(so.getName(), x, y, so.getImageName(),
-                            so.getOpenImageName()), x, y);
+                    domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(so.getName(), x, y, so.getImageName(),
+                            so.getOpenImageName());
+                    if (so.getHiddenItem() != null) {
+                        if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                            domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so.getHiddenItem();
+                            newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
+                        } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
+                            domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so.getHiddenItem();
+                            newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                        }
+                    }
+                    copy.placeObject(newSo, x, y);
                 } else {
                     copy.placeObject(obj, x, y);
                 }

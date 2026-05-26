@@ -1066,13 +1066,13 @@ public class GameView extends JPanel {
                             int dw = tileSize;
                             if (deco instanceof domain.models.staticObjects.Decoration) {
                                 dw = (int) (tileSize * 0.4);
-                            } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                            } else if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
                                 dw = Math.max(tileSize - 6, 4);
                             }
                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                             int drawY;
-                            if (deco instanceof domain.models.staticObjects.WallObject) {
+                            if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
                                 drawY = offsetY + (yVal * tileSize) - 3 + (tileSize - dh) / 2; // wallOffset=6
                             } else {
                                 drawY = offsetY + (yVal * tileSize) + tileSize - dh;
@@ -1138,35 +1138,12 @@ public class GameView extends JPanel {
                         int iw = decoImg.getWidth();
                         int ih = decoImg.getHeight();
 
-                        double baseDw = tileSize;
-                        if (deco instanceof domain.models.staticObjects.Decoration) {
-                            if ("Skull".equals(deco.getName())) {
-                                baseDw = tileSize * 0.8;
-                            } else if ("Statue".equals(deco.getName())) {
-                                baseDw = tileSize;
-                            } else {
-                                baseDw = tileSize * 0.4;
-                            }
-                        } else if (deco instanceof domain.models.staticObjects.WallObject) {
-                            baseDw = Math.max(tileSize - 6, 4);
-                        }
-
-                        int dw;
-                        if (deco.getImageName() != null &&
-                            (deco.getImageName().toLowerCase().contains("flag") ||
-                             deco.getImageName().toLowerCase().contains("banner"))) {
-                            dw = 30;
-                        } else if (deco.getImageName() != null &&
-                                   deco.getImageName().toLowerCase().contains("blood_stain")) {
-                            dw = 80;
-                        } else {
-                            double factor = (baseDw * deco.getCustomScale()) / iw;
-                            dw = (int) Math.round(iw * factor);
-                        }
-                        int dh = (int) Math.round(ih * ((double) dw / iw));
+                        int[] dims = getDecorDimensions(deco.getImageName(), deco.getCustomScale(), tileSize, iw, ih, deco.getName());
+                        int dw = dims[0];
+                        int dh = dims[1];
                         int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                         int drawY;
-                        if (deco instanceof domain.models.staticObjects.WallObject) {
+                        if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
                             int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
                             drawY = offsetY + (yVal * tileSize) - wallOffset / 2 + (tileSize - dh) / 2;
                         } else {
@@ -1317,21 +1294,16 @@ public class GameView extends JPanel {
                         iw = 31;
                         ih = 64;
                     }
-                    double baseDw = tileSize;
-                    if (obj instanceof domain.models.staticObjects.Decoration) {
-                        if ("Skull".equals(obj.getName())) {
-                            baseDw = tileSize * 0.8;
-                        } else if ("Statue".equals(obj.getName())) {
-                            baseDw = tileSize;
-                        } else {
-                            baseDw = tileSize * 0.4;
-                        }
-                    } else if (obj instanceof domain.models.staticObjects.Door) {
-                        baseDw = tileSize * 2;
+                    int dw = tileSize;
+                    int dh = tileSize;
+                    if (obj instanceof domain.models.staticObjects.Door) {
+                        dw = tileSize * 2;
+                        dh = (int) (ih * ((double) dw / iw));
+                    } else {
+                        int[] dims = getDecorDimensions(obj.getImageName(), obj.getCustomScale(), tileSize, iw, ih, obj.getName());
+                        dw = dims[0];
+                        dh = dims[1];
                     }
-                    double factor = (baseDw * obj.getCustomScale()) / iw;
-                    int dw = (int) Math.round(iw * factor);
-                    int dh = (int) Math.round(ih * factor);
                     int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                     int drawY = offsetY + (yVal * tileSize) + tileSize - dh; // Bottom aligned!
                     g2d.drawImage(sprite, drawX, drawY, dw, dh, null);
@@ -1356,6 +1328,69 @@ public class GameView extends JPanel {
                 }
             }
         }
+    }
+
+    private int[] getDecorDimensions(String img, double scale, int tileSize, int iw, int ih, String objName) {
+        if (img == null) {
+            return new int[] { tileSize, tileSize };
+        }
+        String lower = img.toLowerCase();
+        
+        boolean isAbsolute = !lower.contains("wallsearchable/");
+        double baseW;
+        if (lower.contains("flag") || lower.contains("banner")) {
+            baseW = 30;
+        } else if (lower.contains("blood_stain")) {
+            baseW = 70;
+        } else if (lower.contains("statue") || (objName != null && objName.toLowerCase().contains("statue"))) {
+            baseW = 70;
+        } else if (lower.contains("acid_ooze")) {
+            baseW = 70;
+        } else if (lower.contains("chain")) {
+            baseW = 60;
+        } else if (lower.contains("moss")) {
+            baseW = 55;
+        } else if (lower.contains("crack")) {
+            baseW = 70;
+        } else if (lower.contains("wall_grill")) {
+            baseW = 50;
+        } else if (lower.contains("missing_brick")) {
+            baseW = 40;
+        } else if (lower.contains("gargoyle")) {
+            baseW = 75;
+        } else if (lower.contains("wall_cavity")) {
+            baseW = 40;
+        } else if (lower.contains("pipe_hole")) {
+            baseW = 40;
+        } else if (lower.contains("loose_stone")) {
+            baseW = 50;
+        } else if (lower.contains("torch") || (objName != null && objName.toLowerCase().contains("torch"))) {
+            baseW = 60;
+        } else if (lower.contains("skull") || (objName != null && objName.toLowerCase().contains("skull"))) {
+            baseW = tileSize * 0.8;
+            isAbsolute = false;
+        } else {
+            isAbsolute = false;
+            if (lower.contains("wallsearchable") || lower.contains("walldecoration")) {
+                baseW = Math.max(tileSize - 6, 4);
+            } else {
+                baseW = tileSize;
+            }
+        }
+        
+        double finalW = isAbsolute ? (baseW * ((double) tileSize / 64.0)) : baseW;
+        int dw = (int) Math.round(finalW * scale);
+        int dh = (int) Math.round(ih * ((double) dw / iw));
+        
+        if (lower.contains("torch") || (objName != null && objName.toLowerCase().contains("torch"))) {
+            if (dw > tileSize || dh > tileSize) {
+                double f = Math.min((double) tileSize / iw, (double) tileSize / ih);
+                dw = (int) Math.round(iw * f);
+                dh = (int) Math.round(ih * f);
+            }
+        }
+        
+        return new int[] { dw, dh };
     }
 
     public void toggleInventory() {

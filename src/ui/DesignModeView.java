@@ -1303,21 +1303,6 @@ public class DesignModeView extends JPanel {
                         }
                     }
 
-                    // If it is a flag or banner, set its scale to render at exactly 30 pixels (30.0 / 42.0)
-                    if (wallObj.getImageName() != null &&
-                        (wallObj.getImageName().toLowerCase().contains("flag") ||
-                         wallObj.getImageName().toLowerCase().contains("banner"))) {
-                        wallObj.setCustomScale(30.0 / 42.0);
-                    } else if (wallObj.getImageName() != null &&
-                               wallObj.getImageName().toLowerCase().contains("blood_stain")) {
-                        wallObj.setCustomScale(80.0 / 42.0);
-                    } else {
-                        // Do not overwrite tailored customScale set by constructor, unless it's default
-                        // 1.0
-                        if (wallObj.getCustomScale() == 1.0) {
-                            wallObj.setCustomScale(1.6);
-                        }
-                    }
                     map.placeObject(wallObj, pos[0], pos[1]);
                     placedWallObjs++;
                 }
@@ -1828,23 +1813,9 @@ public class DesignModeView extends JPanel {
                             int iw = decoImg.getWidth();
                             int ih = decoImg.getHeight();
 
-                            int dw = tileSize;
-                            if (deco instanceof Decoration) {
-                                dw = (int) (tileSize * 0.4);
-                            } else if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
-                                dw = Math.max(tileSize - 6, 4);
-                            }
-                             if (deco.getImageName() != null &&
-                                 (deco.getImageName().toLowerCase().contains("flag") ||
-                                  deco.getImageName().toLowerCase().contains("banner"))) {
-                                 dw = 30;
-                             } else if (deco.getImageName() != null &&
-                                        deco.getImageName().toLowerCase().contains("blood_stain")) {
-                                 dw = 80;
-                             } else {
-                                 dw = (int) (dw * deco.getCustomScale());
-                             }
-                             int dh = (int) (ih * ((double) dw / iw));
+                            int[] dims = getDecorDimensions(deco.getImageName(), deco.getCustomScale(), tileSize, iw, ih, deco.getName());
+                            int dw = dims[0];
+                            int dh = dims[1];
                             int drawX = px + (tileSize - dw) / 2;
                             int drawY;
                             if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
@@ -1898,18 +1869,15 @@ public class DesignModeView extends JPanel {
                                 ih = 64;
                             }
                             int dw = tileSize;
-                            if (obj instanceof Decoration) {
-                                if ("Skull".equals(obj.getName())) {
-                                    dw = (int) (tileSize * 0.8);
-                                } else if ("Statue".equals(obj.getName())) {
-                                    dw = tileSize;
-                                } else {
-                                    dw = (int) (tileSize * 0.4); // torch should be much smaller!
-                                }
-                            } else if (obj instanceof Door) {
+                            int dh = tileSize;
+                            if (obj instanceof Door) {
                                 dw = tileSize * 2;
+                                dh = (int) (ih * ((double) dw / iw));
+                            } else {
+                                int[] dims = getDecorDimensions(obj.getImageName(), obj.getCustomScale(), tileSize, iw, ih, obj.getName());
+                                dw = dims[0];
+                                dh = dims[1];
                             }
-                            int dh = (int) (ih * ((double) dw / iw));
                             int drawX = px + (tileSize - dw) / 2;
                             int drawY = py + tileSize - dh; // Bottom aligned!
                             g.drawImage(tImg, drawX, drawY, dw, dh, null);
@@ -1934,23 +1902,23 @@ public class DesignModeView extends JPanel {
         GameObject obj = map.getObjectAt(hoverTileX, hoverTileY);
         boolean isWall = (obj instanceof WallTile);
 
+        PaletteItem pItem = getSelectedPaletteItem();
+        GameObject selectedObj = null;
+        if (pItem != null && pItem.factory != null) {
+            selectedObj = pItem.factory.apply(hoverTileX, hoverTileY);
+        }
+        boolean isWallMounted = false;
+        if (selectedObj != null) {
+            isWallMounted = (selectedObj instanceof domain.models.staticObjects.WallObject || 
+                             (selectedObj instanceof domain.models.entity.SearchableObject && 
+                              selectedObj.getImageName() != null && 
+                              selectedObj.getImageName().contains("WallSearchable/")));
+        }
+
         Color fillColor;
         Color borderColor;
 
         if (isWall) {
-            PaletteItem pItem = getSelectedPaletteItem();
-            GameObject selectedObj = null;
-            if (pItem != null && pItem.factory != null) {
-                selectedObj = pItem.factory.apply(hoverTileX, hoverTileY);
-            }
-            boolean isWallMounted = false;
-            if (selectedObj != null) {
-                isWallMounted = (selectedObj instanceof domain.models.staticObjects.WallObject || 
-                                 (selectedObj instanceof domain.models.entity.SearchableObject && 
-                                  selectedObj.getImageName() != null && 
-                                  selectedObj.getImageName().contains("WallSearchable/")));
-            }
-
             boolean placeable = isWallTilePlaceable(hoverTileX, hoverTileY, selectedObj, isWallMounted);
             if (placeable) {
                 fillColor = new Color(60, 220, 60, 100);       // Green fill
@@ -1960,8 +1928,13 @@ public class DesignModeView extends JPanel {
                 borderColor = new Color(255, 80, 80, 200);      // Red border
             }
         } else {
-            fillColor = new Color(220, 220, 60, 100);          // Yellow/Orange fill
-            borderColor = new Color(255, 240, 80, 200);        // Yellow/Orange border
+            if (isWallMounted) {
+                fillColor = new Color(220, 60, 60, 100);       // Red fill for wall items inside the map
+                borderColor = new Color(255, 80, 80, 200);      // Red border
+            } else {
+                fillColor = new Color(220, 220, 60, 100);          // Yellow/Orange fill
+                borderColor = new Color(255, 240, 80, 200);        // Yellow/Orange border
+            }
         }
 
         g.setColor(fillColor);
@@ -2103,32 +2076,19 @@ public class DesignModeView extends JPanel {
                 iw = 31;
                 ih = 64;
             }
-            int dw = tileSize;
-            if (dummy instanceof Decoration) {
-                if ("Skull".equals(dummy.getName())) {
-                    dw = (int) (tileSize * 0.8);
-                } else if ("Statue".equals(dummy.getName())) {
-                    dw = tileSize;
-                } else {
-                    dw = (int) (tileSize * 0.4); // torch should be much smaller!
-                }
-            } else if (dummy instanceof domain.models.staticObjects.WallObject || dummy instanceof SearchableObject) {
-                dw = Math.max(tileSize - 6, 4);
-            }
-
-            if (dummy.getImageName() != null &&
-                (dummy.getImageName().toLowerCase().contains("flag") ||
-                 dummy.getImageName().toLowerCase().contains("banner"))) {
-                dw = 30;
-            } else if (dummy.getImageName() != null &&
-                       dummy.getImageName().toLowerCase().contains("blood_stain")) {
-                dw = 80;
-            } else if (dummy instanceof domain.models.staticObjects.WallObject || dummy instanceof SearchableObject) {
-                dw = (int) (dw * dummy.getCustomScale());
-            }
-            int dh = (int) (ih * ((double) dw / iw));
+            int[] dims = getDecorDimensions(dummy.getImageName(), dummy.getCustomScale(), tileSize, iw, ih, dummy.getName());
+            int dw = dims[0];
+            int dh = dims[1];
             int drawX = px + (tileSize - dw) / 2;
-            int drawY = py + tileSize - dh; // Bottom aligned!
+            int drawY;
+            boolean isHoverWall = (map.getObjectAt(hoverTileX, hoverTileY) instanceof WallTile);
+            if (isHoverWall && (dummy instanceof domain.models.staticObjects.WallObject || dummy instanceof SearchableObject)) {
+                GameObject tileObj = map.getObjectAt(hoverTileX, hoverTileY);
+                int wallOffset = (tileObj != null && "wall/wall_1".equals(tileObj.getImageName())) ? 8 : 6;
+                drawY = py - wallOffset / 2 + (tileSize - dh) / 2;
+            } else {
+                drawY = py + tileSize - dh;
+            }
             g.drawImage(icon, drawX, drawY, dw, dh, null);
         } else {
             g.drawImage(icon, px, py, tileSize, tileSize, null);
@@ -2167,11 +2127,7 @@ public class DesignModeView extends JPanel {
             return false;
         }
 
-        // Must not already have a decoration
         WallTile wall = (WallTile) existing;
-        if (wall.getDecoration() != null) {
-            return false;
-        }
 
         // Must not be adjacent to LevelDoor (sağ ve sol)
         int doorX = getLevelDoorX();
@@ -2183,17 +2139,90 @@ public class DesignModeView extends JPanel {
         String img = selectedObj.getImageName();
         if (img != null) {
             if (img.contains("WallSearchable/")) {
-                if (countWallSearchable() >= MAX_SEARCHABLE_PER_MAP) {
+                boolean replacingSearchable = false;
+                GameObject currentDeco = wall.getDecoration();
+                if (currentDeco != null && currentDeco.getImageName() != null && currentDeco.getImageName().contains("WallSearchable/")) {
+                    replacingSearchable = true;
+                }
+                if (!replacingSearchable && countWallSearchable() >= MAX_SEARCHABLE_PER_MAP) {
                     return false;
                 }
             } else if (img.contains("WallDecoration/")) {
-                if (countWallDecorative() >= MAX_DECORATIVE_PER_MAP) {
+                boolean replacingDecorative = false;
+                GameObject currentDeco = wall.getDecoration();
+                if (currentDeco != null && currentDeco.getImageName() != null && currentDeco.getImageName().contains("WallDecoration/")) {
+                    replacingDecorative = true;
+                }
+                if (!replacingDecorative && countWallDecorative() >= MAX_DECORATIVE_PER_MAP) {
                     return false;
                 }
             }
         }
 
         return true;
+    }
+
+    private int[] getDecorDimensions(String img, double scale, int tileSize, int iw, int ih, String objName) {
+        if (img == null) {
+            return new int[] { tileSize, tileSize };
+        }
+        String lower = img.toLowerCase();
+        
+        boolean isAbsolute = !lower.contains("wallsearchable/");
+        double baseW;
+        if (lower.contains("flag") || lower.contains("banner")) {
+            baseW = 30;
+        } else if (lower.contains("blood_stain")) {
+            baseW = 70;
+        } else if (lower.contains("statue") || (objName != null && objName.toLowerCase().contains("statue"))) {
+            baseW = 70;
+        } else if (lower.contains("acid_ooze")) {
+            baseW = 70;
+        } else if (lower.contains("chain")) {
+            baseW = 60;
+        } else if (lower.contains("moss")) {
+            baseW = 55;
+        } else if (lower.contains("crack")) {
+            baseW = 70;
+        } else if (lower.contains("wall_grill")) {
+            baseW = 50;
+        } else if (lower.contains("missing_brick")) {
+            baseW = 40;
+        } else if (lower.contains("gargoyle")) {
+            baseW = 75;
+        } else if (lower.contains("wall_cavity")) {
+            baseW = 40;
+        } else if (lower.contains("pipe_hole")) {
+            baseW = 40;
+        } else if (lower.contains("loose_stone")) {
+            baseW = 50;
+        } else if (lower.contains("torch") || (objName != null && objName.toLowerCase().contains("torch"))) {
+            baseW = 60;
+        } else if (lower.contains("skull") || (objName != null && objName.toLowerCase().contains("skull"))) {
+            baseW = tileSize * 0.8;
+            isAbsolute = false;
+        } else {
+            isAbsolute = false;
+            if (lower.contains("wallsearchable") || lower.contains("walldecoration")) {
+                baseW = Math.max(tileSize - 6, 4);
+            } else {
+                baseW = tileSize;
+            }
+        }
+        
+        double finalW = isAbsolute ? (baseW * ((double) tileSize / 64.0)) : baseW;
+        int dw = (int) Math.round(finalW * scale);
+        int dh = (int) Math.round(ih * ((double) dw / iw));
+        
+        if (lower.contains("torch") || (objName != null && objName.toLowerCase().contains("torch"))) {
+            if (dw > tileSize || dh > tileSize) {
+                double f = Math.min((double) tileSize / iw, (double) tileSize / ih);
+                dw = (int) Math.round(iw * f);
+                dh = (int) Math.round(ih * f);
+            }
+        }
+        
+        return new int[] { dw, dh };
     }
 
     private BufferedImage trimTransparency(BufferedImage img) {

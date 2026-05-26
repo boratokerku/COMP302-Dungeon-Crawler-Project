@@ -226,11 +226,6 @@ public class LevelManager {
                 String img = decorations[random.nextInt(decorations.length)];
                 String relativePath = "images/WallDecoration/" + img;
                 GameObject wallObj = new WallObject("WallDecoration", pos[0], pos[1], relativePath);
-                if (relativePath.toLowerCase().contains("flag") || relativePath.toLowerCase().contains("banner")) {
-                    wallObj.setCustomScale(30.0 / 42.0);
-                } else if (relativePath.toLowerCase().contains("blood_stain")) {
-                    wallObj.setCustomScale(80.0 / 42.0);
-                }
                 map.placeObject(wallObj, pos[0], pos[1]);
             }
         }

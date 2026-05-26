@@ -1052,7 +1052,7 @@ public class GameView extends JPanel {
                             obj instanceof domain.models.tile.FloorTile) {
                         // Eğer hücrede bir eşya, statik obje veya zemin varsa zemin (FloorTile)
                         // çiziyoruz
-                        BufferedImage floor = tileManager.getTile("floor");
+                        BufferedImage floor = tileManager.getTile("floor", x, y);
                         if (floor != null) {
                             g2d.drawImage(floor, offsetX + (x * tileSize), offsetY + (y * tileSize), tileSize, tileSize,
                                     null);

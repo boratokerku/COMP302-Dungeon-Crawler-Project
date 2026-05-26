@@ -16,9 +16,37 @@ public class TileManager {
         new File("resources/images/tiles").mkdirs();
     }
 
+    public BufferedImage getTile(String name, int x, int y) {
+        if ("floor".equals(name)) {
+            if (isRockyFloor(x, y)) {
+                BufferedImage rocky = getTile("floor/floor2");
+                if (rocky != null) {
+                    return rocky;
+                }
+            }
+            return getTile("floor/floor1");
+        }
+        return getTile(name);
+    }
+
+    private boolean isRockyFloor(int x, int y) {
+        // Deterministic organic cluster noise formula with offsets to avoid corners,
+        // and higher threshold to make clusters smaller and less frequent.
+        double val = Math.sin((x + 3) * 0.45) * Math.cos((y + 3) * 0.45) + Math.sin(x * 0.2 + y * 0.3);
+        return val > 0.65;
+    }
+
     public BufferedImage getTile(String name) {
         if (name == null)
             return null;
+
+        if ("floor".equals(name)) {
+            BufferedImage img = getTile("floor/floor1");
+            if (img != null) {
+                tileCache.put(name, img);
+                return img;
+            }
+        }
 
         if (tileCache.containsKey(name)) {
             return tileCache.get(name);

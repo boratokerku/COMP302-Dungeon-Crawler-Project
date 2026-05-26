@@ -1740,7 +1740,7 @@ public class DesignModeView extends JPanel {
                         obj instanceof Door || obj instanceof Decoration ||
                         obj instanceof SearchableObject || obj instanceof Sign ||
                         obj instanceof FloorTile) {
-                    BufferedImage floor = tileManager.getTile("floor");
+                    BufferedImage floor = tileManager.getTile("floor", x, y);
                     if (floor != null)
                         g.drawImage(floor, px, py, tileSize, tileSize, null);
                 }

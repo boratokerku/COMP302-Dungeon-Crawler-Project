@@ -1140,14 +1140,30 @@ public class GameView extends JPanel {
 
                         double baseDw = tileSize;
                         if (deco instanceof domain.models.staticObjects.Decoration) {
-                            baseDw = tileSize * 0.4;
+                            if ("Skull".equals(deco.getName())) {
+                                baseDw = tileSize * 0.8;
+                            } else if ("Statue".equals(deco.getName())) {
+                                baseDw = tileSize;
+                            } else {
+                                baseDw = tileSize * 0.4;
+                            }
                         } else if (deco instanceof domain.models.staticObjects.WallObject) {
                             baseDw = Math.max(tileSize - 6, 4);
                         }
 
-                        double factor = (baseDw * deco.getCustomScale()) / iw;
-                        int dw = (int) Math.round(iw * factor);
-                        int dh = (int) Math.round(ih * factor);
+                        int dw;
+                        if (deco.getImageName() != null &&
+                            (deco.getImageName().toLowerCase().contains("flag") ||
+                             deco.getImageName().toLowerCase().contains("banner"))) {
+                            dw = 30;
+                        } else if (deco.getImageName() != null &&
+                                   deco.getImageName().toLowerCase().contains("blood_stain")) {
+                            dw = 80;
+                        } else {
+                            double factor = (baseDw * deco.getCustomScale()) / iw;
+                            dw = (int) Math.round(iw * factor);
+                        }
+                        int dh = (int) Math.round(ih * ((double) dw / iw));
                         int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                         int drawY;
                         if (deco instanceof domain.models.staticObjects.WallObject) {
@@ -1297,9 +1313,19 @@ public class GameView extends JPanel {
                 if (sprite != null) {
                     int iw = sprite.getWidth();
                     int ih = sprite.getHeight();
+                    if (iw == 447 && ih == 558) {
+                        iw = 31;
+                        ih = 64;
+                    }
                     double baseDw = tileSize;
                     if (obj instanceof domain.models.staticObjects.Decoration) {
-                        baseDw = tileSize * 0.4;
+                        if ("Skull".equals(obj.getName())) {
+                            baseDw = tileSize * 0.8;
+                        } else if ("Statue".equals(obj.getName())) {
+                            baseDw = tileSize;
+                        } else {
+                            baseDw = tileSize * 0.4;
+                        }
                     } else if (obj instanceof domain.models.staticObjects.Door) {
                         baseDw = tileSize * 2;
                     }

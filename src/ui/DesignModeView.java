@@ -270,7 +270,7 @@ public class DesignModeView extends JPanel {
         // ── 1. OBSTACLES ───────────────────────────────────────────────────────
         // Crates
         obstaclePalette.add(new PaletteItem("Crate", "crate", true, (x, y) -> new Crate("Crate", x, y)));
-        obstaclePalette.add(new PaletteItem("Crate Brown", "containers/crate_brown", true, (x, y) -> new Crate("Crate", x, y)));
+        obstaclePalette.add(new PaletteItem("Crate Brown", "containers/crate_brown", true, (x, y) -> new Crate("Crate Brown", x, y)));
         obstaclePalette.add(new PaletteItem("DbCrate", "double_crate", true, (x, y) -> new DoubleCrate("DoubleCrate", x, y)));
         
         // Chests & Bags (Floor interactive Chest obstacles)
@@ -289,11 +289,11 @@ public class DesignModeView extends JPanel {
         obstaclePalette.add(new PaletteItem("MagBag", "containers/magical_bag", true, 
                 (x, y) -> new domain.models.entity.Chest("Magical Bag", x, y, false, "containers/magical_bag")));
         
-        // Skull & Statue
+        // Skull & Statue (Obstacles)
         obstaclePalette.add(new PaletteItem("Skull", "images/WallDecoration/skull.png", false, 
-                (x, y) -> new domain.models.staticObjects.WallObject("Skull", x, y, "images/WallDecoration/skull.png")));
+                (x, y) -> new domain.models.staticObjects.Decoration("Skull", x, y, "images/WallDecoration/skull.png")));
         obstaclePalette.add(new PaletteItem("Statue", "images/WallDecoration/statue.png", false, 
-                (x, y) -> new domain.models.staticObjects.WallObject("Statue", x, y, "images/WallDecoration/statue.png")));
+                (x, y) -> new domain.models.staticObjects.Decoration("Statue", x, y, "images/WallDecoration/statue.png")));
 
         // Torch obstacle (resources/images/tiles/torch)
         obstaclePalette.add(new PaletteItem("Torch", "torch/torch_1", true, 
@@ -590,6 +590,15 @@ public class DesignModeView extends JPanel {
         }
 
         GameObject obj = item.factory.apply(hoverTileX, hoverTileY);
+
+        boolean clickedIsWallMounted = (obj instanceof domain.models.staticObjects.WallObject || 
+                                       (obj instanceof domain.models.entity.SearchableObject && obj.getImageName() != null && obj.getImageName().contains("WallSearchable/")));
+        if (clickedIsWallMounted && hoverTileY == 0) {
+            int doorX = getLevelDoorX();
+            if (doorX != -1 && (hoverTileX == doorX - 1 || hoverTileX == doorX + 1)) {
+                return; // Silent return, nothing happens
+            }
+        }
 
         // Cannot place obstacles in front of the door (which is at y==0)
         if (hoverTileY == 1 && isObstacle(obj)) {
@@ -1232,11 +1241,24 @@ public class DesignModeView extends JPanel {
             }
         }
         if (!wallObjectItems.isEmpty()) {
+            int levelDoorXVal = -1;
+            for (int x = 0; x < w; x++) {
+                GameObject obj = map.getObjectAt(x, 0);
+                if (obj instanceof domain.models.staticObjects.LevelDoor) {
+                    levelDoorXVal = x;
+                    break;
+                }
+            }
+
             List<int[]> wallTiles = new ArrayList<>();
             for (int x = 1; x < w - 1; x++) {
-                GameObject topWall = map.getObjectAt(x, 0);
-                if (topWall instanceof WallTile && ((WallTile) topWall).getDecoration() == null) {
-                    wallTiles.add(new int[] { x, 0 });
+                if (levelDoorXVal != -1 && (x == levelDoorXVal - 1 || x == levelDoorXVal + 1)) {
+                    // Skip these adjacent tiles for WallDecorations/Searchables!
+                } else {
+                    GameObject topWall = map.getObjectAt(x, 0);
+                    if (topWall instanceof WallTile && ((WallTile) topWall).getDecoration() == null) {
+                        wallTiles.add(new int[] { x, 0 });
+                    }
                 }
                 GameObject botWall = map.getObjectAt(x, h - 1);
                 if (botWall instanceof WallTile && ((WallTile) botWall).getDecoration() == null) {
@@ -1286,6 +1308,9 @@ public class DesignModeView extends JPanel {
                         (wallObj.getImageName().toLowerCase().contains("flag") ||
                          wallObj.getImageName().toLowerCase().contains("banner"))) {
                         wallObj.setCustomScale(30.0 / 42.0);
+                    } else if (wallObj.getImageName() != null &&
+                               wallObj.getImageName().toLowerCase().contains("blood_stain")) {
+                        wallObj.setCustomScale(80.0 / 42.0);
                     } else {
                         // Do not overwrite tailored customScale set by constructor, unless it's default
                         // 1.0
@@ -1809,8 +1834,17 @@ public class DesignModeView extends JPanel {
                             } else if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
                                 dw = Math.max(tileSize - 6, 4);
                             }
-                            dw = (int) (dw * deco.getCustomScale());
-                            int dh = (int) (ih * ((double) dw / iw));
+                             if (deco.getImageName() != null &&
+                                 (deco.getImageName().toLowerCase().contains("flag") ||
+                                  deco.getImageName().toLowerCase().contains("banner"))) {
+                                 dw = 30;
+                             } else if (deco.getImageName() != null &&
+                                        deco.getImageName().toLowerCase().contains("blood_stain")) {
+                                 dw = 80;
+                             } else {
+                                 dw = (int) (dw * deco.getCustomScale());
+                             }
+                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = px + (tileSize - dw) / 2;
                             int drawY;
                             if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
@@ -1859,9 +1893,19 @@ public class DesignModeView extends JPanel {
                                 obj instanceof SearchableObject || obj instanceof Sign) {
                             int iw = tImg.getWidth();
                             int ih = tImg.getHeight();
+                            if (iw == 447 && ih == 558) {
+                                iw = 31;
+                                ih = 64;
+                            }
                             int dw = tileSize;
                             if (obj instanceof Decoration) {
-                                dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                                if ("Skull".equals(obj.getName())) {
+                                    dw = (int) (tileSize * 0.8);
+                                } else if ("Statue".equals(obj.getName())) {
+                                    dw = tileSize;
+                                } else {
+                                    dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                                }
                             } else if (obj instanceof Door) {
                                 dw = tileSize * 2;
                             }
@@ -1890,16 +1934,41 @@ public class DesignModeView extends JPanel {
         GameObject obj = map.getObjectAt(hoverTileX, hoverTileY);
         boolean isWall = (obj instanceof WallTile);
 
-        // Geçerli: sarı-yeşil; Duvar: kırmızı
+        Color fillColor;
+        Color borderColor;
+
         if (isWall) {
-            g.setColor(new Color(220, 60, 60, 100));
+            PaletteItem pItem = getSelectedPaletteItem();
+            GameObject selectedObj = null;
+            if (pItem != null && pItem.factory != null) {
+                selectedObj = pItem.factory.apply(hoverTileX, hoverTileY);
+            }
+            boolean isWallMounted = false;
+            if (selectedObj != null) {
+                isWallMounted = (selectedObj instanceof domain.models.staticObjects.WallObject || 
+                                 (selectedObj instanceof domain.models.entity.SearchableObject && 
+                                  selectedObj.getImageName() != null && 
+                                  selectedObj.getImageName().contains("WallSearchable/")));
+            }
+
+            boolean placeable = isWallTilePlaceable(hoverTileX, hoverTileY, selectedObj, isWallMounted);
+            if (placeable) {
+                fillColor = new Color(60, 220, 60, 100);       // Green fill
+                borderColor = new Color(80, 255, 80, 200);      // Green border
+            } else {
+                fillColor = new Color(220, 60, 60, 100);       // Red fill
+                borderColor = new Color(255, 80, 80, 200);      // Red border
+            }
         } else {
-            g.setColor(new Color(220, 220, 60, 100));
+            fillColor = new Color(220, 220, 60, 100);          // Yellow/Orange fill
+            borderColor = new Color(255, 240, 80, 200);        // Yellow/Orange border
         }
+
+        g.setColor(fillColor);
         g.fillRect(px, py, tileSize, tileSize);
 
         g.setStroke(new BasicStroke(2));
-        g.setColor(isWall ? new Color(255, 80, 80, 200) : new Color(255, 240, 80, 200));
+        g.setColor(borderColor);
         g.drawRect(px, py, tileSize, tileSize);
         g.setStroke(new BasicStroke(1));
     }
@@ -2026,12 +2095,36 @@ public class DesignModeView extends JPanel {
             g.drawImage(icon, drawX, drawY, dw, dh, null);
         } else if (dummy instanceof Column || dummy instanceof Chest || dummy instanceof Crate ||
                 dummy instanceof Door || dummy instanceof Decoration ||
-                dummy instanceof SearchableObject || dummy instanceof Sign) {
+                dummy instanceof SearchableObject || dummy instanceof Sign ||
+                dummy instanceof domain.models.staticObjects.WallObject) {
             int iw = icon.getWidth();
             int ih = icon.getHeight();
+            if (iw == 447 && ih == 558) {
+                iw = 31;
+                ih = 64;
+            }
             int dw = tileSize;
             if (dummy instanceof Decoration) {
-                dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                if ("Skull".equals(dummy.getName())) {
+                    dw = (int) (tileSize * 0.8);
+                } else if ("Statue".equals(dummy.getName())) {
+                    dw = tileSize;
+                } else {
+                    dw = (int) (tileSize * 0.4); // torch should be much smaller!
+                }
+            } else if (dummy instanceof domain.models.staticObjects.WallObject || dummy instanceof SearchableObject) {
+                dw = Math.max(tileSize - 6, 4);
+            }
+
+            if (dummy.getImageName() != null &&
+                (dummy.getImageName().toLowerCase().contains("flag") ||
+                 dummy.getImageName().toLowerCase().contains("banner"))) {
+                dw = 30;
+            } else if (dummy.getImageName() != null &&
+                       dummy.getImageName().toLowerCase().contains("blood_stain")) {
+                dw = 80;
+            } else if (dummy instanceof domain.models.staticObjects.WallObject || dummy instanceof SearchableObject) {
+                dw = (int) (dw * dummy.getCustomScale());
             }
             int dh = (int) (ih * ((double) dw / iw));
             int drawX = px + (tileSize - dw) / 2;
@@ -2047,6 +2140,61 @@ public class DesignModeView extends JPanel {
     // ─────────────────────────────────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────────────────────────────────
+
+    private int getLevelDoorX() {
+        if (map == null) return -1;
+        for (int x = 0; x < map.getWidth(); x++) {
+            GameObject obj = map.getObjectAt(x, 0);
+            if (obj instanceof domain.models.staticObjects.LevelDoor) {
+                return x;
+            }
+        }
+        return -1;
+    }
+
+    private boolean isWallTilePlaceable(int tx, int ty, GameObject selectedObj, boolean isWallMounted) {
+        if (!isWallMounted || selectedObj == null) {
+            return false;
+        }
+
+        GameObject existing = map.getObjectAt(tx, ty);
+        if (!(existing instanceof WallTile)) {
+            return false;
+        }
+
+        // Must be top or bottom wall, excluding corners
+        if ((ty != 0 && ty != map.getHeight() - 1) || tx == 0 || tx == map.getWidth() - 1) {
+            return false;
+        }
+
+        // Must not already have a decoration
+        WallTile wall = (WallTile) existing;
+        if (wall.getDecoration() != null) {
+            return false;
+        }
+
+        // Must not be adjacent to LevelDoor (sağ ve sol)
+        int doorX = getLevelDoorX();
+        if (ty == 0 && doorX != -1 && (tx == doorX - 1 || tx == doorX + 1)) {
+            return false;
+        }
+
+        // Check decoration limits
+        String img = selectedObj.getImageName();
+        if (img != null) {
+            if (img.contains("WallSearchable/")) {
+                if (countWallSearchable() >= MAX_SEARCHABLE_PER_MAP) {
+                    return false;
+                }
+            } else if (img.contains("WallDecoration/")) {
+                if (countWallDecorative() >= MAX_DECORATIVE_PER_MAP) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 
     private BufferedImage trimTransparency(BufferedImage img) {
         if (img == null)
@@ -2177,6 +2325,10 @@ public class DesignModeView extends JPanel {
         }
         int iw = icon.getWidth();
         int ih = icon.getHeight();
+        if (iw == 447 && ih == 558) {
+            iw = 31;
+            ih = 64;
+        }
         float scale = Math.min((float) slotSize / iw, (float) slotSize / ih);
         int dw = Math.max(1, (int) (iw * scale));
         int dh = Math.max(1, (int) (ih * scale));

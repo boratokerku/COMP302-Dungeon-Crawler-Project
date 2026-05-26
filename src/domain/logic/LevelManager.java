@@ -225,7 +225,13 @@ public class LevelManager {
             } else if (includeDecorations) {
                 String img = decorations[random.nextInt(decorations.length)];
                 String relativePath = "images/WallDecoration/" + img;
-                map.placeObject(new WallObject("WallDecoration", pos[0], pos[1], relativePath), pos[0], pos[1]);
+                GameObject wallObj = new WallObject("WallDecoration", pos[0], pos[1], relativePath);
+                if (relativePath.toLowerCase().contains("flag") || relativePath.toLowerCase().contains("banner")) {
+                    wallObj.setCustomScale(30.0 / 42.0);
+                } else if (relativePath.toLowerCase().contains("blood_stain")) {
+                    wallObj.setCustomScale(80.0 / 42.0);
+                }
+                map.placeObject(wallObj, pos[0], pos[1]);
             }
         }
     }

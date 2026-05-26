@@ -290,10 +290,10 @@ public class DesignModeView extends JPanel {
                 (x, y) -> new domain.models.entity.Chest("Magical Bag", x, y, false, "containers/magical_bag")));
         
         // Skull & Statue (Obstacles)
-        obstaclePalette.add(new PaletteItem("Skull", "images/WallDecoration/skull.png", false, 
-                (x, y) -> new domain.models.staticObjects.Decoration("Skull", x, y, "images/WallDecoration/skull.png")));
-        obstaclePalette.add(new PaletteItem("Statue", "images/WallDecoration/statue.png", false, 
-                (x, y) -> new domain.models.staticObjects.Decoration("Statue", x, y, "images/WallDecoration/statue.png")));
+        obstaclePalette.add(new PaletteItem("Skull", "images/containers/skull.png", false, 
+                (x, y) -> new domain.models.staticObjects.Decoration("Skull", x, y, "images/containers/skull.png")));
+        obstaclePalette.add(new PaletteItem("Statue", "images/containers/statue.png", false, 
+                (x, y) -> new domain.models.staticObjects.Decoration("Statue", x, y, "images/containers/statue.png")));
 
         // Torch obstacle (resources/images/tiles/torch)
         obstaclePalette.add(new PaletteItem("Torch", "torch/torch_1", true, 
@@ -382,8 +382,6 @@ public class DesignModeView extends JPanel {
                 (x, y) -> new domain.models.staticObjects.WallObject("Moss", x, y, "images/WallDecoration/moss.png")));
         wallItemPalette.add(new PaletteItem("Crack", "images/WallDecoration/crack.png", false, 
                 (x, y) -> new domain.models.staticObjects.WallObject("Crack", x, y, "images/WallDecoration/crack.png")));
-        wallItemPalette.add(new PaletteItem("Crack2", "images/WallDecoration/crack2.png", false, 
-                (x, y) -> new domain.models.staticObjects.WallObject("Crack 2", x, y, "images/WallDecoration/crack2.png")));
         wallItemPalette.add(new PaletteItem("Cobweb", "images/WallDecoration/cobweb.png", false, 
                 (x, y) -> new domain.models.staticObjects.WallObject("Cobweb", x, y, "images/WallDecoration/cobweb.png")));
         wallItemPalette.add(new PaletteItem("RedFlag", "images/WallDecoration/red_flag.png", false, 

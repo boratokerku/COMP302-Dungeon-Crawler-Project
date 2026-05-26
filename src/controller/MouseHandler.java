@@ -64,6 +64,23 @@ public class MouseHandler extends MouseAdapter {
 
         // 4. O konumda nesne var mı?
         GameObject obj = gameMap.getObjectAt(clickedGridX, clickedGridY);
+        
+        System.out.println("Clicked tile type: " + (obj != null ? obj.getClass().getName() : "null"));
+        if (obj instanceof domain.models.tile.WallTile) {
+            domain.models.tile.WallTile wt = (domain.models.tile.WallTile) obj;
+            System.out.println("Wall decoration: " + wt.getDecoration());
+            if (wt.getDecoration() != null) {
+                System.out.println("Decoration class: " + wt.getDecoration().getClass().getName());
+                System.out.println("Decoration image: " + wt.getDecoration().getImageName());
+            }
+        }
+
+        if (obj instanceof domain.models.tile.WallTile) {
+            GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
+            if (deco instanceof domain.models.entity.SearchableObject) {
+                obj = deco;
+            }
+        }
 
         if (obj == null) {
             actionMenu.hideMenu();

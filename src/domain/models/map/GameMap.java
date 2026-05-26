@@ -30,8 +30,11 @@ public class GameMap extends Grid {
     private void initializeEmptyMap() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                // --- YAN DUVARLAR (köşeler dahil sol/sağ sütunların tamamı) ---
-                if (i == 0 || i == rows - 1) {
+                if ((i == 0 || i == rows - 1) && (j == 0 || j == cols - 1)) {
+                    placeObject(new domain.models.tile.WallTile("wall/wall_corner"), i, j);
+                }
+                // --- YAN DUVARLAR (sol/sağ sütunların tamamı) ---
+                else if (i == 0 || i == rows - 1) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_side"), i, j);
                 }
                 // --- ÜST DUVAR (yan duvarların arasında) ---
@@ -102,9 +105,10 @@ public class GameMap extends Grid {
                 ((domain.models.tile.WallTile) existing).setDecoration(null);
                 return true;
             }
-            // Rule: Only WallObjects and Decorations can be placed on wall tiles as decoration
+            // Rule: Only WallObjects, Decorations and SearchableObjects can be placed on wall tiles as decoration
             if (obj instanceof domain.models.staticObjects.WallObject ||
-                obj instanceof domain.models.staticObjects.Decoration) {
+                obj instanceof domain.models.staticObjects.Decoration ||
+                obj instanceof domain.models.entity.SearchableObject) {
                 ((domain.models.tile.WallTile) existing).setDecoration(obj);
                 obj.setPosition(x, y);
                 obj.setMap(this);

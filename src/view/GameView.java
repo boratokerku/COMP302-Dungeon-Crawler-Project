@@ -29,6 +29,22 @@ public class GameView extends JPanel {
 
     private static final java.util.List<FloatingText> floatingTexts = new java.util.ArrayList<>();
 
+    public static java.awt.Font vt323Font;
+
+    static {
+        try {
+            vt323Font = java.awt.Font.createFont(
+                java.awt.Font.TRUETYPE_FONT,
+                new java.io.File("resources/fonts/VT323-Regular.ttf")
+            ).deriveFont(24f);
+            java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
+            ge.registerFont(vt323Font);
+        } catch (Exception e) {
+            e.printStackTrace();
+            vt323Font = new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 24);
+        }
+    }
+
     public static void addFloatingText(double x, double y, String text, Color color) {
         FloatingText ft = new FloatingText();
         ft.x = x;
@@ -183,9 +199,17 @@ public class GameView extends JPanel {
         // 5.5 Süzülen Hasar Efektlerini Çiz (Floating Texts)
         drawFloatingTexts(g2d);
 
+        if (trapFlashFrames > 0) {
+            g2d.setColor(new Color(255, 0, 0, 80));
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+            trapFlashFrames--;
+        }
+
         // Kaynakları temizle
         g2d.dispose();
     }
+
+    public static int trapFlashFrames = 0;
 
     private void drawFloatingTexts(Graphics2D g2d) {
         synchronized (floatingTexts) {
@@ -201,7 +225,7 @@ public class GameView extends JPanel {
                     alphaVal = 255;
 
                 g2d.setColor(new Color(ft.color.getRed(), ft.color.getGreen(), ft.color.getBlue(), alphaVal));
-                g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 22));
+                g2d.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, 22f));
 
                 int px = offsetX + (int) (ft.x * tileSize) + tileSize / 4;
                 int py = offsetY + (int) (ft.y * tileSize) - 10;
@@ -260,16 +284,7 @@ public class GameView extends JPanel {
 
             mainFrameImg = javax.imageio.ImageIO.read(new java.io.File("resources/images/HUDScreen/main_frame.png"));
 
-            try {
-                java.awt.Font customFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT,
-                        new java.io.File("resources/fonts/VT323-Regular.ttf"));
-                java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
-                ge.registerFont(customFont);
-                hudFont = customFont.deriveFont(java.awt.Font.PLAIN, 16f); // Kullanıcı talebi: 16 punto
-            } catch (Exception fe) {
-                System.err.println("VT323 fontu yüklenemedi: " + fe.getMessage());
-                hudFont = new java.awt.Font("SansSerif", java.awt.Font.BOLD, 18);
-            }
+            hudFont = vt323Font.deriveFont(java.awt.Font.PLAIN, 16f); // Kullanıcı talebi: 16 punto
         } catch (Exception e) {
             System.err.println("HUD assetleri bulunamadı!");
         }
@@ -761,7 +776,7 @@ public class GameView extends JPanel {
                         g2d.drawRect(barX, barY, barW, barH);
                         // HP Text
                         g2d.setColor(Color.WHITE);
-                        g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 11));
+                        g2d.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, 11f));
                         String hpText = boss.getHp() + "/100";
                         int textW = g2d.getFontMetrics().stringWidth(hpText);
                         g2d.drawString(hpText, barX + (barW - textW) / 2, barY - 2);
@@ -1254,7 +1269,7 @@ public class GameView extends JPanel {
                     g2d.drawOval(tx + 6, ty + 6, tileSize - 12, tileSize - 12);
 
                     g2d.setColor(new Color(255, 255, 255, 200));
-                    g2d.setFont(new java.awt.Font("Arial", java.awt.Font.BOLD, 11));
+                    g2d.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, 11f));
                     String markerText = "LVL";
                     int textW = g2d.getFontMetrics().stringWidth(markerText);
                     g2d.drawString(markerText, tx + (tileSize - textW) / 2, ty + tileSize / 2 + 4);

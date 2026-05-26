@@ -147,6 +147,8 @@ public class LevelManager {
         map.placeObject(new Decoration("Torch", w / 2, 1, "torch/torch_1"), w / 2, 1);
         map.placeObject(new Decoration("Torch", w - 5, 1, "torch/torch_1"), w - 5, 1);
 
+        placeRandomWallObjects(map, true, true);
+
         // Level Door to Boss Arena (locked, needs Level Key)
         placeRandomLevelDoor(map, "Boss Gate");
 
@@ -182,11 +184,50 @@ public class LevelManager {
         map.placeObject(new Decoration("Torch", 2 * w / 3, 1, "torch/torch_1"), 2 * w / 3, 1);
         map.placeObject(new Decoration("Torch", w - 5, 1, "torch/torch_1"), w - 5, 1);
 
+        placeRandomWallObjects(map, false, true);
+
         // Some potions for the boss fight
         map.placeObject(new PotionItem(2, 2), 2, 2);
         map.placeObject(new PotionItem(w - 3, 2), w - 3, 2);
         map.placeObject(new PotionItem(2, h - 3), 2, h - 3);
         map.placeObject(new PotionItem(w - 3, h - 3), w - 3, h - 3);
+    }
+
+    private void placeRandomWallObjects(GameMap map, boolean includeSearchables, boolean includeDecorations) {
+        int w = map.getWidth();
+        int h = map.getHeight();
+        List<int[]> emptyWallTiles = new ArrayList<>();
+        for (int x = 1; x < w - 1; x++) {
+            GameObject topWall = map.getObjectAt(x, 0);
+            if (topWall instanceof domain.models.tile.WallTile && ((domain.models.tile.WallTile) topWall).getDecoration() == null) {
+                emptyWallTiles.add(new int[] { x, 0 });
+            }
+            GameObject botWall = map.getObjectAt(x, h - 1);
+            if (botWall instanceof domain.models.tile.WallTile && ((domain.models.tile.WallTile) botWall).getDecoration() == null) {
+                emptyWallTiles.add(new int[] { x, h - 1 });
+            }
+        }
+        Collections.shuffle(emptyWallTiles, random);
+
+        String[] searchables = { "missing_brick.png", "wall_cavity.png", "loose_stone.png", "wall_grill.png", "gargoyle.png", "pipe_hole.png" };
+        String[] decorations = { "blood_stain.png", "chain.png", "cobweb.png", "crack.png", "moss.png", "skull.png" };
+
+        int numToPlace = Math.min(emptyWallTiles.size(), 12);
+        for (int i = 0; i < numToPlace; i++) {
+            int[] pos = emptyWallTiles.get(i);
+            boolean placeSearchable = includeSearchables && (random.nextBoolean() || !includeDecorations);
+            if (!includeSearchables && includeDecorations) placeSearchable = false;
+
+            if (placeSearchable) {
+                String img = searchables[random.nextInt(searchables.length)];
+                String relativePath = "images/WallSearchable/" + img;
+                map.placeObject(new SearchableObject("WallSearchable", pos[0], pos[1], relativePath, relativePath), pos[0], pos[1]);
+            } else if (includeDecorations) {
+                String img = decorations[random.nextInt(decorations.length)];
+                String relativePath = "images/WallDecoration/" + img;
+                map.placeObject(new WallObject("WallDecoration", pos[0], pos[1], relativePath), pos[0], pos[1]);
+            }
+        }
     }
 
     private void populateBossArenaEnemies(GameMap map, List<Entity> entities, Hero hero) {

@@ -249,7 +249,29 @@ public class DemoRunner {
 
         // Place static Level Door and Level Key for Adventure mode progression
         LevelManager.placeRandomLevelDoor(map, "Level Gate");
-        map.placeObject(new domain.models.staticObjects.LevelKey(15, 12), 15, 12);
+
+        // ITEM HIDING SYSTEM: Hide the LevelKey in a random SearchableObject
+        java.util.List<domain.models.entity.SearchableObject> searchables = new java.util.ArrayList<>();
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.tile.WallTile) {
+                    domain.models.entity.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
+                    if (deco instanceof domain.models.entity.SearchableObject) {
+                        searchables.add((domain.models.entity.SearchableObject) deco);
+                    }
+                }
+            }
+        }
+
+        domain.models.staticObjects.LevelKey levelKey = new domain.models.staticObjects.LevelKey(15, 12);
+        if (!searchables.isEmpty()) {
+            domain.models.entity.SearchableObject selected = searchables.get(new java.util.Random().nextInt(searchables.size()));
+            selected.setHiddenItem(levelKey);
+        } else {
+            System.out.println("Warning: No searchable locations on map.");
+            map.placeObject(levelKey, 15, 12);
+        }
 
         // Initialize level manager for level progression
         levelManager = new LevelManager();
@@ -540,6 +562,22 @@ public class DemoRunner {
             if ("ShadowCloneScroll".equals(rec.type)) {
                 // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
                 scrollItems.add(rec);
+            } else if ("SearchableObject".equals(rec.type)) {
+                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked);
+                if (item instanceof domain.models.entity.SearchableObject) {
+                    domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) item;
+                    so.setSearched(rec.searched);
+                    if (rec.hiddenItemType != null) {
+                        if (rec.hiddenItemType.equals("LevelKey")) so.setHiddenItem(new domain.models.staticObjects.LevelKey(rec.x, rec.y));
+                        else if (rec.hiddenItemType.equals("KeyItem")) so.setHiddenItem(new domain.models.staticObjects.KeyItem(rec.x, rec.y));
+                    }
+                }
+                domain.models.entity.GameObject existing = map.getObjectAt(rec.x, rec.y);
+                if (existing instanceof domain.models.tile.WallTile) {
+                    ((domain.models.tile.WallTile) existing).setDecoration(item);
+                } else {
+                    map.placeObject(item, rec.x, rec.y);
+                }
             } else {
                 domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked);
                 if (item != null)
@@ -603,12 +641,11 @@ public class DemoRunner {
             case "Chest":
                 return new domain.models.entity.Chest(displayName, x, y, isLocked);
             case "SearchableObject":
-                return new domain.models.entity.SearchableObject(displayName, x, y);
+                return new domain.models.entity.SearchableObject(displayName, x, y, displayName);
             case "Decoration":
-                return new domain.models.staticObjects.Decoration(displayName, x, y, "torch/torch_1");
+                return new domain.models.staticObjects.Decoration(displayName, x, y, displayName);
             case "WallObject":
-                return new domain.models.staticObjects.WallObject(displayName, x, y,
-                        "images/WallObjects/wall_object1.png");
+                return new domain.models.staticObjects.WallObject(displayName, x, y, displayName);
             case "Door":
                 domain.models.staticObjects.Door door = new domain.models.staticObjects.Door(displayName, x, y,
                         isLocked);

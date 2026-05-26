@@ -325,7 +325,7 @@ public class DesignModeView extends JPanel {
                     final String finalLabel = label;
                     final String relativePath = "images/WallSearchable/" + filename;
                     leftPalette.add(new PaletteItem(finalLabel, relativePath, false,
-                            (x, y) -> new domain.models.staticObjects.WallObject(finalLabel, x, y, relativePath)));
+                            (x, y) -> new domain.models.entity.SearchableObject(finalLabel, x, y, relativePath, relativePath)));
                 }
             }
         }
@@ -563,9 +563,28 @@ public class DesignModeView extends JPanel {
             if (above instanceof domain.models.staticObjects.LevelDoor) {
                 return; // Cannot block the front of the door!
             }
+            if (above instanceof domain.models.tile.WallTile) {
+                GameObject deco = ((domain.models.tile.WallTile) above).getDecoration();
+                if (deco instanceof domain.models.entity.SearchableObject) {
+                    JOptionPane.showMessageDialog(this, "Cannot place obstacle in front of a searchable wall object!");
+                    return;
+                }
+            }
+        }
+        
+        // Check bottom wall for searchable objects
+        if (hoverTileY == map.getHeight() - 2 && isObstacle(obj)) {
+            GameObject below = map.getObjectAt(hoverTileX, map.getHeight() - 1);
+            if (below instanceof domain.models.tile.WallTile) {
+                GameObject deco = ((domain.models.tile.WallTile) below).getDecoration();
+                if (deco instanceof domain.models.entity.SearchableObject) {
+                    JOptionPane.showMessageDialog(this, "Cannot place obstacle in front of a searchable wall object!");
+                    return;
+                }
+            }
         }
 
-        boolean isWallMounted = (obj instanceof domain.models.staticObjects.WallObject);
+        boolean isWallMounted = (obj instanceof domain.models.staticObjects.WallObject || obj instanceof domain.models.entity.SearchableObject);
 
         if (existing instanceof WallTile) {
             if (!isWallMounted) {
@@ -573,7 +592,7 @@ public class DesignModeView extends JPanel {
             }
         }
 
-        if (obj instanceof domain.models.staticObjects.WallObject) {
+        if (isWallMounted) {
             if (!(existing instanceof WallTile) ||
                     (hoverTileY != 0 && hoverTileY != map.getHeight() - 1)
                     ||
@@ -582,7 +601,7 @@ public class DesignModeView extends JPanel {
             }
         }
 
-        if (obj instanceof domain.models.staticObjects.WallObject) {
+        if (obj instanceof domain.models.staticObjects.WallObject || obj instanceof domain.models.entity.SearchableObject) {
             String img = obj.getImageName();
             if (img != null) {
                 if (img.contains("WallSearchable/")) {
@@ -1009,7 +1028,7 @@ public class DesignModeView extends JPanel {
                     ((WallTile) obj).setDecoration(null);
                     continue;
                 }
-                if (obj == null || obj instanceof FloorTile)
+                if (obj == null || obj instanceof FloorTile || obj instanceof domain.models.staticObjects.LevelDoor)
                     continue;
                 // Sadece yerleştirilen objeleri sil → FloorTile ile değiştir
                 map.placeObject(new FloorTile(), x, y);
@@ -1183,7 +1202,7 @@ public class DesignModeView extends JPanel {
         for (PaletteItem item : leftPalette) {
             if (item.factory != null) {
                 GameObject dummy = item.factory.apply(0, 0);
-                if (dummy instanceof domain.models.staticObjects.WallObject) {
+                if (dummy instanceof domain.models.staticObjects.WallObject || dummy instanceof domain.models.entity.SearchableObject) {
                     wallObjectItems.add(item);
                 }
             }
@@ -1312,7 +1331,16 @@ public class DesignModeView extends JPanel {
                                     .append(",\"y\":").append(y)
                                     .append(",\"isWallMounted\":true")
                                     .append(",\"customScale\":").append(deco.getCustomScale())
-                                    .append(",\"imageName\":\"").append(escape(deco.getImageName())).append("\"}");
+                                    .append(",\"imageName\":\"").append(escape(deco.getImageName())).append("\"");
+
+                            if (deco instanceof domain.models.entity.SearchableObject) {
+                                domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) deco;
+                                sb.append(",\"searched\":").append(so.isSearched());
+                                if (so.getHiddenItem() != null) {
+                                    sb.append(",\"hiddenItemType\":\"").append(so.getHiddenItem().getClass().getSimpleName()).append("\"");
+                                }
+                            }
+                            sb.append("}");
                         }
                     }
                     continue;
@@ -1427,6 +1455,8 @@ public class DesignModeView extends JPanel {
             String openImgName = jsonStr(line, "openImageName");
             boolean isWallMounted = "true".equals(jsonStr(line, "isWallMounted"));
             double scale = jsonDouble(line, "customScale");
+            boolean searched = "true".equals(jsonStr(line, "searched"));
+            String hiddenItemType = jsonStr(line, "hiddenItemType");
 
             GameObject obj = switch (type) {
                 case "PotionItem" -> imgName != null && !imgName.isEmpty()
@@ -1461,11 +1491,28 @@ public class DesignModeView extends JPanel {
                 case "SearchableObject" -> imgName != null && !imgName.isEmpty()
                         ? new SearchableObject(name, x, y, imgName, openImgName)
                         : new SearchableObject(name, x, y);
-                case "WallObject" -> new domain.models.staticObjects.WallObject(name, x, y, imgName);
+                case "WallObject" -> {
+                    if (imgName != null && imgName.contains("WallSearchable/")) {
+                        yield new SearchableObject(name, x, y, imgName, openImgName);
+                    } else {
+                        yield new domain.models.staticObjects.WallObject(name, x, y, imgName);
+                    }
+                }
                 default -> null;
             };
             if (obj != null) {
                 obj.setCustomScale(scale);
+                if (obj instanceof SearchableObject) {
+                    SearchableObject so = (SearchableObject) obj;
+                    so.setSearched(searched);
+                    if (hiddenItemType != null && !hiddenItemType.isEmpty()) {
+                        if (hiddenItemType.equals("LevelKey")) {
+                            so.setHiddenItem(new domain.models.staticObjects.LevelKey(x, y));
+                        } else if (hiddenItemType.equals("KeyItem")) {
+                            so.setHiddenItem(new KeyItem(x, y));
+                        }
+                    }
+                }
                 if (isWallMounted) {
                     GameObject existing = map.getObjectAt(x, y);
                     if (existing instanceof WallTile) {
@@ -1881,14 +1928,14 @@ public class DesignModeView extends JPanel {
                             int dw = tileSize;
                             if (deco instanceof Decoration) {
                                 dw = (int) (tileSize * 0.4);
-                            } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                            } else if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
                                 dw = Math.max(tileSize - 6, 4);
                             }
                             dw = (int) (dw * deco.getCustomScale());
                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = px + (tileSize - dw) / 2;
                             int drawY;
-                            if (deco instanceof domain.models.staticObjects.WallObject) {
+                            if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
                                 int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
                                 drawY = py - wallOffset / 2 + (tileSize - dh) / 2;
                             } else {

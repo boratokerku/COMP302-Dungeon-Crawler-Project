@@ -992,7 +992,7 @@ public class GameView extends JPanel {
                             obj instanceof domain.models.entity.Column ||
                             obj instanceof domain.models.entity.Chest ||
                             obj instanceof domain.models.entity.Crate ||
-                            obj instanceof domain.models.staticObjects.Door ||
+                            (obj instanceof domain.models.staticObjects.Door && !(obj instanceof domain.models.staticObjects.LevelDoor)) ||
                             obj instanceof domain.models.staticObjects.Decoration ||
                             obj instanceof domain.models.entity.SearchableObject ||
                             obj instanceof domain.models.entity.Sign ||
@@ -1074,6 +1074,13 @@ public class GameView extends JPanel {
                     }
                 } else if ("wall/wall_2".equals(obj.getImageName())) {
                     BufferedImage tileImage = tileManager.getTile(obj.getImageName());
+                    if (tileImage != null) {
+                        int dh = (int) (tileSize * 1.5);
+                        int drawY = offsetY + (yVal * tileSize) + tileSize - dh;
+                        g2d.drawImage(tileImage, offsetX + (x * tileSize), drawY, tileSize, dh, null);
+                    }
+                } else if (yVal == 0 && obj instanceof domain.models.staticObjects.LevelDoor) {
+                    BufferedImage tileImage = tileManager.getTile("wall/wall_1");
                     if (tileImage != null) {
                         int dh = (int) (tileSize * 1.5);
                         int drawY = offsetY + (yVal * tileSize) + tileSize - dh;
@@ -1279,7 +1286,7 @@ public class GameView extends JPanel {
                     if (obj instanceof domain.models.staticObjects.Decoration) {
                         baseDw = tileSize * 0.4;
                     } else if (obj instanceof domain.models.staticObjects.Door) {
-                        baseDw = tileSize * 3;
+                        baseDw = tileSize * 2;
                     }
                     double factor = (baseDw * obj.getCustomScale()) / iw;
                     int dw = (int) Math.round(iw * factor);

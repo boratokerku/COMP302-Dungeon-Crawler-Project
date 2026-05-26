@@ -551,7 +551,19 @@ public class DesignModeView extends JPanel {
             return;
 
         GameObject existing = map.getObjectAt(hoverTileX, hoverTileY);
+        if (existing instanceof domain.models.staticObjects.LevelDoor) {
+            return; // Cannot overwrite the level door!
+        }
+
         GameObject obj = item.factory.apply(hoverTileX, hoverTileY);
+
+        // Cannot place obstacles in front of the door (which is at y==0)
+        if (hoverTileY == 1 && isObstacle(obj)) {
+            GameObject above = map.getObjectAt(hoverTileX, 0);
+            if (above instanceof domain.models.staticObjects.LevelDoor) {
+                return; // Cannot block the front of the door!
+            }
+        }
 
         boolean isWallMounted = (obj instanceof domain.models.staticObjects.WallObject);
 
@@ -635,6 +647,9 @@ public class DesignModeView extends JPanel {
         GameObject existing = map.getObjectAt(tx, ty);
         if (existing == null)
             return;
+        if (existing instanceof domain.models.staticObjects.LevelDoor) {
+            return; // Cannot erase the level door!
+        }
         if (existing instanceof WallTile) {
             map.placeObject(null, tx, ty);
         } else {
@@ -1038,7 +1053,11 @@ public class DesignModeView extends JPanel {
             }
         }
 
-        // 3. Çıkış Kapısı yerleştirme KALDIRILDI (Kapi assla konulmamali)
+        // 3. Çıkış Kapısı yerleştirme (Her zaman 1 kapı yerleştirsin, kapı önü boş olacak, en sağ/sol tile'lar hariç)
+        int doorX = rand.nextInt(w - 4) + 2; 
+        map.placeObject(new domain.models.staticObjects.LevelDoor("Level Gate", doorX, 0), doorX, 0);
+        map.placeObject(new domain.models.tile.FloorTile(), doorX, 1);
+        reserved[doorX][1] = true; // Diğer objelerin kapı önünde spawn olması engellenir
 
         // 4. Sütunlar (Obstacles) yerleştir
         int numColumns = rand.nextInt(3) + 2; // 2 - 4
@@ -1336,6 +1355,8 @@ public class DesignModeView extends JPanel {
     }
 
     private String objectType(GameObject obj) {
+        if (obj instanceof domain.models.staticObjects.LevelDoor)
+            return "LevelDoor";
         if (obj instanceof domain.models.staticObjects.WallObject)
             return "WallObject";
         if (obj instanceof PotionItem)
@@ -1432,6 +1453,7 @@ public class DesignModeView extends JPanel {
                 case "Sign" -> imgName != null && !imgName.isEmpty()
                         ? new Sign(name, x, y, imgName)
                         : new Sign(name, x, y);
+                case "LevelDoor" -> new domain.models.staticObjects.LevelDoor(name, x, y);
                 case "Door" -> new Door(name, x, y, locked);
                 case "Decoration" -> imgName != null && !imgName.isEmpty()
                         ? new Decoration(name, x, y, imgName)
@@ -1819,6 +1841,13 @@ public class DesignModeView extends JPanel {
                             g.drawImage(tImg, px, py - 6, tileSize, tileSize + 6, null);
                         }
                     }
+                } else if (y == 0 && obj instanceof domain.models.staticObjects.LevelDoor) {
+                    BufferedImage tImg = tileManager.getTile("wall/wall_1");
+                    if (tImg != null) {
+                        int dh = (int) (tileSize * 1.5);
+                        int drawY = py + tileSize - dh;
+                        g.drawImage(tImg, px, drawY, tileSize, dh, null);
+                    }
                 }
             }
         }
@@ -1909,7 +1938,7 @@ public class DesignModeView extends JPanel {
                             if (obj instanceof Decoration) {
                                 dw = (int) (tileSize * 0.4); // torch should be much smaller!
                             } else if (obj instanceof Door) {
-                                dw = tileSize * 3;
+                                dw = tileSize * 2;
                             }
                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = px + (tileSize - dw) / 2;

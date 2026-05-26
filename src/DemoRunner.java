@@ -192,6 +192,13 @@ public class DemoRunner {
     // ── Design Mode ──────────────────────────────────────────────────────────
     private static void startDesignMode(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         GameMap map = new GameMap(30, 20);
+        
+        // Kapının yeri oyunda build mode açıldığı anda direkt atanmış olarak gelsin (Rastgele 1 kapı yerleştirilir, en sağ/sol tile'lar hariç)
+        java.util.Random rand = new java.util.Random();
+        int doorX = rand.nextInt(map.getWidth() - 4) + 2; 
+        map.placeObject(new domain.models.staticObjects.LevelDoor("Level Gate", doorX, 0), doorX, 0);
+        map.placeObject(new domain.models.tile.FloorTile(), doorX, 1); // Kapı önü boş olacak
+        
         TileManager tileManager = new TileManager();
 
         DesignModeView designView = new DesignModeView(

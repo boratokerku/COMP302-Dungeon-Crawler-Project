@@ -30,19 +30,15 @@ public class GameMap extends Grid {
     private void initializeEmptyMap() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                // --- YAN DUVARLAR (öncelik: köşeler dahil tüm sütunlar) ---
+                // --- YAN DUVARLAR (köşeler dahil sol/sağ sütunların tamamı) ---
                 if (i == 0 || i == rows - 1) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_side"), i, j);
                 }
                 // --- ÜST DUVAR (yan duvarların arasında) ---
                 else if (j == 0) {
-                    if (i == rows / 2) {
-                        placeObject(new domain.models.tile.FloorTile(), i, j);
-                    } else {
-                        placeObject(new domain.models.tile.WallTile("wall/wall_1"), i, j);
-                    }
+                    placeObject(new domain.models.tile.WallTile("wall/wall_1"), i, j);
                 }
-                // --- ALT DUVAR (yan duvarların arasında) ---
+                // --- ALT DUVAR (yan duvarların arasında, köşeler hariç) ---
                 else if (j == cols - 1) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_2"), i, j);
                 }

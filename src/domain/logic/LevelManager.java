@@ -198,10 +198,43 @@ public class LevelManager {
     }
 
     public static void placeRandomLevelDoor(GameMap map, String name) {
+        if (map == null) return;
+        
         int w = map.getWidth();
-        int middleX = w / 2;
-        int doorY = 0; // Top wall
-        map.placeObject(new LevelDoor(name, middleX, doorY), middleX, doorY);
-        System.out.println("Placed static LevelDoor '" + name + "' at (" + middleX + ", " + doorY + ")");
+        int h = map.getHeight();
+        
+        // Check if map already has a LevelDoor
+        for (int x = 0; x < w; x++) {
+            for (int y = 0; y < h; y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof LevelDoor) {
+                    // Already has exactly 1 door, keep it and ensure its front tile is clear!
+                    int doorX = x;
+                    int doorY = y;
+                    // Ensure the tile in front of it (insides) is a FloorTile
+                    int frontY = (doorY == 0) ? 1 : (doorY == h - 1 ? h - 2 : doorY);
+                    if (frontY != doorY) {
+                        GameObject frontObj = map.getObjectAt(doorX, frontY);
+                        if (frontObj == null || !(frontObj instanceof domain.models.tile.FloorTile)) {
+                            map.placeObject(new domain.models.tile.FloorTile(), doorX, frontY);
+                        }
+                    }
+                    System.out.println("Map already has a LevelDoor at (" + doorX + ", " + doorY + "). Keeping it and clearing front.");
+                    return;
+                }
+            }
+        }
+        
+        // No LevelDoor found. Place a new random LevelDoor on the top wall (y == 0, en sağ/sol tile'lar hariç)
+        Random rand = new Random();
+        int doorX = rand.nextInt(w - 4) + 2;
+        int doorY = 0; // Top wall only
+        
+        map.placeObject(new LevelDoor(name, doorX, doorY), doorX, doorY);
+        
+        // Ensure the tile in front of the door (doorX, 1) is a FloorTile (obstacle is removed if any)
+        map.placeObject(new domain.models.tile.FloorTile(), doorX, 1);
+        
+        System.out.println("Placed static LevelDoor '" + name + "' randomly at (" + doorX + ", " + doorY + ") and cleared front tile.");
     }
 }

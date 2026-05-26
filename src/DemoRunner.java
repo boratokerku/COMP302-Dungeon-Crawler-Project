@@ -180,7 +180,7 @@ public class DemoRunner {
             cardLayout.show(mainPanel, "Menu");
             frame.add(mainPanel);
 
-            frame.setSize(832, 640);
+            frame.setSize(1250, 800);
             frame.pack();
             frame.revalidate();
             frame.repaint();
@@ -220,7 +220,7 @@ public class DemoRunner {
                             : null);
                     startGameWithMap(frame, mainPanel, cardLayout, designedMap, domain.models.GameMode.TEAM_MATCH);
                 });
-        designView.setPreferredSize(new java.awt.Dimension(832, 700));
+        designView.setPreferredSize(new java.awt.Dimension(1250, 800));
 
         // Önceki design panelini temizle (varsa)
         for (java.awt.Component c : mainPanel.getComponents()) {

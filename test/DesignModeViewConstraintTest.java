@@ -215,4 +215,72 @@ public class DesignModeViewConstraintTest {
         assertTrue(torchDims[0] <= 32 && torchDims[1] <= 32, 
             "Torch must be clamped to not exceed the wall tile size (32px), but was width: " + torchDims[0] + ", height: " + torchDims[1]);
     }
+
+    @Test
+    public void testCloneMap_RestartVsResumeState() throws Exception {
+        GameMap original = new GameMap(5, 5);
+        
+        // 1. Get pre-existing WallTile at (1, 0) and place a SearchableObject decoration
+        WallTile wall = (WallTile) original.getObjectAt(1, 0);
+        assertNotNull(wall);
+        SearchableObject wallSo = new SearchableObject("WallSearchable", 1, 0, "images/WallSearchable/gargoyle.png", "images/WallSearchable/gargoyle.png");
+        wallSo.setSearched(true);
+        wallSo.setTrapTriggered(true);
+        domain.models.staticObjects.LevelKey key1 = new domain.models.staticObjects.LevelKey(1, 0);
+        wallSo.setHiddenItem(key1);
+        original.placeObject(wallSo, 1, 0);
+
+        // 2. Create a floor-mounted SearchableObject
+        SearchableObject floorSo = new SearchableObject("Chest", 2, 2, "containers/chest_brown", "containers/chest_brown");
+        floorSo.setSearched(true);
+        floorSo.setTrapTriggered(true);
+        domain.models.staticObjects.KeyItem key2 = new domain.models.staticObjects.KeyItem(2, 2);
+        floorSo.setHiddenItem(key2);
+        original.placeObject(floorSo, 2, 2);
+
+        // Access private cloneMap method via reflection
+        Method cloneMethod = DemoRunner.class.getDeclaredMethod("cloneMap", GameMap.class, boolean.class);
+        cloneMethod.setAccessible(true);
+
+        // 3. Test Resume Mode (isRestart = false)
+        GameMap resumeClone = (GameMap) cloneMethod.invoke(null, original, false);
+        assertNotNull(resumeClone);
+        
+        // Verify wall decoration on resume clone
+        WallTile clonedWall = (WallTile) resumeClone.getObjectAt(1, 0);
+        assertNotNull(clonedWall);
+        SearchableObject clonedWallSo = (SearchableObject) clonedWall.getDecoration();
+        assertNotNull(clonedWallSo);
+        assertTrue(clonedWallSo.isSearched(), "Wall searchable should remain searched on resume");
+        assertTrue(clonedWallSo.isTrapTriggered(), "Wall searchable trap status should be preserved on resume");
+        assertNotNull(clonedWallSo.getHiddenItem(), "Wall searchable hidden item should be preserved on resume");
+        assertTrue(clonedWallSo.getHiddenItem() instanceof domain.models.staticObjects.LevelKey, "Hidden item type should be preserved");
+
+        // Verify floor searchable on resume clone
+        SearchableObject clonedFloorSo = (SearchableObject) resumeClone.getObjectAt(2, 2);
+        assertNotNull(clonedFloorSo);
+        assertTrue(clonedFloorSo.isSearched(), "Floor searchable should remain searched on resume");
+        assertTrue(clonedFloorSo.isTrapTriggered(), "Floor searchable trap status should be preserved on resume");
+        assertNotNull(clonedFloorSo.getHiddenItem(), "Floor searchable hidden item should be preserved on resume");
+
+        // 4. Test Restart Mode (isRestart = true)
+        GameMap restartClone = (GameMap) cloneMethod.invoke(null, original, true);
+        assertNotNull(restartClone);
+
+        // Verify wall decoration on restart clone
+        WallTile restartedWall = (WallTile) restartClone.getObjectAt(1, 0);
+        assertNotNull(restartedWall);
+        SearchableObject restartedWallSo = (SearchableObject) restartedWall.getDecoration();
+        assertNotNull(restartedWallSo);
+        assertFalse(restartedWallSo.isSearched(), "Wall searchable should be reset to unsearched on restart");
+        assertFalse(restartedWallSo.isTrapTriggered(), "Wall searchable trap status should be reset to false on restart");
+        assertNull(restartedWallSo.getHiddenItem(), "Wall searchable hidden item should be reset to null on restart");
+
+        // Verify floor searchable on restart clone
+        SearchableObject restartedFloorSo = (SearchableObject) restartClone.getObjectAt(2, 2);
+        assertNotNull(restartedFloorSo);
+        assertFalse(restartedFloorSo.isSearched(), "Floor searchable should be reset to unsearched on restart");
+        assertFalse(restartedFloorSo.isTrapTriggered(), "Floor searchable trap status should be reset to false on restart");
+        assertNull(restartedFloorSo.getHiddenItem(), "Floor searchable hidden item should be reset to null on restart");
+    }
 }

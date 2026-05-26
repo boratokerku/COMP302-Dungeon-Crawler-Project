@@ -92,8 +92,8 @@ public class GameMap extends Grid {
         }
 
         if (existing instanceof domain.models.tile.WallTile) {
-            // Allow placing a Door to overwrite the WallTile completely
-            if (obj instanceof domain.models.staticObjects.Door) {
+            // Allow placing a Door or another WallTile to overwrite the WallTile completely
+            if (obj instanceof domain.models.staticObjects.Door || obj instanceof domain.models.tile.WallTile) {
                 boolean success = super.placeObject(obj, x, y);
                 if (success && obj != null) {
                     obj.setMap(this);

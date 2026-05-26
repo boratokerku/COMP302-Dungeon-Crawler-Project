@@ -21,7 +21,7 @@ public class DemoRunner {
     private static domain.models.GameMode activeGameMode = domain.models.GameMode.ADVENTURE;
     private static LevelManager levelManager = null;
 
-    private static GameMap cloneMap(GameMap original) {
+    private static GameMap cloneMap(GameMap original, boolean isRestart) {
         if (original == null)
             return null;
         int w = original.getWidth();
@@ -55,13 +55,21 @@ public class DemoRunner {
                             domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) origDeco;
                             domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(so.getName(), x, y,
                                     so.getImageName(), so.getOpenImageName());
-                            if (so.getHiddenItem() != null) {
-                                if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                                    domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so.getHiddenItem();
-                                    newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
-                                } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
-                                    domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so.getHiddenItem();
-                                    newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                            if (isRestart) {
+                                newSo.setSearched(false);
+                                newSo.setTrapTriggered(false);
+                                newSo.setHiddenItem(null);
+                            } else {
+                                newSo.setSearched(so.isSearched());
+                                newSo.setTrapTriggered(so.isTrapTriggered());
+                                if (so.getHiddenItem() != null) {
+                                    if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                                        domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so.getHiddenItem();
+                                        newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
+                                    } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
+                                        domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so.getHiddenItem();
+                                        newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                                    }
                                 }
                             }
                             newDeco = newSo;
@@ -128,13 +136,21 @@ public class DemoRunner {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
                     domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(so.getName(), x, y, so.getImageName(),
                             so.getOpenImageName());
-                    if (so.getHiddenItem() != null) {
-                        if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                            domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so.getHiddenItem();
-                            newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
-                        } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
-                            domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so.getHiddenItem();
-                            newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                    if (isRestart) {
+                        newSo.setSearched(false);
+                        newSo.setTrapTriggered(false);
+                        newSo.setHiddenItem(null);
+                    } else {
+                        newSo.setSearched(so.isSearched());
+                        newSo.setTrapTriggered(so.isTrapTriggered());
+                        if (so.getHiddenItem() != null) {
+                            if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                                domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so.getHiddenItem();
+                                newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
+                            } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
+                                domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so.getHiddenItem();
+                                newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                            }
                         }
                     }
                     copy.placeObject(newSo, x, y);
@@ -155,7 +171,7 @@ public class DemoRunner {
 
     private static void restartGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         if (initialDesignedMap != null) {
-            GameMap cleanMap = cloneMap(initialDesignedMap);
+            GameMap cleanMap = cloneMap(initialDesignedMap, true);
             startGameWithMap(frame, mainPanel, cardLayout, cleanMap, activeGameMode);
         } else {
             startGame(frame, mainPanel, cardLayout);
@@ -266,7 +282,7 @@ public class DemoRunner {
         activeGameMode = mode;
 
         if (mode == domain.models.GameMode.TEAM_MATCH) {
-            initialDesignedMap = cloneMap(map);
+            initialDesignedMap = cloneMap(map, false);
             startTeamMatchWithMap(frame, mainPanel, cardLayout, map);
             return;
         }
@@ -307,7 +323,7 @@ public class DemoRunner {
         }
 
         // Save the map clone AFTER door and hidden key setups are established so that restarting yields the exact same layout.
-        initialDesignedMap = cloneMap(map);
+        initialDesignedMap = cloneMap(map, false);
 
         // Initialize level manager for level progression
         levelManager = new LevelManager();

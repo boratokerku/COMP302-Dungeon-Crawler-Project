@@ -263,10 +263,10 @@ public class DemoRunner {
     /** Tasarımlanan map ile hero + enemies ekleyerek oyunu başlatır */
     private static void startGameWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map,
             domain.models.GameMode mode) {
-        initialDesignedMap = cloneMap(map);
         activeGameMode = mode;
 
         if (mode == domain.models.GameMode.TEAM_MATCH) {
+            initialDesignedMap = cloneMap(map);
             startTeamMatchWithMap(frame, mainPanel, cardLayout, map);
             return;
         }
@@ -276,26 +276,38 @@ public class DemoRunner {
 
         // ITEM HIDING SYSTEM: Hide the LevelKey in a random SearchableObject
         java.util.List<domain.models.entity.SearchableObject> searchables = new java.util.ArrayList<>();
+        boolean hasHiddenKey = false;
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 domain.models.entity.GameObject obj = map.getObjectAt(x, y);
                 if (obj instanceof domain.models.tile.WallTile) {
                     domain.models.entity.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
                     if (deco instanceof domain.models.entity.SearchableObject) {
-                        searchables.add((domain.models.entity.SearchableObject) deco);
+                        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) deco;
+                        searchables.add(so);
+                        if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                            hasHiddenKey = true;
+                        }
                     }
+                } else if (obj instanceof domain.models.staticObjects.LevelKey) {
+                    hasHiddenKey = true;
                 }
             }
         }
 
-        domain.models.staticObjects.LevelKey levelKey = new domain.models.staticObjects.LevelKey(15, 12);
-        if (!searchables.isEmpty()) {
-            domain.models.entity.SearchableObject selected = searchables.get(new java.util.Random().nextInt(searchables.size()));
-            selected.setHiddenItem(levelKey);
-        } else {
-            System.out.println("Warning: No searchable locations on map.");
-            map.placeObject(levelKey, 15, 12);
+        if (!hasHiddenKey) {
+            domain.models.staticObjects.LevelKey levelKey = new domain.models.staticObjects.LevelKey(15, 12);
+            if (!searchables.isEmpty()) {
+                domain.models.entity.SearchableObject selected = searchables.get(new java.util.Random().nextInt(searchables.size()));
+                selected.setHiddenItem(levelKey);
+            } else {
+                System.out.println("Warning: No searchable locations on map.");
+                map.placeObject(levelKey, 15, 12);
+            }
         }
+
+        // Save the map clone AFTER door and hidden key setups are established so that restarting yields the exact same layout.
+        initialDesignedMap = cloneMap(map);
 
         // Initialize level manager for level progression
         levelManager = new LevelManager();

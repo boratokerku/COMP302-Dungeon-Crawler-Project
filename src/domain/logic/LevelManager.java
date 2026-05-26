@@ -221,12 +221,21 @@ public class LevelManager {
             if (placeSearchable) {
                 String img = searchables[random.nextInt(searchables.length)];
                 String relativePath = "images/WallSearchable/" + img;
-                map.placeObject(new SearchableObject("WallSearchable", pos[0], pos[1], relativePath, relativePath), pos[0], pos[1]);
+                GameObject wallTile = map.getObjectAt(pos[0], pos[1]);
+                if (wallTile instanceof domain.models.tile.WallTile) {
+                    SearchableObject deco = new SearchableObject("WallSearchable", pos[0], pos[1], relativePath, relativePath);
+                    ((domain.models.tile.WallTile) wallTile).setDecoration(deco);
+                    deco.setMap(map);
+                }
             } else if (includeDecorations) {
                 String img = decorations[random.nextInt(decorations.length)];
                 String relativePath = "images/WallDecoration/" + img;
-                GameObject wallObj = new WallObject("WallDecoration", pos[0], pos[1], relativePath);
-                map.placeObject(wallObj, pos[0], pos[1]);
+                GameObject wallTile = map.getObjectAt(pos[0], pos[1]);
+                if (wallTile instanceof domain.models.tile.WallTile) {
+                    GameObject wallObj = new WallObject("WallDecoration", pos[0], pos[1], relativePath);
+                    ((domain.models.tile.WallTile) wallTile).setDecoration(wallObj);
+                    wallObj.setMap(map);
+                }
             }
         }
     }

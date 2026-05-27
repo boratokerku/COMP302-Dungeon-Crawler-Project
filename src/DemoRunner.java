@@ -801,6 +801,9 @@ public class DemoRunner {
         final javax.swing.Timer[] logicRef = new javax.swing.Timer[1];
         final javax.swing.Timer[] renderRef = new javax.swing.Timer[1];
 
+        final long[] totalElapsedTimeMs = new long[]{state != null ? state.elapsedSeconds * 1000 : 0};
+        final long[] lastTickTime = new long[]{System.currentTimeMillis()};
+
         final Runnable advanceLevelRunnable = () -> {
             if (levelManager != null) {
                 // Freeze the game first by stopping the timers
@@ -866,8 +869,10 @@ public class DemoRunner {
                 }
 
                 // Resume the timers
-                if (logicRef[0] != null)
+                if (logicRef[0] != null) {
+                    lastTickTime[0] = System.currentTimeMillis();
                     logicRef[0].start();
+                }
                 if (renderRef[0] != null)
                     renderRef[0].start();
             }
@@ -894,8 +899,9 @@ public class DemoRunner {
 
         // PauseMenu — JFrame glass pane olarak oyunun üstüne bindiriliyor
         view.PauseMenu pauseMenu = new view.PauseMenu(
-                hero, entities, map, spawner, scrollSpawner, levelManager,
+                hero, entities, map, spawner, scrollSpawner, levelManager, gameView,
                 () -> {
+                    lastTickTime[0] = System.currentTimeMillis();
                     if (logicRef[0] != null)
                         logicRef[0].start();
                     if (renderRef[0] != null)
@@ -954,6 +960,7 @@ public class DemoRunner {
                 boolean paused = pauseMenu.isVisible();
                 if (paused) {
                     pauseMenu.setVisible(false);
+                    lastTickTime[0] = System.currentTimeMillis();
                     if (logicRef[0] != null)
                         logicRef[0].start();
                     if (renderRef[0] != null)
@@ -971,6 +978,13 @@ public class DemoRunner {
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         logicRef[0] = new javax.swing.Timer(120, (e) -> {
+            long now = System.currentTimeMillis();
+            long delta = now - lastTickTime[0];
+            lastTickTime[0] = now;
+            if (delta > 0 && delta < 1000) {
+                totalElapsedTimeMs[0] += delta;
+            }
+            gameView.setElapsedSeconds(totalElapsedTimeMs[0] / 1000);
 
             if (mode == domain.models.GameMode.TEAM_MATCH) {
                 // TEAM MATCH WIN/LOSS CONDITION

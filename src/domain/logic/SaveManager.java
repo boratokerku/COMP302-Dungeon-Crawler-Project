@@ -22,11 +22,12 @@ public class SaveManager {
     // Oyunu kaydet — saves/<saveName>.json dosyasına yazar
     public static void save(String saveName, Hero hero, List<Entity> entities, GameMap map,
                             domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner,
-                            int currentLevel) {
+                            int currentLevel, long elapsedSeconds) {
         GameState state = new GameState();
         state.saveName = saveName;
         state.currentLevel = currentLevel;
         state.timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date());
+        state.elapsedSeconds = elapsedSeconds;
 
         // Global Timerlar
         state.enemySpawnTimeLeft = enemySpawner.getTimeLeft();

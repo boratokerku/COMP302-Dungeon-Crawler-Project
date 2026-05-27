@@ -26,6 +26,7 @@ public class PauseMenu extends JPanel {
     private final domain.logic.EnemySpawner enemySpawner;
     private final domain.logic.ScrollSpawner scrollSpawner;
     private final LevelManager levelManager;
+    private final GameView gameView;
     private final Runnable onResume;
     private final Runnable onRestart;
     private final Runnable onMainMenu;
@@ -39,7 +40,7 @@ public class PauseMenu extends JPanel {
 
     public PauseMenu(Hero hero, List<Entity> entities, GameMap map,
                      domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner,
-                     LevelManager levelManager,
+                     LevelManager levelManager, GameView gameView,
                      Runnable onResume, Runnable onRestart, Runnable onMainMenu) {
         this.hero = hero;
         this.entities = entities;
@@ -47,6 +48,7 @@ public class PauseMenu extends JPanel {
         this.enemySpawner = enemySpawner;
         this.scrollSpawner = scrollSpawner;
         this.levelManager = levelManager;
+        this.gameView = gameView;
         this.onResume = onResume;
         this.onRestart = onRestart;
         this.onMainMenu = onMainMenu;
@@ -252,7 +254,7 @@ public class PauseMenu extends JPanel {
             saveName = existingSaves.get(idx).saveName;
         }
 
-        SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner, levelManager.getCurrentLevel());
+        SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner, levelManager.getCurrentLevel(), gameView.getElapsedSeconds());
         JOptionPane.showMessageDialog(this, "Saved successfully: " + saveName, "Save Successful", JOptionPane.INFORMATION_MESSAGE);
     }
 

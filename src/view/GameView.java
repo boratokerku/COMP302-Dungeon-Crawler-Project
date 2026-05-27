@@ -75,6 +75,16 @@ public class GameView extends JPanel {
     private java.util.List<domain.models.entity.Entity> entityList;
     private domain.models.GameMode gameMode = domain.models.GameMode.ADVENTURE;
 
+    private long elapsedSeconds = 0;
+
+    public void setElapsedSeconds(long seconds) {
+        this.elapsedSeconds = seconds;
+    }
+
+    public long getElapsedSeconds() {
+        return this.elapsedSeconds;
+    }
+
     public void setGameMode(domain.models.GameMode mode) {
         this.gameMode = mode;
     }
@@ -486,6 +496,22 @@ public class GameView extends JPanel {
         // 5. DEF
         drawSingleBar(g, "DEF", hero.getDef(), 6, defIntImg, defExtImg, defIconImg, startX + 4 * (barW + gap), y, barW,
                 barH);
+
+        // 6. Timer
+        long hours = elapsedSeconds / 3600;
+        long minutes = (elapsedSeconds % 3600) / 60;
+        long secs = elapsedSeconds % 60;
+        String timeStr = String.format("%02d:%02d:%02d", hours, minutes, secs);
+
+        g.setColor(new Color(255, 220, 100));
+        g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, 26f));
+        int timeStrW = g.getFontMetrics().stringWidth(timeStr);
+        int timerX = frameX + frameW + 15;
+        if (timerX + timeStrW > getWidth() - 5) {
+            timerX = getWidth() - timeStrW - 5;
+        }
+        int timerY = frameY + (frameH + g.getFontMetrics().getAscent()) / 2 - 5;
+        g.drawString(timeStr, timerX, timerY);
     }
 
     /** Delegates always-visible hotbar drawing to InventoryView. */

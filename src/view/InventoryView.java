@@ -147,9 +147,14 @@ public class InventoryView {
             if (item instanceof domain.models.item.PotionItem || item instanceof domain.models.item.RingItem) {
                 renderSize = (int) (itemSize * 0.7); // Potions & rings render 30% smaller
             }
-            int drawX = slotX + (slotWidth - renderSize) / 2;
-            int drawY = slotY + (slotHeight - renderSize) / 2;
-            g.drawImage(sprite, drawX, drawY, renderSize, renderSize, null);
+            int iw = sprite.getWidth();
+            int ih = sprite.getHeight();
+            double scale = Math.min((double) renderSize / iw, (double) renderSize / ih);
+            int dw = (int) (iw * scale);
+            int dh = (int) (ih * scale);
+            int drawX = slotX + (slotWidth - dw) / 2;
+            int drawY = slotY + (slotHeight - dh) / 2;
+            g.drawImage(sprite, drawX, drawY, dw, dh, null);
         } else {
             // Colour placeholder
             if (item instanceof domain.models.item.ShadowCloneScroll) {

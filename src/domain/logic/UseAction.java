@@ -12,14 +12,42 @@ public class UseAction implements Action {
 
     @Override
     public boolean isAvailable(Hero hero, GameObject target) {
-        return hero.getInventory().getItems().contains(target);
+        if (!hero.getInventory().getItems().contains(target)) {
+            return false;
+        }
+        if (target instanceof domain.models.item.PotionItem) {
+            String name = target.getName().toLowerCase();
+            if (name.contains("blue")) {
+                return hero.getMana() < 80;
+            } else if (name.contains("green")) {
+                return hero.getEnergy() < 100;
+            } else {
+                return hero.getHp() < 17;
+            }
+        }
+        return true;
     }
 
     @Override
     public void execute(Hero hero, GameObject target) {
         if (target instanceof domain.models.item.PotionItem) {
-            hero.heal(5); // Heal 5 HP
-            System.out.println("Used Potion. Hero healed for 5 HP. Current HP: " + hero.getHp());
+            String name = target.getName().toLowerCase();
+            if (name.contains("blue")) {
+                hero.setMana(Math.min(80, hero.getMana() + 20));
+                System.out.println("Used Blue Potion. Hero restored 20 Mana. Current Mana: " + hero.getMana());
+                util.helpers.SoundManager.playHeal();
+                view.GameView.addFloatingText(hero.getX(), hero.getY(), "+20 Mana", java.awt.Color.CYAN);
+            } else if (name.contains("green")) {
+                hero.setEnergy(Math.min(100, hero.getEnergy() + 30));
+                System.out.println("Used Green Potion. Hero restored 30 Energy. Current Energy: " + hero.getEnergy());
+                util.helpers.SoundManager.playHeal();
+                view.GameView.addFloatingText(hero.getX(), hero.getY(), "+30 Energy", java.awt.Color.YELLOW);
+            } else {
+                hero.heal(5);
+                System.out.println("Used Potion. Hero healed for 5 HP. Current HP: " + hero.getHp());
+                util.helpers.SoundManager.playHeal();
+                view.GameView.addFloatingText(hero.getX(), hero.getY(), "+5 HP", java.awt.Color.GREEN);
+            }
             hero.getInventory().removeItem(target);
         } else if (target instanceof domain.models.staticObjects.KeyItem) {
             domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) target;

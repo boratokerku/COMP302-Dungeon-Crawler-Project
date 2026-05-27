@@ -59,6 +59,28 @@ public class InputHandler implements KeyListener {
             if (gameView != null) {
                 gameView.setHotbarSlot(hotbarSlot);
             }
+            if (hero != null && hero.getInventory() != null) {
+                java.util.List<domain.models.entity.GameObject> items = hero.getInventory().getItems();
+                int itemIndex = hotbarSlot - 1;
+                if (itemIndex >= 0 && itemIndex < items.size()) {
+                    domain.models.entity.GameObject item = items.get(itemIndex);
+                    if (item != null) {
+                        for (domain.logic.Action action : item.getActions()) {
+                            String name = action.getName();
+                            if (name.equals("Use") || name.equals("Equip") || name.equals("Wear") || name.equals("Read") || name.equals("Eat")) {
+                                if (action.isAvailable(hero, item)) {
+                                    action.execute(hero, item);
+                                    System.out.println("[Hotkey " + hotbarSlot + "] Executed " + name + " on " + item.getName());
+                                    if (gameView != null) {
+                                        gameView.repaint();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             return;
         }
 

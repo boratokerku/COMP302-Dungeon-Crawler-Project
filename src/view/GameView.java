@@ -33,12 +33,21 @@ public class GameView extends JPanel {
 
     static {
         try {
-            vt323Font = java.awt.Font.createFont(
-                java.awt.Font.TRUETYPE_FONT,
-                new java.io.File("resources/fonts/VT323-Regular.ttf")
-            ).deriveFont(24f);
-            java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
-            ge.registerFont(vt323Font);
+            java.io.File fontFile = new java.io.File("resources/fonts/VT323-Regular.ttf");
+            if (!fontFile.exists()) {
+                fontFile = new java.io.File("../resources/fonts/VT323-Regular.ttf");
+            }
+            if (fontFile.exists()) {
+                vt323Font = java.awt.Font.createFont(
+                    java.awt.Font.TRUETYPE_FONT,
+                    fontFile
+                ).deriveFont(24f);
+                java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
+                ge.registerFont(vt323Font);
+            } else {
+                System.err.println("Font file not found, falling back to Monospaced: " + fontFile.getAbsolutePath());
+                vt323Font = new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 24);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             vt323Font = new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 24);

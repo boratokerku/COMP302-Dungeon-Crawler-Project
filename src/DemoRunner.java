@@ -113,7 +113,7 @@ public class DemoRunner {
                             x, y);
                 } else if (obj instanceof domain.models.item.PotionItem) {
                     domain.models.item.PotionItem pot = (domain.models.item.PotionItem) obj;
-                    copy.placeObject(new domain.models.item.PotionItem(pot.getName(), x, y, pot.getImageName()), x, y);
+                    copy.placeObject(new domain.models.item.PotionItem(pot.getPotion(), x, y, pot.getImageName()), x, y);
                 } else if (obj instanceof domain.models.item.SwordItem) {
                     copy.placeObject(new domain.models.item.SwordItem(x, y), x, y);
                 } else if (obj instanceof domain.models.item.WoodenSwordItem) {
@@ -449,7 +449,7 @@ public class DemoRunner {
         map.placeObject(new domain.models.entity.Column("Column", 14, 10, "colon/gray_colon_whole"), 14, 10);
 
         // Eşyalar
-        map.placeObject(new domain.models.item.PotionItem(9, 5), 9, 5);
+        map.placeObject(new domain.models.item.PotionItem(new domain.models.item.HealthPotion("Red Potion", 5), 9, 5, "images/items/potion/red_potion.png"), 9, 5);
         map.placeObject(new domain.models.staticObjects.KeyItem(10, 8), 10, 8);
         map.placeObject(new domain.models.staticObjects.KeyItem(10, 9), 10, 9);
         map.placeObject(new domain.models.item.SwordItem(12, 8), 12, 8);
@@ -661,7 +661,12 @@ public class DemoRunner {
         String displayName = (name != null && !name.isEmpty()) ? name : type;
         switch (type) {
             case "PotionItem":
-                return new domain.models.item.PotionItem(x, y);
+            case "HealthPotionItem":
+                return new domain.models.item.PotionItem(new domain.models.item.HealthPotion("Red Potion", 5), x, y, "images/items/potion/red_potion.png");
+            case "ManaPotionItem":
+                return new domain.models.item.PotionItem(new domain.models.item.ManaPotion("Blue Potion", 20), x, y, "images/items/potion/blue_potion.png");
+            case "EnergyPotionItem":
+                return new domain.models.item.PotionItem(new domain.models.item.EnergyPotion("Green Potion", 30), x, y, "images/items/potion/green_potion.png");
             case "SwordItem":
                 return new domain.models.item.SwordItem(x, y);
             case "AxeItem":
@@ -1222,7 +1227,7 @@ public class DemoRunner {
                                                     loot = domain.models.item.MapItem.createRandomItem(enemy.getX(),
                                                             enemy.getY());
                                                 } else if (dropType == 1) {
-                                                    loot = new domain.models.item.PotionItem(enemy.getX(),
+                                                    loot = domain.models.item.PotionItem.createRandomPotionItem(enemy.getX(),
                                                             enemy.getY());
                                                 } else {
                                                     int locked = countLockedChests(mapRef[0]);
@@ -1234,7 +1239,7 @@ public class DemoRunner {
                                                         loot = rand.nextBoolean()
                                                                 ? domain.models.item.MapItem
                                                                         .createRandomItem(enemy.getX(), enemy.getY())
-                                                                : new domain.models.item.PotionItem(enemy.getX(),
+                                                                : domain.models.item.PotionItem.createRandomPotionItem(enemy.getX(),
                                                                         enemy.getY());
                                                     }
                                                 }

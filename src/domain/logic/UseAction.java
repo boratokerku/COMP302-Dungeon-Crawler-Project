@@ -16,12 +16,12 @@ public class UseAction implements Action {
             return false;
         }
         if (target instanceof domain.models.item.PotionItem) {
-            String name = target.getName().toLowerCase();
-            if (name.contains("blue")) {
+            domain.models.item.Item pot = ((domain.models.item.PotionItem) target).getPotion();
+            if (pot instanceof domain.models.item.ManaPotion) {
                 return hero.getMana() < 80;
-            } else if (name.contains("green")) {
+            } else if (pot instanceof domain.models.item.EnergyPotion) {
                 return hero.getEnergy() < 100;
-            } else {
+            } else if (pot instanceof domain.models.item.HealthPotion) {
                 return hero.getHp() < 17;
             }
         }
@@ -31,23 +31,22 @@ public class UseAction implements Action {
     @Override
     public void execute(Hero hero, GameObject target) {
         if (target instanceof domain.models.item.PotionItem) {
-            String name = target.getName().toLowerCase();
-            if (name.contains("blue")) {
-                hero.setMana(Math.min(80, hero.getMana() + 20));
-                System.out.println("Used Blue Potion. Hero restored 20 Mana. Current Mana: " + hero.getMana());
-                util.helpers.SoundManager.playHeal();
+            domain.models.item.PotionItem potionItem = (domain.models.item.PotionItem) target;
+            domain.models.item.Item pot = potionItem.getPotion();
+            
+            // Execute the domain item logic
+            pot.use(hero);
+            
+            // Execute the feedback logic (sound, floating text)
+            util.helpers.SoundManager.playHeal();
+            if (pot instanceof domain.models.item.ManaPotion) {
                 view.GameView.addFloatingText(hero.getX(), hero.getY(), "+20 Mana", java.awt.Color.CYAN);
-            } else if (name.contains("green")) {
-                hero.setEnergy(Math.min(100, hero.getEnergy() + 30));
-                System.out.println("Used Green Potion. Hero restored 30 Energy. Current Energy: " + hero.getEnergy());
-                util.helpers.SoundManager.playHeal();
+            } else if (pot instanceof domain.models.item.EnergyPotion) {
                 view.GameView.addFloatingText(hero.getX(), hero.getY(), "+30 Energy", java.awt.Color.YELLOW);
-            } else {
-                hero.heal(5);
-                System.out.println("Used Potion. Hero healed for 5 HP. Current HP: " + hero.getHp());
-                util.helpers.SoundManager.playHeal();
+            } else if (pot instanceof domain.models.item.HealthPotion) {
                 view.GameView.addFloatingText(hero.getX(), hero.getY(), "+5 HP", java.awt.Color.GREEN);
             }
+            
             hero.getInventory().removeItem(target);
         } else if (target instanceof domain.models.staticObjects.KeyItem) {
             domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) target;

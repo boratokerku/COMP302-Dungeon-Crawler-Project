@@ -270,7 +270,7 @@ public class Hero extends Entity {
                         if (dropType == 0) {
                             loot = domain.models.item.MapItem.createRandomItem(target.getX(), target.getY());
                         } else if (dropType == 1) {
-                            loot = new domain.models.item.PotionItem(target.getX(), target.getY());
+                            loot = domain.models.item.PotionItem.createRandomPotionItem(target.getX(), target.getY());
                         } else {
                             int locked = countLockedChests(map);
                             int keys = countKeys(map, this);
@@ -279,7 +279,7 @@ public class Hero extends Entity {
                             } else {
                                 loot = rand.nextBoolean()
                                     ? domain.models.item.MapItem.createRandomItem(target.getX(), target.getY())
-                                    : new domain.models.item.PotionItem(target.getX(), target.getY());
+                                    : domain.models.item.PotionItem.createRandomPotionItem(target.getX(), target.getY());
                             }
                         }
                     }

@@ -139,8 +139,8 @@ public class LevelManager {
         map.placeObject(new KeyItem(w - 8, h - 5), w - 8, h - 5);
 
         // Potions scattered
-        map.placeObject(new PotionItem(3, 8), 3, 8);
-        map.placeObject(new PotionItem(w - 4, 4), w - 4, 4);
+        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), 3, 8, "images/items/potion/red_potion.png"), 3, 8);
+        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), w - 4, 4, "images/items/potion/red_potion.png"), w - 4, 4);
 
         // Torches for atmosphere
         map.placeObject(new Decoration("Torch", 3, 1, "torch/torch_1"), 3, 1);
@@ -186,11 +186,11 @@ public class LevelManager {
 
         placeRandomWallObjects(map, false, true);
 
-        // Some potions for the boss fight
-        map.placeObject(new PotionItem(2, 2), 2, 2);
-        map.placeObject(new PotionItem(w - 3, 2), w - 3, 2);
-        map.placeObject(new PotionItem(2, h - 3), 2, h - 3);
-        map.placeObject(new PotionItem(w - 3, h - 3), w - 3, h - 3);
+        // Some potions for the boss fight (different varieties)
+        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), 2, 2, "images/items/potion/red_potion.png"), 2, 2);
+        map.placeObject(new PotionItem(new ManaPotion("Blue Potion", 20), w - 3, 2, "images/items/potion/blue_potion.png"), w - 3, 2);
+        map.placeObject(new PotionItem(new EnergyPotion("Green Potion", 30), 2, h - 3, "images/items/potion/green_potion.png"), 2, h - 3);
+        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), w - 3, h - 3, "images/items/potion/red_potion.png"), w - 3, h - 3);
     }
 
     private void placeRandomWallObjects(GameMap map, boolean includeSearchables, boolean includeDecorations) {

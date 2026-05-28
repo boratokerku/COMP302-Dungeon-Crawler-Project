@@ -2,10 +2,10 @@ package domain.models.item;
 
 import domain.models.entity.Hero;
 
-public class Potion extends Item {
+public class HealthPotion extends Item {
     private int healAmount;
 
-    public Potion(String name, int healAmount) {
+    public HealthPotion(String name, int healAmount) {
         super(name, 0.5); // İksirler hafiftir
         this.healAmount = healAmount;
     }

@@ -309,11 +309,11 @@ public class DesignModeView extends JPanel {
         // ── 2. ITEMS ───────────────────────────────────────────────────────────
         // Potions
         itemPalette.add(new PaletteItem("RedPotion", "images/items/potion/red_potion.png", false,
-                (x, y) -> new PotionItem("Red Potion", x, y, "images/items/potion/red_potion.png")));
+                (x, y) -> new PotionItem(new HealthPotion("Red Potion", 5), x, y, "images/items/potion/red_potion.png")));
         itemPalette.add(new PaletteItem("BluePotion", "images/items/potion/blue_potion.png", false,
-                (x, y) -> new PotionItem("Blue Potion", x, y, "images/items/potion/blue_potion.png")));
+                (x, y) -> new PotionItem(new ManaPotion("Blue Potion", 20), x, y, "images/items/potion/blue_potion.png")));
         itemPalette.add(new PaletteItem("GreenPotion", "images/items/potion/green_potion.png", false,
-                (x, y) -> new PotionItem("Green Potion", x, y, "images/items/potion/green_potion.png")));
+                (x, y) -> new PotionItem(new EnergyPotion("Green Potion", 30), x, y, "images/items/potion/green_potion.png")));
         
         // Keys
         itemPalette.add(new PaletteItem("GoldKey1", "images/items/key/golden_key_1.png", false,
@@ -1191,7 +1191,7 @@ public class DesignModeView extends JPanel {
                 patts++;
             } while ((reserved[px][py] || !isFarEnough(px, py)) && patts < 100);
             if (patts < 100) {
-                map.placeObject(new PotionItem(px, py), px, py);
+                map.placeObject(PotionItem.createRandomPotionItem(px, py), px, py);
                 reserved[px][py] = true;
             }
         }
@@ -1491,9 +1491,15 @@ public class DesignModeView extends JPanel {
             String hiddenItemType = jsonStr(line, "hiddenItemType");
 
             GameObject obj = switch (type) {
-                case "PotionItem" -> imgName != null && !imgName.isEmpty()
-                        ? new PotionItem(name, x, y, imgName)
-                        : new PotionItem(x, y);
+                case "PotionItem" -> {
+                    if (name != null && name.toLowerCase().contains("blue")) {
+                        yield new PotionItem(new ManaPotion("Blue Potion", 20), x, y, "images/items/potion/blue_potion.png");
+                    } else if (name != null && name.toLowerCase().contains("green")) {
+                        yield new PotionItem(new EnergyPotion("Green Potion", 30), x, y, "images/items/potion/green_potion.png");
+                    } else {
+                        yield new PotionItem(new HealthPotion("Red Potion", 5), x, y, "images/items/potion/red_potion.png");
+                    }
+                }
                 case "SwordItem" -> new SwordItem(x, y);
                 case "WoodenSwordItem" -> new WoodenSwordItem(x, y);
                 case "SamuraiSwordItem" -> new SamuraiSwordItem(x, y);

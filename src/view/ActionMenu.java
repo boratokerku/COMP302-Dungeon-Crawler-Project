@@ -254,7 +254,7 @@ public class ActionMenu {
                         g.setColor(new Color(255, 235, 180)); // Soft gold/yellow text
                     }
 
-                    int textX = x + 25;
+                    int textX = x + 20;
                     int textY = y + centersY[i] + afm.getAscent() / 2 - 3;
                     g.drawString(label, textX, textY);
                 }

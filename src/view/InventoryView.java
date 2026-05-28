@@ -126,33 +126,48 @@ public class InventoryView {
         for (int col = 0; col < slotsX; col++) {
             int slotIndex = col + 1;
             
-            int slotX, slotY, slotWidthScaled, slotHeightScaled;
+            int slotX_item, slotY_item, slotW_item, slotH_item;
+            int slotX_selector, slotY_selector, slotW_selector, slotH_selector;
+            
             if (bgImage != null) {
-                int slotLeft = 178 + col * 281;
-                slotX = startX + (int) Math.round(slotLeft * scale);
-                slotWidthScaled = (int) Math.round(192 * scale);
-                slotY = startY + (int) Math.round(15 * scale);
-                slotHeightScaled = (int) Math.round(400 * scale);
+                // Item coordinates (exact interior)
+                int slotLeft_item = 178 + col * 281;
+                slotX_item = startX + (int) Math.round(slotLeft_item * scale);
+                slotW_item = (int) Math.round(192 * scale);
+                slotY_item = startY + (int) Math.round(117 * scale);
+                slotH_item = (int) Math.round(190 * scale);
+                
+                // Selector coordinates (including borders)
+                int slotLeft_selector = 160 + col * 281;
+                slotX_selector = startX + (int) Math.round(slotLeft_selector * scale);
+                slotW_selector = (int) Math.round(226 * scale);
+                slotY_selector = startY + (int) Math.round(96 * scale);
+                slotH_selector = (int) Math.round(226 * scale);
             } else {
-                slotX = startX + (col * slotWidth);
-                slotY = startY;
-                slotWidthScaled = slotWidth;
-                slotHeightScaled = slotHeight;
+                slotX_item = startX + (col * slotWidth);
+                slotY_item = startY;
+                slotW_item = slotWidth;
+                slotH_item = slotHeight;
+                
+                slotX_selector = slotX_item;
+                slotY_selector = slotY_item;
+                slotW_selector = slotW_item;
+                slotH_selector = slotH_item;
             }
 
             if (hotbar.getSelectedSlot() == slotIndex) {
                 if (selectorImage != null) {
                     g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-                    g.drawImage(selectorImage, slotX, slotY, slotWidthScaled, slotHeightScaled, null);
+                    g.drawImage(selectorImage, slotX_selector, slotY_selector, slotW_selector, slotH_selector, null);
                 } else {
                     g.setColor(new Color(255, 255, 255, 170));
-                    g.drawRect(slotX + 1, slotY + 1, slotWidthScaled - 3, slotHeightScaled - 3);
+                    g.drawRect(slotX_selector + 1, slotY_selector + 1, slotW_selector - 3, slotH_selector - 3);
                 }
             }
 
             domain.models.entity.GameObject item = hotbar.getSlot(slotIndex);
             if (item != null) {
-                drawItemInSlot(g, item, slotX, slotY, slotWidthScaled, slotHeightScaled);
+                drawItemInSlot(g, item, slotX_item, slotY_item, slotW_item, slotH_item);
             }
         }
     }
@@ -224,14 +239,14 @@ public class InventoryView {
             double scale = (double) barWidth / bgImage.getWidth();
             for (int col = 0; col < slotsX; col++) {
                 int slotIndex = col + 1;
-                int slotLeft = 178 + col * 281;
-                int slotX = startX + (int) Math.round(slotLeft * scale);
-                int slotWidthScaled = (int) Math.round(192 * scale);
-                int slotY = startY + (int) Math.round(15 * scale);
-                int slotHeightScaled = (int) Math.round(400 * scale);
+                int slotLeft_selector = 160 + col * 281;
+                int slotX = startX + (int) Math.round(slotLeft_selector * scale);
+                int slotW = (int) Math.round(226 * scale);
+                int slotY = startY + (int) Math.round(96 * scale);
+                int slotH = (int) Math.round(226 * scale);
 
-                if (screenX >= slotX && screenX <= slotX + slotWidthScaled &&
-                        screenY >= slotY && screenY <= slotY + slotHeightScaled) {
+                if (screenX >= slotX && screenX <= slotX + slotW &&
+                        screenY >= slotY && screenY <= slotY + slotH) {
                     hotbar.setSelectedSlot(slotIndex);
                     return hotbar.getSlot(slotIndex);
                 }

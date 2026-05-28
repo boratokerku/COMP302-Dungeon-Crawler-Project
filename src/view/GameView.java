@@ -543,15 +543,24 @@ public class GameView extends JPanel {
             g.drawImage(timerBgImg, timerBgX, timerBgY, timerBgW, timerBgH, null);
 
             g.setColor(new Color(255, 220, 100));
-            g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, 26f));
+            double timerScale = (double) timerBgW / timerBgImg.getWidth();
+            int textSlotW = (int) Math.round((1275 - 490) * timerScale);
+            
+            float fontSize = 26f;
+            g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, fontSize));
             java.awt.FontMetrics tfm = g.getFontMetrics();
             int timeStrW = tfm.stringWidth(timeStr);
-            if (timeStrW > timerBgW * 0.8) {
-                g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, 20f));
+
+            // Scale down font size dynamically until it fits the text slot
+            while (timeStrW > textSlotW * 0.85 && fontSize > 10f) {
+                fontSize -= 1.0f;
+                g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, fontSize));
                 tfm = g.getFontMetrics();
                 timeStrW = tfm.stringWidth(timeStr);
             }
-            int textX = timerBgX + (timerBgW - timeStrW) / 2;
+
+            int textCenterX = timerBgX + (int) Math.round(882.5 * timerScale);
+            int textX = textCenterX - timeStrW / 2;
             int textY = timerBgY + (timerBgH + tfm.getAscent()) / 2 - 3;
             g.drawString(timeStr, textX, textY);
         } else {

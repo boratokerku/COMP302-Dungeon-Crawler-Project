@@ -65,14 +65,15 @@ public class InventoryView {
     // ── Drawing ───────────────────────────────────────────────────────────────
 
     /**
-    * Draws the hotbar at the bottom of the screen.
+     * Draws the hotbar at the bottom of the screen.
      *
      * @param g           the Graphics2D context
      * @param panelWidth  current width of the game panel
      * @param panelHeight current height of the game panel
      */
     public void draw(Graphics2D g, int panelWidth, int panelHeight) {
-        if (hero == null || hero.getInventory() == null) return;
+        if (hero == null || hero.getInventory() == null)
+            return;
 
         syncHotbarItems();
 
@@ -126,9 +127,11 @@ public class InventoryView {
         }
     }
 
-    /** Draws the sprite (or a colour placeholder) of a game object inside a slot. */
+    /**
+     * Draws the sprite (or a colour placeholder) of a game object inside a slot.
+     */
     private void drawItemInSlot(Graphics2D g, domain.models.entity.GameObject item,
-                                int slotX, int slotY) {
+            int slotX, int slotY) {
         if (item == null) {
             return;
         }
@@ -144,7 +147,8 @@ public class InventoryView {
 
         if (sprite != null) {
             int renderSize = itemSize;
-            if (item instanceof domain.models.item.PotionItem || item instanceof domain.models.item.RingItem) {
+            if (item instanceof domain.models.item.usables.PotionItem
+                    || item instanceof domain.models.item.wearables.RingItem) {
                 renderSize = (int) (itemSize * 0.7); // Potions & rings render 30% smaller
             }
             int iw = sprite.getWidth();
@@ -157,7 +161,7 @@ public class InventoryView {
             g.drawImage(sprite, drawX, drawY, dw, dh, null);
         } else {
             // Colour placeholder
-            if (item instanceof domain.models.item.ShadowCloneScroll) {
+            if (item instanceof domain.models.item.usables.ShadowCloneScroll) {
                 g.setColor(new Color(150, 50, 255)); // purple — scroll
             } else {
                 g.setColor(new Color(255, 220, 50)); // yellow — unknown
@@ -172,7 +176,8 @@ public class InventoryView {
 
     /** Returns the hotbar item that was clicked, or null if the slot is empty. */
     public domain.models.entity.GameObject getClickedItem(int screenX, int screenY) {
-        if (hero == null || hero.getInventory() == null) return null;
+        if (hero == null || hero.getInventory() == null)
+            return null;
         syncHotbarItems();
 
         for (int col = 0; col < slotsX; col++) {

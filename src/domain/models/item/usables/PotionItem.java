@@ -1,7 +1,9 @@
-package domain.models.item;
+package domain.models.item.usables;
 
 import domain.logic.TakeAction;
 import domain.logic.UseAction;
+import domain.models.item.Item;
+import domain.models.item.MapItem;
 import domain.logic.DiscardAction;
 
 public class PotionItem extends MapItem {
@@ -15,7 +17,8 @@ public class PotionItem extends MapItem {
         this.addAction(new DiscardAction());
     }
 
-    // Compatibility constructor for custom-named potion/placeholder items in the palette
+    // Compatibility constructor for custom-named potion/placeholder items in the
+    // palette
     public PotionItem(String name, int x, int y, String imagePath) {
         super(name, x, y, imagePath);
         if (name != null && name.toLowerCase().contains("blue")) {

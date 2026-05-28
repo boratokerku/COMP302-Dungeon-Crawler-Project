@@ -5,6 +5,10 @@ import domain.models.entity.Crate;
 import domain.models.map.GameMap;
 import domain.models.staticObjects.*;
 import domain.models.item.*;
+import domain.models.item.usables.EnergyPotion;
+import domain.models.item.usables.HealthPotion;
+import domain.models.item.usables.ManaPotion;
+import domain.models.item.usables.PotionItem;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +18,7 @@ import java.util.Random;
 /**
  * State machine managing multi-level dungeon progression.
  * 
- * Level 1 (Entry):      Uses the designed/default map. Regular enemies.
+ * Level 1 (Entry): Uses the designed/default map. Regular enemies.
  * Level 2 (The Depths): Tighter corridors, more columns, harder enemies.
  * Level 3 (Boss Arena): Open arena with the Final Boss.
  */
@@ -42,16 +46,20 @@ public class LevelManager {
 
     /**
      * Advances to the next level and generates the new map.
-     * @return The generated GameMap for the new level, or null if already at max level.
+     * 
+     * @return The generated GameMap for the new level, or null if already at max
+     *         level.
      */
     public GameMap advanceLevel() {
-        if (isLastLevel()) return null;
+        if (isLastLevel())
+            return null;
         currentLevel++;
         return generateLevel(currentLevel);
     }
 
     /**
-     * Generates a map for the specified level with appropriate obstacles and decorations.
+     * Generates a map for the specified level with appropriate obstacles and
+     * decorations.
      * Enemies are added separately by the caller (DemoRunner).
      */
     public GameMap generateLevel(int level) {
@@ -74,10 +82,11 @@ public class LevelManager {
 
     /**
      * Populates the entity list with enemies appropriate for the given level.
-     * @param level The level number
-     * @param map The game map
+     * 
+     * @param level    The level number
+     * @param map      The game map
      * @param entities The entity list to populate (hero should already be in it)
-     * @param hero The hero reference
+     * @param hero     The hero reference
      */
     public void populateEnemies(int level, GameMap map, List<Entity> entities, Hero hero) {
         switch (level) {
@@ -139,8 +148,11 @@ public class LevelManager {
         map.placeObject(new KeyItem(w - 8, h - 5), w - 8, h - 5);
 
         // Potions scattered
-        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), 3, 8, "images/items/potion/red_potion.png"), 3, 8);
-        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), w - 4, 4, "images/items/potion/red_potion.png"), w - 4, 4);
+        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), 3, 8, "images/items/potion/red_potion.png"),
+                3, 8);
+        map.placeObject(
+                new PotionItem(new HealthPotion("Red Potion", 5), w - 4, 4, "images/items/potion/red_potion.png"),
+                w - 4, 4);
 
         // Torches for atmosphere
         map.placeObject(new Decoration("Torch", 3, 1, "torch/torch_1"), 3, 1);
@@ -187,10 +199,17 @@ public class LevelManager {
         placeRandomWallObjects(map, false, true);
 
         // Some potions for the boss fight (different varieties)
-        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), 2, 2, "images/items/potion/red_potion.png"), 2, 2);
-        map.placeObject(new PotionItem(new ManaPotion("Blue Potion", 20), w - 3, 2, "images/items/potion/blue_potion.png"), w - 3, 2);
-        map.placeObject(new PotionItem(new EnergyPotion("Green Potion", 30), 2, h - 3, "images/items/potion/green_potion.png"), 2, h - 3);
-        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), w - 3, h - 3, "images/items/potion/red_potion.png"), w - 3, h - 3);
+        map.placeObject(new PotionItem(new HealthPotion("Red Potion", 5), 2, 2, "images/items/potion/red_potion.png"),
+                2, 2);
+        map.placeObject(
+                new PotionItem(new ManaPotion("Blue Potion", 20), w - 3, 2, "images/items/potion/blue_potion.png"),
+                w - 3, 2);
+        map.placeObject(
+                new PotionItem(new EnergyPotion("Green Potion", 30), 2, h - 3, "images/items/potion/green_potion.png"),
+                2, h - 3);
+        map.placeObject(
+                new PotionItem(new HealthPotion("Red Potion", 5), w - 3, h - 3, "images/items/potion/red_potion.png"),
+                w - 3, h - 3);
     }
 
     private void placeRandomWallObjects(GameMap map, boolean includeSearchables, boolean includeDecorations) {
@@ -199,31 +218,36 @@ public class LevelManager {
         List<int[]> emptyWallTiles = new ArrayList<>();
         for (int x = 1; x < w - 1; x++) {
             GameObject topWall = map.getObjectAt(x, 0);
-            if (topWall instanceof domain.models.tile.WallTile && ((domain.models.tile.WallTile) topWall).getDecoration() == null) {
+            if (topWall instanceof domain.models.tile.WallTile
+                    && ((domain.models.tile.WallTile) topWall).getDecoration() == null) {
                 emptyWallTiles.add(new int[] { x, 0 });
             }
             GameObject botWall = map.getObjectAt(x, h - 1);
-            if (botWall instanceof domain.models.tile.WallTile && ((domain.models.tile.WallTile) botWall).getDecoration() == null) {
+            if (botWall instanceof domain.models.tile.WallTile
+                    && ((domain.models.tile.WallTile) botWall).getDecoration() == null) {
                 emptyWallTiles.add(new int[] { x, h - 1 });
             }
         }
         Collections.shuffle(emptyWallTiles, random);
 
-        String[] searchables = { "missing_brick.png", "wall_cavity.png", "loose_stone.png", "wall_grill.png", "gargoyle.png", "pipe_hole.png" };
+        String[] searchables = { "missing_brick.png", "wall_cavity.png", "loose_stone.png", "wall_grill.png",
+                "gargoyle.png", "pipe_hole.png" };
         String[] decorations = { "blood_stain.png", "chain.png", "cobweb.png", "crack.png", "moss.png", "skull.png" };
 
         int numToPlace = Math.min(emptyWallTiles.size(), 12);
         for (int i = 0; i < numToPlace; i++) {
             int[] pos = emptyWallTiles.get(i);
             boolean placeSearchable = includeSearchables && (random.nextBoolean() || !includeDecorations);
-            if (!includeSearchables && includeDecorations) placeSearchable = false;
+            if (!includeSearchables && includeDecorations)
+                placeSearchable = false;
 
             if (placeSearchable) {
                 String img = searchables[random.nextInt(searchables.length)];
                 String relativePath = "images/WallSearchable/" + img;
                 GameObject wallTile = map.getObjectAt(pos[0], pos[1]);
                 if (wallTile instanceof domain.models.tile.WallTile) {
-                    SearchableObject deco = new SearchableObject("WallSearchable", pos[0], pos[1], relativePath, relativePath);
+                    SearchableObject deco = new SearchableObject("WallSearchable", pos[0], pos[1], relativePath,
+                            relativePath);
                     ((domain.models.tile.WallTile) wallTile).setDecoration(deco);
                     deco.setMap(map);
                 }
@@ -249,11 +273,12 @@ public class LevelManager {
     }
 
     public static void placeRandomLevelDoor(GameMap map, String name) {
-        if (map == null) return;
-        
+        if (map == null)
+            return;
+
         int w = map.getWidth();
         int h = map.getHeight();
-        
+
         // Check if map already has a LevelDoor
         for (int x = 0; x < w; x++) {
             for (int y = 0; y < h; y++) {
@@ -270,22 +295,26 @@ public class LevelManager {
                             map.placeObject(new domain.models.tile.FloorTile(), doorX, frontY);
                         }
                     }
-                    System.out.println("Map already has a LevelDoor at (" + doorX + ", " + doorY + "). Keeping it and clearing front.");
+                    System.out.println("Map already has a LevelDoor at (" + doorX + ", " + doorY
+                            + "). Keeping it and clearing front.");
                     return;
                 }
             }
         }
-        
-        // No LevelDoor found. Place a new random LevelDoor on the top wall (y == 0, en sağ/sol tile'lar hariç)
+
+        // No LevelDoor found. Place a new random LevelDoor on the top wall (y == 0, en
+        // sağ/sol tile'lar hariç)
         Random rand = new Random();
         int doorX = rand.nextInt(w - 4) + 2;
         int doorY = 0; // Top wall only
-        
+
         map.placeObject(new LevelDoor(name, doorX, doorY), doorX, doorY);
-        
-        // Ensure the tile in front of the door (doorX, 1) is a FloorTile (obstacle is removed if any)
+
+        // Ensure the tile in front of the door (doorX, 1) is a FloorTile (obstacle is
+        // removed if any)
         map.placeObject(new domain.models.tile.FloorTile(), doorX, 1);
-        
-        System.out.println("Placed static LevelDoor '" + name + "' randomly at (" + doorX + ", " + doorY + ") and cleared front tile.");
+
+        System.out.println("Placed static LevelDoor '" + name + "' randomly at (" + doorX + ", " + doorY
+                + ") and cleared front tile.");
     }
 }

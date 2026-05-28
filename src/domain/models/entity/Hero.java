@@ -79,11 +79,11 @@ public class Hero extends Entity {
         this.weaponAtk = atk; // Real weapon ATK
     }
 
-    public void equipWeapon(domain.models.item.SwordItem sword) {
+    public void equipWeapon(domain.models.item.wearables.SwordItem sword) {
         equipWeapon((domain.models.item.MapItem) sword);
     }
 
-    public void equipWeapon(domain.models.item.SwordItem sword, int atk) {
+    public void equipWeapon(domain.models.item.wearables.SwordItem sword, int atk) {
         equipWeapon((domain.models.item.MapItem) sword, atk);
     }
 
@@ -270,7 +270,8 @@ public class Hero extends Entity {
                         if (dropType == 0) {
                             loot = domain.models.item.MapItem.createRandomItem(target.getX(), target.getY());
                         } else if (dropType == 1) {
-                            loot = domain.models.item.PotionItem.createRandomPotionItem(target.getX(), target.getY());
+                            loot = domain.models.item.usables.PotionItem.createRandomPotionItem(target.getX(),
+                                    target.getY());
                         } else {
                             int locked = countLockedChests(map);
                             int keys = countKeys(map, this);
@@ -278,8 +279,9 @@ public class Hero extends Entity {
                                 loot = new domain.models.staticObjects.KeyItem(target.getX(), target.getY());
                             } else {
                                 loot = rand.nextBoolean()
-                                    ? domain.models.item.MapItem.createRandomItem(target.getX(), target.getY())
-                                    : domain.models.item.PotionItem.createRandomPotionItem(target.getX(), target.getY());
+                                        ? domain.models.item.MapItem.createRandomItem(target.getX(), target.getY())
+                                        : domain.models.item.usables.PotionItem.createRandomPotionItem(target.getX(),
+                                                target.getY());
                             }
                         }
                     }

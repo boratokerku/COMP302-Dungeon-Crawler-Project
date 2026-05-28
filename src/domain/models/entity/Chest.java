@@ -7,7 +7,7 @@ public class Chest extends GameObject {
         super(name, x, y, customImage, false);
         this.isLocked = isLocked;
         java.util.List<GameObject> contents = new java.util.ArrayList<>();
-        contents.add(domain.models.item.PotionItem.createRandomPotionItem(x, y));
+        contents.add(domain.models.item.usables.PotionItem.createRandomPotionItem(x, y));
         this.addAction(new domain.logic.OpenAction(contents));
         this.addAction(new domain.logic.BreakAction());
     }
@@ -51,4 +51,3 @@ public class Chest extends GameObject {
         return "chest";
     }
 }
-

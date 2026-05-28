@@ -1,9 +1,10 @@
-package domain.models.item;
+package domain.models.item.wearables;
 
 import domain.logic.TakeAction;
 import domain.logic.WearAction;
 import domain.logic.TakeOffAction;
 import domain.logic.DiscardAction;
+import domain.models.item.MapItem;
 
 public class ArmorItem extends MapItem {
 

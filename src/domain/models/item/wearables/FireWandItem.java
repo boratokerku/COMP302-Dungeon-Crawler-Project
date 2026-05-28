@@ -1,8 +1,9 @@
-package domain.models.item;
+package domain.models.item.wearables;
 
 import domain.logic.TakeAction;
 import domain.logic.EquipAction;
 import domain.logic.UnequipAction;
+import domain.models.item.MapItem;
 import domain.logic.DiscardAction;
 
 public class FireWandItem extends MapItem {

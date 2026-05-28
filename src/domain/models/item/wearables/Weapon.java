@@ -1,6 +1,7 @@
-package domain.models.item;
+package domain.models.item.wearables;
 
 import domain.models.entity.Hero;
+import domain.models.item.Item;
 
 public class Weapon extends Item {
     private int attackPower;

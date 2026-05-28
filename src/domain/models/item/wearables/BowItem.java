@@ -1,9 +1,10 @@
-package domain.models.item;
+package domain.models.item.wearables;
 
 import domain.logic.TakeAction;
 import domain.logic.EquipAction;
 import domain.logic.UnequipAction;
 import domain.logic.DiscardAction;
+import domain.models.item.MapItem;
 
 public class BowItem extends MapItem {
     public BowItem(int x, int y) {

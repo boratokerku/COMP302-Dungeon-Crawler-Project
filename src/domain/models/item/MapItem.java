@@ -80,6 +80,14 @@ public abstract class MapItem extends GameObject {
         return 0;
     }
 
+    public int getHpBonus() {
+        return 0;
+    }
+
+    public int getManaCostReduction() {
+        return 0;
+    }
+
     // Ranged weapon metadata
     public boolean isRanged() {
         return false;

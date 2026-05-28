@@ -80,6 +80,7 @@ public class GameView extends JPanel {
     private domain.models.entity.Knight knight;
     private domain.models.entity.Sorcerer sorcerer;
     private TileManager tileManager;
+    private ActionMenu actionMenu;
     private java.util.List<domain.models.entity.Entity> entityList;
     private domain.models.GameMode gameMode = domain.models.GameMode.ADVENTURE;
 
@@ -124,6 +125,10 @@ public class GameView extends JPanel {
     public void setTileManager(TileManager tileManager) {
         this.tileManager = tileManager;
         this.inventoryView.setTileManager(tileManager);
+    }
+
+    public void setActionMenu(ActionMenu actionMenu) {
+        this.actionMenu = actionMenu;
     }
 
     public int getTileSize() {
@@ -221,6 +226,10 @@ public class GameView extends JPanel {
             g2d.setColor(new Color(255, 0, 0, 80));
             g2d.fillRect(0, 0, getWidth(), getHeight());
             trapFlashFrames--;
+        }
+
+        if (actionMenu != null && actionMenu.isVisible()) {
+            actionMenu.draw(g2d);
         }
 
         // Kaynakları temizle
@@ -499,7 +508,7 @@ public class GameView extends JPanel {
         }
 
         // 1. Health
-        drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
+        drawSingleBar(g, "HP", hero.getHp(), hero.getMaxHp(), hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
 
         // 2. Energy
         drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap),

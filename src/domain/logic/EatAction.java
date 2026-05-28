@@ -16,7 +16,7 @@ public class EatAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        int maxHp = 17;
+        int maxHp = hero.getMaxHp();
         int maxEnergy = 100;
         hero.setHp(Math.min(maxHp, hero.getHp() + 5));
         hero.setEnergy(Math.min(maxEnergy, hero.getEnergy() + 15));

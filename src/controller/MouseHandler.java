@@ -41,6 +41,18 @@ public class MouseHandler extends MouseAdapter {
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        if (actionMenu != null && actionMenu.isVisible()) {
+            boolean inside = actionMenu.contains(e.getX(), e.getY());
+            if (inside) {
+                actionMenu.handleMouseClick(e.getX(), e.getY(), gameView);
+                return;
+            } else {
+                actionMenu.hideMenu();
+                gameView.repaint();
+                return;
+            }
+        }
+
         int tileSize = gameView.getTileSize();
         int offsetX = gameView.getOffsetX();
         int offsetY = gameView.getOffsetY();
@@ -201,5 +213,13 @@ public class MouseHandler extends MouseAdapter {
             }
         }
         return name;
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        if (actionMenu != null && actionMenu.isVisible()) {
+            actionMenu.handleMouseMove(e.getX(), e.getY());
+            gameView.repaint();
+        }
     }
 }

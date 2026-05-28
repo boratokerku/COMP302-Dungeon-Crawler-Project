@@ -65,8 +65,15 @@ public class Hero extends Entity {
 
     public void heal(int amount) {
         this.hp += amount;
-        if (this.hp > 17)
-            this.hp = 17;
+        int limit = getMaxHp();
+        if (this.hp > limit)
+            this.hp = limit;
+    }
+
+    @Override
+    public int getMaxHp() {
+        int bonus = (equippedRing != null) ? equippedRing.getHpBonus() : 0;
+        return 17 + bonus;
     }
 
     public void equipWeapon(domain.models.item.MapItem weapon) {
@@ -162,6 +169,9 @@ public class Hero extends Entity {
 
     public void unequipRing() {
         this.equippedRing = null;
+        if (this.hp > getMaxHp()) {
+            this.hp = getMaxHp();
+        }
     }
 
     public GameObject getEquippedWeapon() {

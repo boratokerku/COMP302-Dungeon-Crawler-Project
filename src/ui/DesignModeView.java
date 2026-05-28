@@ -18,6 +18,9 @@ import domain.models.item.wearables.BowItem;
 import domain.models.item.wearables.DiamondSwordItem;
 import domain.models.item.wearables.FireWandItem;
 import domain.models.item.wearables.RingItem;
+import domain.models.item.wearables.BlueRing;
+import domain.models.item.wearables.RedRing;
+import domain.models.item.wearables.GreenRing;
 import domain.models.item.wearables.SamuraiSwordItem;
 import domain.models.item.wearables.SwordItem;
 import domain.models.item.wearables.WoodenSwordItem;
@@ -356,9 +359,9 @@ public class DesignModeView extends JPanel {
         itemPalette.add(
                 new PaletteItem("GreenRing", "images/items/ring/green_ring.png", false, (x, y) -> new RingItem(x, y)));
         itemPalette.add(new PaletteItem("RedRing", "images/items/ring/red_ring.png", false,
-                (x, y) -> new PotionItem("Red Ring", x, y, "images/items/ring/red_ring.png")));
+                (x, y) -> new RingItem("Red Ring", x, y, "images/items/ring/red_ring.png")));
         itemPalette.add(new PaletteItem("BlueRing", "images/items/ring/blue_ring.png", false,
-                (x, y) -> new PotionItem("Blue Ring", x, y, "images/items/ring/blue_ring.png")));
+                (x, y) -> new RingItem("Blue Ring", x, y, "images/items/ring/blue_ring.png")));
 
         // Weapons
         itemPalette
@@ -1566,7 +1569,15 @@ public class DesignModeView extends JPanel {
                 case "BowItem" -> new BowItem(x, y);
                 case "FireWandItem" -> new FireWandItem(x, y);
                 case "ArmorItem" -> new ArmorItem(x, y);
-                case "RingItem" -> new RingItem(x, y);
+                case "RingItem" -> {
+                    if (name != null && name.toLowerCase().contains("blue")) {
+                        yield new RingItem(new BlueRing("Blue Ring"), x, y, "images/items/ring/blue_ring.png");
+                    } else if (name != null && name.toLowerCase().contains("red")) {
+                        yield new RingItem(new RedRing("Red Ring"), x, y, "images/items/ring/red_ring.png");
+                    } else {
+                        yield new RingItem(new GreenRing("Ring of Might"), x, y, "images/items/ring/green_ring.png");
+                    }
+                }
                 case "KeyItem" -> imgName != null && !imgName.isEmpty()
                         ? new KeyItem(name, x, y, imgName)
                         : new KeyItem(x, y);

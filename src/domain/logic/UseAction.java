@@ -22,7 +22,7 @@ public class UseAction implements Action {
             } else if (pot instanceof domain.models.item.usables.EnergyPotion) {
                 return hero.getEnergy() < 100;
             } else if (pot instanceof domain.models.item.usables.HealthPotion) {
-                return hero.getHp() < 17;
+                return hero.getHp() < hero.getMaxHp();
             }
         }
         return true;

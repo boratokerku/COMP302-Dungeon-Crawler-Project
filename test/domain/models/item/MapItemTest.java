@@ -3,6 +3,11 @@ package domain.models.item;
 import org.junit.jupiter.api.Test;
 
 import domain.models.item.usables.EnergyPotion;
+import domain.models.item.wearables.RingItem;
+import domain.models.item.wearables.GreenRing;
+import domain.models.item.wearables.RedRing;
+import domain.models.item.wearables.BlueRing;
+import domain.models.entity.Hero;
 import domain.models.item.usables.HealthPotion;
 import domain.models.item.usables.ManaPotion;
 import domain.models.item.usables.PotionItem;
@@ -79,5 +84,51 @@ public class MapItemTest {
         assertNotNull(pot.getPotion());
         assertTrue(pot.getPotion() instanceof HealthPotion || pot.getPotion() instanceof ManaPotion
                 || pot.getPotion() instanceof EnergyPotion);
+    }
+
+    @Test
+    public void testGreenRingProperties() {
+        RingItem item = new RingItem(new GreenRing("Ring of Might"), 1, 1, "images/items/ring/green_ring.png");
+        assertEquals("Ring of Might", item.getName());
+        assertEquals(5, item.getStrBonus());
+        assertEquals(0, item.getHpBonus());
+        assertEquals(0, item.getManaCostReduction());
+    }
+
+    @Test
+    public void testRedRingProperties() {
+        RingItem item = new RingItem(new RedRing("Red Ring"), 2, 2, "images/items/ring/red_ring.png");
+        assertEquals("Red Ring", item.getName());
+        assertEquals(0, item.getStrBonus());
+        assertEquals(5, item.getHpBonus());
+        assertEquals(0, item.getManaCostReduction());
+    }
+
+    @Test
+    public void testBlueRingProperties() {
+        RingItem item = new RingItem(new BlueRing("Blue Ring"), 3, 3, "images/items/ring/blue_ring.png");
+        assertEquals("Blue Ring", item.getName());
+        assertEquals(0, item.getStrBonus());
+        assertEquals(0, item.getHpBonus());
+        assertEquals(1, item.getManaCostReduction());
+    }
+
+    @Test
+    public void testHeroEquipRedRing_MaxHealthIncreasesTo22() {
+        Hero hero = new Hero(0, 0);
+        assertEquals(17, hero.getMaxHp());
+
+        RingItem redRing = new RingItem(new RedRing("Red Ring"), 0, 0, "images/items/ring/red_ring.png");
+        hero.equipRing(redRing);
+        assertEquals(22, hero.getMaxHp());
+
+        // Heal up to new max HP
+        hero.heal(10);
+        assertEquals(22, hero.getHp());
+
+        // Unequip ring clamps HP back to 17
+        hero.unequipRing();
+        assertEquals(17, hero.getMaxHp());
+        assertEquals(17, hero.getHp());
     }
 }

@@ -137,7 +137,8 @@ public class DemoRunner {
                 } else if (obj instanceof domain.models.item.wearables.ArmorItem) {
                     copy.placeObject(new domain.models.item.wearables.ArmorItem(x, y), x, y);
                 } else if (obj instanceof domain.models.item.wearables.RingItem) {
-                    copy.placeObject(new domain.models.item.wearables.RingItem(x, y), x, y);
+                    domain.models.item.wearables.RingItem oldRing = (domain.models.item.wearables.RingItem) obj;
+                    copy.placeObject(new domain.models.item.wearables.RingItem(oldRing.getName(), x, y, oldRing.getImageName()), x, y);
                 } else if (obj instanceof domain.models.entity.SearchableObject) {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
                     domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(
@@ -709,7 +710,16 @@ public class DemoRunner {
             case "ArmorItem":
                 return new domain.models.item.wearables.ArmorItem(x, y);
             case "RingItem":
-                return new domain.models.item.wearables.RingItem(x, y);
+                if (displayName != null && displayName.toLowerCase().contains("blue")) {
+                    return new domain.models.item.wearables.RingItem(
+                            new domain.models.item.wearables.BlueRing("Blue Ring"), x, y, "images/items/ring/blue_ring.png");
+                } else if (displayName != null && displayName.toLowerCase().contains("red")) {
+                    return new domain.models.item.wearables.RingItem(
+                            new domain.models.item.wearables.RedRing("Red Ring"), x, y, "images/items/ring/red_ring.png");
+                } else {
+                    return new domain.models.item.wearables.RingItem(
+                            new domain.models.item.wearables.GreenRing("Ring of Might"), x, y, "images/items/ring/green_ring.png");
+                }
             case "KeyItem":
                 return new domain.models.staticObjects.KeyItem(x, y);
             case "Column":
@@ -784,8 +794,10 @@ public class DemoRunner {
         cardLayout.show(mainPanel, "Game");
 
         view.ActionMenu actionMenu = new view.ActionMenu(hero);
+        gameView.setActionMenu(actionMenu);
         controller.MouseHandler mouseHandler = new controller.MouseHandler(hero, map, gameView, actionMenu);
         gameView.addMouseListener(mouseHandler);
+        gameView.addMouseMotionListener(mouseHandler);
         gameView.addMouseWheelListener(mouseHandler);
 
         controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);

@@ -4,6 +4,9 @@ import domain.logic.ScrollSpawner;
 import domain.models.GameState;
 import domain.models.entity.*;
 import domain.models.map.GameMap;
+import domain.models.item.*;
+import domain.models.item.usables.*;
+import domain.models.item.wearables.*;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.util.ArrayList;
@@ -110,35 +113,35 @@ public class DemoRunner {
                     domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) obj;
                     copy.placeObject(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()), x,
                             y);
-                } else if (obj instanceof domain.models.item.VictoryCoin) {
-                    copy.placeObject(new domain.models.item.VictoryCoin(x, y), x, y);
+                } else if (obj instanceof VictoryCoin) {
+                    copy.placeObject(new VictoryCoin(x, y), x, y);
                 } else if (obj instanceof domain.models.staticObjects.KeyItem) {
                     domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) obj;
                     copy.placeObject(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()),
                             x, y);
-                } else if (obj instanceof domain.models.item.usables.PotionItem) {
-                    domain.models.item.usables.PotionItem pot = (domain.models.item.usables.PotionItem) obj;
+                } else if (obj instanceof PotionItem) {
+                    PotionItem pot = (PotionItem) obj;
                     copy.placeObject(
-                            new domain.models.item.usables.PotionItem(pot.getPotion(), x, y, pot.getImageName()), x, y);
-                } else if (obj instanceof domain.models.item.wearables.SwordItem) {
-                    copy.placeObject(new domain.models.item.wearables.SwordItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.wearables.WoodenSwordItem) {
-                    copy.placeObject(new domain.models.item.wearables.WoodenSwordItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.wearables.AxeItem) {
-                    copy.placeObject(new domain.models.item.wearables.AxeItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.wearables.BowItem) {
-                    copy.placeObject(new domain.models.item.wearables.BowItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.wearables.FireWandItem) {
-                    copy.placeObject(new domain.models.item.wearables.FireWandItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.wearables.SamuraiSwordItem) {
-                    copy.placeObject(new domain.models.item.wearables.SamuraiSwordItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.wearables.DiamondSwordItem) {
-                    copy.placeObject(new domain.models.item.wearables.DiamondSwordItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.wearables.ArmorItem) {
-                    copy.placeObject(new domain.models.item.wearables.ArmorItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.wearables.RingItem) {
-                    domain.models.item.wearables.RingItem oldRing = (domain.models.item.wearables.RingItem) obj;
-                    copy.placeObject(new domain.models.item.wearables.RingItem(oldRing.getName(), x, y, oldRing.getImageName()), x, y);
+                            new PotionItem(pot.getPotion(), x, y, pot.getImageName()), x, y);
+                } else if (obj instanceof SwordItem) {
+                    copy.placeObject(new SwordItem(x, y), x, y);
+                } else if (obj instanceof WoodenSwordItem) {
+                    copy.placeObject(new WoodenSwordItem(x, y), x, y);
+                } else if (obj instanceof AxeItem) {
+                    copy.placeObject(new AxeItem(x, y), x, y);
+                } else if (obj instanceof BowItem) {
+                    copy.placeObject(new BowItem(x, y), x, y);
+                } else if (obj instanceof FireWandItem) {
+                    copy.placeObject(new FireWandItem(x, y), x, y);
+                } else if (obj instanceof SamuraiSwordItem) {
+                    copy.placeObject(new SamuraiSwordItem(x, y), x, y);
+                } else if (obj instanceof DiamondSwordItem) {
+                    copy.placeObject(new DiamondSwordItem(x, y), x, y);
+                } else if (obj instanceof ArmorItem) {
+                    copy.placeObject(new ArmorItem(x, y), x, y);
+                } else if (obj instanceof RingItem) {
+                    RingItem oldRing = (RingItem) obj;
+                    copy.placeObject(new RingItem(oldRing.getName(), x, y, oldRing.getImageName()), x, y);
                 } else if (obj instanceof domain.models.entity.SearchableObject) {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
                     domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(
@@ -415,7 +418,7 @@ public class DemoRunner {
         allTiles.addAll(rightTiles);
         java.util.Collections.shuffle(allTiles);
         for (int i = 0; i < 6; i++) {
-            domain.models.item.MapItem weapon = domain.models.item.MapItem.createRandomWeapon(allTiles.get(i)[0],
+            MapItem weapon = MapItem.createRandomWeapon(allTiles.get(i)[0],
                     allTiles.get(i)[1]);
             map.placeObject(weapon, allTiles.get(i)[0], allTiles.get(i)[1]);
         }
@@ -465,12 +468,12 @@ public class DemoRunner {
 
         // Eşyalar
         map.placeObject(
-                new domain.models.item.usables.PotionItem(new domain.models.item.usables.HealthPotion("Red Potion", 5),
+                new PotionItem(new HealthPotion("Red Potion", 5),
                         9, 5, "images/items/potion/red_potion.png"),
                 9, 5);
         map.placeObject(new domain.models.staticObjects.KeyItem(10, 8), 10, 8);
         map.placeObject(new domain.models.staticObjects.KeyItem(10, 9), 10, 9);
-        map.placeObject(new domain.models.item.wearables.SwordItem(12, 8), 12, 8);
+        map.placeObject(new SwordItem(12, 8), 12, 8);
 
         // =====================================================================
         // TODO: TEMPORARY DEVELOPMENT TEST DROPS - GEÇİCİ GELİŞTİRİCİ TEST SİLAHLARI VE
@@ -479,14 +482,14 @@ public class DemoRunner {
         // kolayca denemek için eklenmiştir.
         // Yay, Balta, Asa, Katana, Elmas Kılıç, Çelik Zırh ve Güç Yüzüğü kahramanın
         // etrafında yer alır.
-        map.placeObject(new domain.models.item.wearables.WoodenSwordItem(4, 5), 4, 5);
-        map.placeObject(new domain.models.item.wearables.AxeItem(5, 4), 5, 4);
-        map.placeObject(new domain.models.item.wearables.BowItem(5, 5), 5, 5);
-        map.placeObject(new domain.models.item.wearables.FireWandItem(3, 4), 3, 4);
-        map.placeObject(new domain.models.item.wearables.SamuraiSwordItem(3, 5), 3, 5);
-        map.placeObject(new domain.models.item.wearables.DiamondSwordItem(5, 3), 5, 3);
-        map.placeObject(new domain.models.item.wearables.ArmorItem(4, 3), 4, 3);
-        map.placeObject(new domain.models.item.wearables.RingItem(3, 3), 3, 3);
+        map.placeObject(new WoodenSwordItem(4, 5), 4, 5);
+        map.placeObject(new AxeItem(5, 4), 5, 4);
+        map.placeObject(new BowItem(5, 5), 5, 5);
+        map.placeObject(new FireWandItem(3, 4), 3, 4);
+        map.placeObject(new SamuraiSwordItem(3, 5), 3, 5);
+        map.placeObject(new DiamondSwordItem(5, 3), 5, 3);
+        map.placeObject(new ArmorItem(4, 3), 4, 3);
+        map.placeObject(new RingItem(3, 3), 3, 3);
         // =====================================================================
 
         // Dekorasyonlar (Torches)
@@ -544,22 +547,22 @@ public class DemoRunner {
         // Kılıcı veya kuşanılmış silahı takılıysa ayarla
         if (state.hero.equippedWeaponType != null && !state.hero.equippedWeaponType.isEmpty()) {
             domain.models.entity.GameObject weapon = createItem(state.hero.equippedWeaponType, 0, 0);
-            if (weapon instanceof domain.models.item.MapItem) {
-                hero.equipWeapon((domain.models.item.MapItem) weapon);
+            if (weapon instanceof MapItem) {
+                hero.equipWeapon((MapItem) weapon);
             }
         }
         // Kuşanılmış zırhı takılıysa ayarla
         if (state.hero.equippedArmorType != null && !state.hero.equippedArmorType.isEmpty()) {
             domain.models.entity.GameObject armor = createItem(state.hero.equippedArmorType, 0, 0);
-            if (armor instanceof domain.models.item.MapItem) {
-                hero.equipArmor((domain.models.item.MapItem) armor);
+            if (armor instanceof MapItem) {
+                hero.equipArmor((MapItem) armor);
             }
         }
         // Kuşanılmış yüzüğü takılıysa ayarla
         if (state.hero.equippedRingType != null && !state.hero.equippedRingType.isEmpty()) {
             domain.models.entity.GameObject ring = createItem(state.hero.equippedRingType, 0, 0);
-            if (ring instanceof domain.models.item.MapItem) {
-                hero.equipRing((domain.models.item.MapItem) ring);
+            if (ring instanceof MapItem) {
+                hero.equipRing((MapItem) ring);
             }
         }
 
@@ -682,43 +685,43 @@ public class DemoRunner {
         switch (type) {
             case "PotionItem":
             case "HealthPotionItem":
-                return new domain.models.item.usables.PotionItem(
-                        new domain.models.item.usables.HealthPotion("Red Potion", 5), x, y,
+                return new PotionItem(
+                        new HealthPotion("Red Potion", 5), x, y,
                         "images/items/potion/red_potion.png");
             case "ManaPotionItem":
-                return new domain.models.item.usables.PotionItem(
-                        new domain.models.item.usables.ManaPotion("Blue Potion", 20), x, y,
+                return new PotionItem(
+                        new ManaPotion("Blue Potion", 20), x, y,
                         "images/items/potion/blue_potion.png");
             case "EnergyPotionItem":
-                return new domain.models.item.usables.PotionItem(
-                        new domain.models.item.usables.EnergyPotion("Green Potion", 30), x, y,
+                return new PotionItem(
+                        new EnergyPotion("Green Potion", 30), x, y,
                         "images/items/potion/green_potion.png");
             case "SwordItem":
-                return new domain.models.item.wearables.SwordItem(x, y);
+                return new SwordItem(x, y);
             case "AxeItem":
-                return new domain.models.item.wearables.AxeItem(x, y);
+                return new AxeItem(x, y);
             case "WoodenSwordItem":
-                return new domain.models.item.wearables.WoodenSwordItem(x, y);
+                return new WoodenSwordItem(x, y);
             case "SamuraiSwordItem":
-                return new domain.models.item.wearables.SamuraiSwordItem(x, y);
+                return new SamuraiSwordItem(x, y);
             case "DiamondSwordItem":
-                return new domain.models.item.wearables.DiamondSwordItem(x, y);
+                return new DiamondSwordItem(x, y);
             case "BowItem":
-                return new domain.models.item.wearables.BowItem(x, y);
+                return new BowItem(x, y);
             case "FireWandItem":
-                return new domain.models.item.wearables.FireWandItem(x, y);
+                return new FireWandItem(x, y);
             case "ArmorItem":
-                return new domain.models.item.wearables.ArmorItem(x, y);
+                return new ArmorItem(x, y);
             case "RingItem":
                 if (displayName != null && displayName.toLowerCase().contains("blue")) {
-                    return new domain.models.item.wearables.RingItem(
-                            new domain.models.item.wearables.BlueRing("Blue Ring"), x, y, "images/items/ring/blue_ring.png");
+                    return new RingItem(
+                            new BlueRing("Blue Ring"), x, y, "images/items/ring/blue_ring.png");
                 } else if (displayName != null && displayName.toLowerCase().contains("red")) {
-                    return new domain.models.item.wearables.RingItem(
-                            new domain.models.item.wearables.RedRing("Red Ring"), x, y, "images/items/ring/red_ring.png");
+                    return new RingItem(
+                            new RedRing("Red Ring"), x, y, "images/items/ring/red_ring.png");
                 } else {
-                    return new domain.models.item.wearables.RingItem(
-                            new domain.models.item.wearables.GreenRing("Ring of Might"), x, y, "images/items/ring/green_ring.png");
+                    return new RingItem(
+                            new GreenRing("Ring of Might"), x, y, "images/items/ring/green_ring.png");
                 }
             case "KeyItem":
                 return new domain.models.staticObjects.KeyItem(x, y);
@@ -749,7 +752,7 @@ public class DemoRunner {
             case "LevelKey":
                 return new domain.models.staticObjects.LevelKey(x, y);
             case "VictoryCoin":
-                return new domain.models.item.VictoryCoin(x, y);
+                return new VictoryCoin(x, y);
             default:
                 System.err.println("Bilinmeyen item tipi: " + type);
                 return null;
@@ -816,7 +819,7 @@ public class DemoRunner {
 
         // Scroll'ları şimdi yerleştir — inputHandler hazır, tam işlevsel oluşturulur
         for (GameState.ItemRecord rec : scrollItems) {
-            domain.models.item.usables.ShadowCloneScroll scroll = new domain.models.item.usables.ShadowCloneScroll(
+            ShadowCloneScroll scroll = new ShadowCloneScroll(
                     rec.x, rec.y,
                     entities, map, inputHandler);
             map.placeObject(scroll, rec.x, rec.y);
@@ -826,7 +829,7 @@ public class DemoRunner {
         for (String type : inventoryScrollTypes) {
             if ("ShadowCloneScroll".equals(type)) {
                 hero.getInventory().addItem(
-                        new domain.models.item.usables.ShadowCloneScroll(0, 0, entities, map, inputHandler));
+                        new ShadowCloneScroll(0, 0, entities, map, inputHandler));
             }
         }
 
@@ -923,7 +926,7 @@ public class DemoRunner {
         domain.models.staticObjects.LevelDoor.setOpenCallback(advanceLevelRunnable);
 
         // Victory Coin callback to trigger victory sequence
-        domain.models.item.VictoryCoin.setVictoryCallback(() -> {
+        VictoryCoin.setVictoryCallback(() -> {
             if (logicRef[0] != null)
                 logicRef[0].stop();
             if (renderRef[0] != null)
@@ -1257,16 +1260,15 @@ public class DemoRunner {
                                             System.out.println("Enemy defeated by projectile!");
                                             domain.models.entity.GameObject loot = null;
                                             if (enemy instanceof domain.models.entity.FinalBoss) {
-                                                loot = new domain.models.item.VictoryCoin(enemy.getX(), enemy.getY());
+                                                loot = new VictoryCoin(enemy.getX(), enemy.getY());
                                             } else {
                                                 java.util.Random rand = new java.util.Random();
                                                 int dropType = rand.nextInt(3);
                                                 if (dropType == 0) {
-                                                    loot = domain.models.item.MapItem.createRandomItem(enemy.getX(),
+                                                    loot = MapItem.createRandomItem(enemy.getX(),
                                                             enemy.getY());
                                                 } else if (dropType == 1) {
-                                                    loot = domain.models.item.usables.PotionItem.createRandomPotionItem(
-                                                            enemy.getX(),
+                                                    loot = PotionItem.createRandomPotionItem(enemy.getX(),
                                                             enemy.getY());
                                                 } else {
                                                     int locked = countLockedChests(mapRef[0]);
@@ -1276,11 +1278,9 @@ public class DemoRunner {
                                                                 enemy.getY());
                                                     } else {
                                                         loot = rand.nextBoolean()
-                                                                ? domain.models.item.MapItem
-                                                                        .createRandomItem(enemy.getX(), enemy.getY())
-                                                                : domain.models.item.usables.PotionItem
-                                                                        .createRandomPotionItem(enemy.getX(),
-                                                                                enemy.getY());
+                                                                ? MapItem.createRandomItem(enemy.getX(), enemy.getY())
+                                                                : PotionItem.createRandomPotionItem(enemy.getX(),
+                                                                        enemy.getY());
                                                     }
                                                 }
                                             }
@@ -1349,7 +1349,7 @@ public class DemoRunner {
 
             domain.models.entity.GameObject existingObj = map.getObjectAt(x, y);
             if (existingObj != null && existingObj.getImageName().equals("floor")
-                    && !(existingObj instanceof domain.models.item.MapItem)) {
+                    && !(existingObj instanceof MapItem)) {
                 item.setPosition(x, y);
                 map.placeObject(item, x, y);
                 placed = true;

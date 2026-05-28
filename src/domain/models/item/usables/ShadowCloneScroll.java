@@ -1,8 +1,9 @@
-package domain.models.item;
+package domain.models.item.usables;
 
 import domain.logic.TakeAction;
 import domain.logic.ReadAction;
 import domain.models.entity.Entity;
+import domain.models.item.MapItem;
 import domain.models.map.GameMap;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
 public class ShadowCloneScroll extends MapItem {
 
     public ShadowCloneScroll(int x, int y, List<Entity> entities, GameMap map,
-                             controller.InputHandler inputHandler) {
+            controller.InputHandler inputHandler) {
         super("Shadow Clone Scroll", x, y, "images/items/readings/book.png");
         this.addAction(new TakeAction());
         this.addAction(new ReadAction(entities, map, inputHandler));

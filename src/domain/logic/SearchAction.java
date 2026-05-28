@@ -45,7 +45,7 @@ public class SearchAction implements Action {
 
             int dropY = (so.getY() == 0) ? 1 : so.getY() - 1;
             map.placeObject(so.getHiddenItem(), so.getX(), dropY);
-            
+
             view.GameView.addFloatingText(so.getX(), so.getY(), "Found Key!", java.awt.Color.YELLOW);
             System.out.println("You found something! A key was hidden here. It fell to the ground.");
             return;
@@ -59,20 +59,26 @@ public class SearchAction implements Action {
             String msg = "Nothing found.";
             String imgName = so.getImageName();
             if (imgName != null) {
-                if (imgName.contains("missing_brick")) msg = "Just cold stone behind it.";
-                else if (imgName.contains("wall_grill")) msg = "Stale air. Nothing else.";
-                else if (imgName.contains("gargoyle")) msg = "The water is still. Nothing stirs.";
-                else if (imgName.contains("pipe_hole")) msg = "Too dark to see anything inside.";
-                else if (imgName.contains("wall_cavity")) msg = "Your hand finds nothing but dust.";
-                else if (imgName.contains("loose_stone")) msg = "The stone is solid. Nothing here.";
+                if (imgName.contains("missing_brick"))
+                    msg = "Just cold stone behind it.";
+                else if (imgName.contains("wall_grill"))
+                    msg = "Stale air. Nothing else.";
+                else if (imgName.contains("gargoyle"))
+                    msg = "The water is still. Nothing stirs.";
+                else if (imgName.contains("pipe_hole"))
+                    msg = "Too dark to see anything inside.";
+                else if (imgName.contains("wall_cavity"))
+                    msg = "Your hand finds nothing but dust.";
+                else if (imgName.contains("loose_stone"))
+                    msg = "The stone is solid. Nothing here.";
             }
             view.GameView.addFloatingText(so.getX(), so.getY(), "Empty", java.awt.Color.LIGHT_GRAY);
             System.out.println(msg);
 
         } else if (roll < 75) {
             // 35% small item -> random Potion or GoldCoin
-            domain.models.item.MapItem item = new domain.models.item.PotionItem(so.getX(), so.getY());
-            
+            domain.models.item.MapItem item = new domain.models.item.usables.PotionItem(so.getX(), so.getY());
+
             // Searchable object duvardan kalksın
             domain.models.map.GameMap map = so.getMap();
             GameObject existingWall = map.getObjectAt(so.getX(), so.getY());
@@ -82,14 +88,14 @@ public class SearchAction implements Action {
 
             int dropY = (so.getY() == 0) ? 1 : so.getY() - 1;
             map.placeObject(item, so.getX(), dropY);
-            
+
             view.GameView.addFloatingText(so.getX(), so.getY(), "Found Item!", java.awt.Color.GREEN);
             System.out.println("You found a " + item.getName() + "! It fell to the ground.");
 
         } else if (roll < 95) {
             // 20% key item -> KeyItem
             domain.models.staticObjects.KeyItem key = new domain.models.staticObjects.KeyItem(so.getX(), so.getY());
-            
+
             domain.models.map.GameMap map = so.getMap();
             GameObject existingWall = map.getObjectAt(so.getX(), so.getY());
             if (existingWall instanceof domain.models.tile.WallTile) {
@@ -98,7 +104,7 @@ public class SearchAction implements Action {
 
             int dropY = (so.getY() == 0) ? 1 : so.getY() - 1;
             map.placeObject(key, so.getX(), dropY);
-            
+
             view.GameView.addFloatingText(so.getX(), so.getY(), "Found Key!", java.awt.Color.ORANGE);
             System.out.println("A key was hidden here! It fell to the ground.");
 

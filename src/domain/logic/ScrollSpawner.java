@@ -1,7 +1,7 @@
 package domain.logic;
 
 import domain.models.entity.Entity;
-import domain.models.item.ShadowCloneScroll;
+import domain.models.item.usables.ShadowCloneScroll;
 import domain.models.map.GameMap;
 
 import java.util.ArrayList;
@@ -40,7 +40,8 @@ public class ScrollSpawner {
     // Her logic tick'te çağrılır — 15 saniye dolunca scroll çıkarır
     public void trySpawn() {
         long now = System.currentTimeMillis();
-        if (now - lastSpawnTime < SPAWN_INTERVAL_MS) return;
+        if (now - lastSpawnTime < SPAWN_INTERVAL_MS)
+            return;
         lastSpawnTime = now;
 
         int[] pos = findRandomEmptyTile();
@@ -62,7 +63,8 @@ public class ScrollSpawner {
 
         for (int x = 1; x < w - 1; x++) {
             for (int y = 1; y < h - 1; y++) {
-                if (!map.isWalkable(x, y)) continue;
+                if (!map.isWalkable(x, y))
+                    continue;
 
                 // Başka bir entity üzerine koyma
                 boolean occupied = false;
@@ -72,11 +74,13 @@ public class ScrollSpawner {
                         break;
                     }
                 }
-                if (!occupied) candidates.add(new int[]{x, y});
+                if (!occupied)
+                    candidates.add(new int[] { x, y });
             }
         }
 
-        if (candidates.isEmpty()) return null;
+        if (candidates.isEmpty())
+            return null;
         return candidates.get(random.nextInt(candidates.size()));
     }
 }

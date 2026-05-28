@@ -53,7 +53,8 @@ public class DemoRunner {
                                     origDeco.getImageName());
                         } else if (origDeco instanceof domain.models.entity.SearchableObject) {
                             domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) origDeco;
-                            domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(so.getName(), x, y,
+                            domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(
+                                    so.getName(), x, y,
                                     so.getImageName(), so.getOpenImageName());
                             if (isRestart) {
                                 newSo.setSearched(false);
@@ -64,11 +65,15 @@ public class DemoRunner {
                                 newSo.setTrapTriggered(so.isTrapTriggered());
                                 if (so.getHiddenItem() != null) {
                                     if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                                        domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so.getHiddenItem();
-                                        newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
+                                        domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so
+                                                .getHiddenItem();
+                                        newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y,
+                                                lk.getImageName()));
                                     } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
-                                        domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so.getHiddenItem();
-                                        newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                                        domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so
+                                                .getHiddenItem();
+                                        newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y,
+                                                key.getImageName()));
                                     }
                                 }
                             }
@@ -111,30 +116,33 @@ public class DemoRunner {
                     domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) obj;
                     copy.placeObject(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()),
                             x, y);
-                } else if (obj instanceof domain.models.item.PotionItem) {
-                    domain.models.item.PotionItem pot = (domain.models.item.PotionItem) obj;
-                    copy.placeObject(new domain.models.item.PotionItem(pot.getName(), x, y, pot.getImageName()), x, y);
-                } else if (obj instanceof domain.models.item.SwordItem) {
-                    copy.placeObject(new domain.models.item.SwordItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.WoodenSwordItem) {
-                    copy.placeObject(new domain.models.item.WoodenSwordItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.AxeItem) {
-                    copy.placeObject(new domain.models.item.AxeItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.BowItem) {
-                    copy.placeObject(new domain.models.item.BowItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.FireWandItem) {
-                    copy.placeObject(new domain.models.item.FireWandItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.SamuraiSwordItem) {
-                    copy.placeObject(new domain.models.item.SamuraiSwordItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.DiamondSwordItem) {
-                    copy.placeObject(new domain.models.item.DiamondSwordItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.ArmorItem) {
-                    copy.placeObject(new domain.models.item.ArmorItem(x, y), x, y);
-                } else if (obj instanceof domain.models.item.RingItem) {
-                    copy.placeObject(new domain.models.item.RingItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.usables.PotionItem) {
+                    domain.models.item.usables.PotionItem pot = (domain.models.item.usables.PotionItem) obj;
+                    copy.placeObject(
+                            new domain.models.item.usables.PotionItem(pot.getPotion(), x, y, pot.getImageName()), x, y);
+                } else if (obj instanceof domain.models.item.wearables.SwordItem) {
+                    copy.placeObject(new domain.models.item.wearables.SwordItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.wearables.WoodenSwordItem) {
+                    copy.placeObject(new domain.models.item.wearables.WoodenSwordItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.wearables.AxeItem) {
+                    copy.placeObject(new domain.models.item.wearables.AxeItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.wearables.BowItem) {
+                    copy.placeObject(new domain.models.item.wearables.BowItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.wearables.FireWandItem) {
+                    copy.placeObject(new domain.models.item.wearables.FireWandItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.wearables.SamuraiSwordItem) {
+                    copy.placeObject(new domain.models.item.wearables.SamuraiSwordItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.wearables.DiamondSwordItem) {
+                    copy.placeObject(new domain.models.item.wearables.DiamondSwordItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.wearables.ArmorItem) {
+                    copy.placeObject(new domain.models.item.wearables.ArmorItem(x, y), x, y);
+                } else if (obj instanceof domain.models.item.wearables.RingItem) {
+                    domain.models.item.wearables.RingItem oldRing = (domain.models.item.wearables.RingItem) obj;
+                    copy.placeObject(new domain.models.item.wearables.RingItem(oldRing.getName(), x, y, oldRing.getImageName()), x, y);
                 } else if (obj instanceof domain.models.entity.SearchableObject) {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
-                    domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(so.getName(), x, y, so.getImageName(),
+                    domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(
+                            so.getName(), x, y, so.getImageName(),
                             so.getOpenImageName());
                     if (isRestart) {
                         newSo.setSearched(false);
@@ -145,11 +153,15 @@ public class DemoRunner {
                         newSo.setTrapTriggered(so.isTrapTriggered());
                         if (so.getHiddenItem() != null) {
                             if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                                domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so.getHiddenItem();
-                                newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
+                                domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so
+                                        .getHiddenItem();
+                                newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y,
+                                        lk.getImageName()));
                             } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
-                                domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so.getHiddenItem();
-                                newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                                domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so
+                                        .getHiddenItem();
+                                newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y,
+                                        key.getImageName()));
                             }
                         }
                     }
@@ -232,13 +244,14 @@ public class DemoRunner {
     // ── Design Mode ──────────────────────────────────────────────────────────
     private static void startDesignMode(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         GameMap map = new GameMap(30, 20);
-        
-        // Kapının yeri oyunda build mode açıldığı anda direkt atanmış olarak gelsin (Rastgele 1 kapı yerleştirilir, en sağ/sol tile'lar hariç)
+
+        // Kapının yeri oyunda build mode açıldığı anda direkt atanmış olarak gelsin
+        // (Rastgele 1 kapı yerleştirilir, en sağ/sol tile'lar hariç)
         java.util.Random rand = new java.util.Random();
-        int doorX = rand.nextInt(map.getWidth() - 4) + 2; 
+        int doorX = rand.nextInt(map.getWidth() - 4) + 2;
         map.placeObject(new domain.models.staticObjects.LevelDoor("Level Gate", doorX, 0), doorX, 0);
         map.placeObject(new domain.models.tile.FloorTile(), doorX, 1); // Kapı önü boş olacak
-        
+
         TileManager tileManager = new TileManager();
 
         DesignModeView designView = new DesignModeView(
@@ -314,7 +327,8 @@ public class DemoRunner {
         if (!hasHiddenKey) {
             domain.models.staticObjects.LevelKey levelKey = new domain.models.staticObjects.LevelKey(15, 12);
             if (!searchables.isEmpty()) {
-                domain.models.entity.SearchableObject selected = searchables.get(new java.util.Random().nextInt(searchables.size()));
+                domain.models.entity.SearchableObject selected = searchables
+                        .get(new java.util.Random().nextInt(searchables.size()));
                 selected.setHiddenItem(levelKey);
             } else {
                 System.out.println("Warning: No searchable locations on map.");
@@ -322,7 +336,8 @@ public class DemoRunner {
             }
         }
 
-        // Save the map clone AFTER door and hidden key setups are established so that restarting yields the exact same layout.
+        // Save the map clone AFTER door and hidden key setups are established so that
+        // restarting yields the exact same layout.
         initialDesignedMap = cloneMap(map, false);
 
         // Initialize level manager for level progression
@@ -449,10 +464,13 @@ public class DemoRunner {
         map.placeObject(new domain.models.entity.Column("Column", 14, 10, "colon/gray_colon_whole"), 14, 10);
 
         // Eşyalar
-        map.placeObject(new domain.models.item.PotionItem(9, 5), 9, 5);
+        map.placeObject(
+                new domain.models.item.usables.PotionItem(new domain.models.item.usables.HealthPotion("Red Potion", 5),
+                        9, 5, "images/items/potion/red_potion.png"),
+                9, 5);
         map.placeObject(new domain.models.staticObjects.KeyItem(10, 8), 10, 8);
         map.placeObject(new domain.models.staticObjects.KeyItem(10, 9), 10, 9);
-        map.placeObject(new domain.models.item.SwordItem(12, 8), 12, 8);
+        map.placeObject(new domain.models.item.wearables.SwordItem(12, 8), 12, 8);
 
         // =====================================================================
         // TODO: TEMPORARY DEVELOPMENT TEST DROPS - GEÇİCİ GELİŞTİRİCİ TEST SİLAHLARI VE
@@ -461,14 +479,14 @@ public class DemoRunner {
         // kolayca denemek için eklenmiştir.
         // Yay, Balta, Asa, Katana, Elmas Kılıç, Çelik Zırh ve Güç Yüzüğü kahramanın
         // etrafında yer alır.
-        map.placeObject(new domain.models.item.WoodenSwordItem(4, 5), 4, 5);
-        map.placeObject(new domain.models.item.AxeItem(5, 4), 5, 4);
-        map.placeObject(new domain.models.item.BowItem(5, 5), 5, 5);
-        map.placeObject(new domain.models.item.FireWandItem(3, 4), 3, 4);
-        map.placeObject(new domain.models.item.SamuraiSwordItem(3, 5), 3, 5);
-        map.placeObject(new domain.models.item.DiamondSwordItem(5, 3), 5, 3);
-        map.placeObject(new domain.models.item.ArmorItem(4, 3), 4, 3);
-        map.placeObject(new domain.models.item.RingItem(3, 3), 3, 3);
+        map.placeObject(new domain.models.item.wearables.WoodenSwordItem(4, 5), 4, 5);
+        map.placeObject(new domain.models.item.wearables.AxeItem(5, 4), 5, 4);
+        map.placeObject(new domain.models.item.wearables.BowItem(5, 5), 5, 5);
+        map.placeObject(new domain.models.item.wearables.FireWandItem(3, 4), 3, 4);
+        map.placeObject(new domain.models.item.wearables.SamuraiSwordItem(3, 5), 3, 5);
+        map.placeObject(new domain.models.item.wearables.DiamondSwordItem(5, 3), 5, 3);
+        map.placeObject(new domain.models.item.wearables.ArmorItem(4, 3), 4, 3);
+        map.placeObject(new domain.models.item.wearables.RingItem(3, 3), 3, 3);
         // =====================================================================
 
         // Dekorasyonlar (Torches)
@@ -620,8 +638,10 @@ public class DemoRunner {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) item;
                     so.setSearched(rec.searched);
                     if (rec.hiddenItemType != null) {
-                        if (rec.hiddenItemType.equals("LevelKey")) so.setHiddenItem(new domain.models.staticObjects.LevelKey(rec.x, rec.y));
-                        else if (rec.hiddenItemType.equals("KeyItem")) so.setHiddenItem(new domain.models.staticObjects.KeyItem(rec.x, rec.y));
+                        if (rec.hiddenItemType.equals("LevelKey"))
+                            so.setHiddenItem(new domain.models.staticObjects.LevelKey(rec.x, rec.y));
+                        else if (rec.hiddenItemType.equals("KeyItem"))
+                            so.setHiddenItem(new domain.models.staticObjects.KeyItem(rec.x, rec.y));
                     }
                 }
                 domain.models.entity.GameObject existing = map.getObjectAt(rec.x, rec.y);
@@ -661,25 +681,45 @@ public class DemoRunner {
         String displayName = (name != null && !name.isEmpty()) ? name : type;
         switch (type) {
             case "PotionItem":
-                return new domain.models.item.PotionItem(x, y);
+            case "HealthPotionItem":
+                return new domain.models.item.usables.PotionItem(
+                        new domain.models.item.usables.HealthPotion("Red Potion", 5), x, y,
+                        "images/items/potion/red_potion.png");
+            case "ManaPotionItem":
+                return new domain.models.item.usables.PotionItem(
+                        new domain.models.item.usables.ManaPotion("Blue Potion", 20), x, y,
+                        "images/items/potion/blue_potion.png");
+            case "EnergyPotionItem":
+                return new domain.models.item.usables.PotionItem(
+                        new domain.models.item.usables.EnergyPotion("Green Potion", 30), x, y,
+                        "images/items/potion/green_potion.png");
             case "SwordItem":
-                return new domain.models.item.SwordItem(x, y);
+                return new domain.models.item.wearables.SwordItem(x, y);
             case "AxeItem":
-                return new domain.models.item.AxeItem(x, y);
+                return new domain.models.item.wearables.AxeItem(x, y);
             case "WoodenSwordItem":
-                return new domain.models.item.WoodenSwordItem(x, y);
+                return new domain.models.item.wearables.WoodenSwordItem(x, y);
             case "SamuraiSwordItem":
-                return new domain.models.item.SamuraiSwordItem(x, y);
+                return new domain.models.item.wearables.SamuraiSwordItem(x, y);
             case "DiamondSwordItem":
-                return new domain.models.item.DiamondSwordItem(x, y);
+                return new domain.models.item.wearables.DiamondSwordItem(x, y);
             case "BowItem":
-                return new domain.models.item.BowItem(x, y);
+                return new domain.models.item.wearables.BowItem(x, y);
             case "FireWandItem":
-                return new domain.models.item.FireWandItem(x, y);
+                return new domain.models.item.wearables.FireWandItem(x, y);
             case "ArmorItem":
-                return new domain.models.item.ArmorItem(x, y);
+                return new domain.models.item.wearables.ArmorItem(x, y);
             case "RingItem":
-                return new domain.models.item.RingItem(x, y);
+                if (displayName != null && displayName.toLowerCase().contains("blue")) {
+                    return new domain.models.item.wearables.RingItem(
+                            new domain.models.item.wearables.BlueRing("Blue Ring"), x, y, "images/items/ring/blue_ring.png");
+                } else if (displayName != null && displayName.toLowerCase().contains("red")) {
+                    return new domain.models.item.wearables.RingItem(
+                            new domain.models.item.wearables.RedRing("Red Ring"), x, y, "images/items/ring/red_ring.png");
+                } else {
+                    return new domain.models.item.wearables.RingItem(
+                            new domain.models.item.wearables.GreenRing("Ring of Might"), x, y, "images/items/ring/green_ring.png");
+                }
             case "KeyItem":
                 return new domain.models.staticObjects.KeyItem(x, y);
             case "Column":
@@ -754,8 +794,10 @@ public class DemoRunner {
         cardLayout.show(mainPanel, "Game");
 
         view.ActionMenu actionMenu = new view.ActionMenu(hero);
+        gameView.setActionMenu(actionMenu);
         controller.MouseHandler mouseHandler = new controller.MouseHandler(hero, map, gameView, actionMenu);
         gameView.addMouseListener(mouseHandler);
+        gameView.addMouseMotionListener(mouseHandler);
         gameView.addMouseWheelListener(mouseHandler);
 
         controller.InputHandler inputHandler = new controller.InputHandler(hero, map, entities, gameView);
@@ -774,7 +816,8 @@ public class DemoRunner {
 
         // Scroll'ları şimdi yerleştir — inputHandler hazır, tam işlevsel oluşturulur
         for (GameState.ItemRecord rec : scrollItems) {
-            domain.models.item.ShadowCloneScroll scroll = new domain.models.item.ShadowCloneScroll(rec.x, rec.y,
+            domain.models.item.usables.ShadowCloneScroll scroll = new domain.models.item.usables.ShadowCloneScroll(
+                    rec.x, rec.y,
                     entities, map, inputHandler);
             map.placeObject(scroll, rec.x, rec.y);
         }
@@ -783,7 +826,7 @@ public class DemoRunner {
         for (String type : inventoryScrollTypes) {
             if ("ShadowCloneScroll".equals(type)) {
                 hero.getInventory().addItem(
-                        new domain.models.item.ShadowCloneScroll(0, 0, entities, map, inputHandler));
+                        new domain.models.item.usables.ShadowCloneScroll(0, 0, entities, map, inputHandler));
             }
         }
 
@@ -800,6 +843,9 @@ public class DemoRunner {
         // Timer referans tutucular — lambda içinden timer'a erişmek için (pause/resume)
         final javax.swing.Timer[] logicRef = new javax.swing.Timer[1];
         final javax.swing.Timer[] renderRef = new javax.swing.Timer[1];
+
+        final long[] totalElapsedTimeMs = new long[] { state != null ? state.elapsedSeconds * 1000 : 0 };
+        final long[] lastTickTime = new long[] { System.currentTimeMillis() };
 
         final Runnable advanceLevelRunnable = () -> {
             if (levelManager != null) {
@@ -866,8 +912,10 @@ public class DemoRunner {
                 }
 
                 // Resume the timers
-                if (logicRef[0] != null)
+                if (logicRef[0] != null) {
+                    lastTickTime[0] = System.currentTimeMillis();
                     logicRef[0].start();
+                }
                 if (renderRef[0] != null)
                     renderRef[0].start();
             }
@@ -894,8 +942,9 @@ public class DemoRunner {
 
         // PauseMenu — JFrame glass pane olarak oyunun üstüne bindiriliyor
         view.PauseMenu pauseMenu = new view.PauseMenu(
-                hero, entities, map, spawner, scrollSpawner, levelManager,
+                hero, entities, map, spawner, scrollSpawner, levelManager, gameView,
                 () -> {
+                    lastTickTime[0] = System.currentTimeMillis();
                     if (logicRef[0] != null)
                         logicRef[0].start();
                     if (renderRef[0] != null)
@@ -954,6 +1003,7 @@ public class DemoRunner {
                 boolean paused = pauseMenu.isVisible();
                 if (paused) {
                     pauseMenu.setVisible(false);
+                    lastTickTime[0] = System.currentTimeMillis();
                     if (logicRef[0] != null)
                         logicRef[0].start();
                     if (renderRef[0] != null)
@@ -971,6 +1021,13 @@ public class DemoRunner {
 
         // Logic Loop (Düşman hareketleri ve enerji yenilenmesi hızı)
         logicRef[0] = new javax.swing.Timer(120, (e) -> {
+            long now = System.currentTimeMillis();
+            long delta = now - lastTickTime[0];
+            lastTickTime[0] = now;
+            if (delta > 0 && delta < 1000) {
+                totalElapsedTimeMs[0] += delta;
+            }
+            gameView.setElapsedSeconds(totalElapsedTimeMs[0] / 1000);
 
             if (mode == domain.models.GameMode.TEAM_MATCH) {
                 // TEAM MATCH WIN/LOSS CONDITION
@@ -1208,7 +1265,8 @@ public class DemoRunner {
                                                     loot = domain.models.item.MapItem.createRandomItem(enemy.getX(),
                                                             enemy.getY());
                                                 } else if (dropType == 1) {
-                                                    loot = new domain.models.item.PotionItem(enemy.getX(),
+                                                    loot = domain.models.item.usables.PotionItem.createRandomPotionItem(
+                                                            enemy.getX(),
                                                             enemy.getY());
                                                 } else {
                                                     int locked = countLockedChests(mapRef[0]);
@@ -1220,8 +1278,9 @@ public class DemoRunner {
                                                         loot = rand.nextBoolean()
                                                                 ? domain.models.item.MapItem
                                                                         .createRandomItem(enemy.getX(), enemy.getY())
-                                                                : new domain.models.item.PotionItem(enemy.getX(),
-                                                                        enemy.getY());
+                                                                : domain.models.item.usables.PotionItem
+                                                                        .createRandomPotionItem(enemy.getX(),
+                                                                                enemy.getY());
                                                     }
                                                 }
                                             }

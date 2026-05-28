@@ -59,6 +59,28 @@ public class InputHandler implements KeyListener {
             if (gameView != null) {
                 gameView.setHotbarSlot(hotbarSlot);
             }
+            if (hero != null && hero.getInventory() != null) {
+                java.util.List<domain.models.entity.GameObject> items = hero.getInventory().getItems();
+                int itemIndex = hotbarSlot - 1;
+                if (itemIndex >= 0 && itemIndex < items.size()) {
+                    domain.models.entity.GameObject item = items.get(itemIndex);
+                    if (item != null) {
+                        for (domain.logic.Action action : item.getActions()) {
+                            String name = action.getName();
+                            if (name.equals("Use") || name.equals("Equip") || name.equals("Wear") || name.equals("Read") || name.equals("Eat")) {
+                                if (action.isAvailable(hero, item)) {
+                                    action.execute(hero, item);
+                                    System.out.println("[Hotkey " + hotbarSlot + "] Executed " + name + " on " + item.getName());
+                                    if (gameView != null) {
+                                        gameView.repaint();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             return;
         }
 
@@ -88,7 +110,8 @@ public class InputHandler implements KeyListener {
             if (hero.getEquippedWeapon() instanceof domain.models.item.MapItem) {
                 domain.models.item.MapItem weapon = (domain.models.item.MapItem) hero.getEquippedWeapon();
                 if (weapon.isRanged()) {
-                    if (hero.getMana() < weapon.getManaCost()) {
+                    int cost = Math.max(0, weapon.getManaCost() - (hero.getEquippedRing() != null ? hero.getEquippedRing().getManaCostReduction() : 0));
+                    if (hero.getMana() < cost) {
                         System.out.println("Büyü atmak için yeterli mana yok!");
                         view.GameView.addFloatingText(hero.getX(), hero.getY(), "No Mana!", java.awt.Color.CYAN);
                         return;
@@ -100,7 +123,7 @@ public class InputHandler implements KeyListener {
                     
                     // Consume stats
                     hero.setEnergy(Math.max(0, hero.getEnergy() - 10));
-                    hero.setMana(Math.max(0, hero.getMana() - weapon.getManaCost()));
+                    hero.setMana(Math.max(0, hero.getMana() - cost));
                     hero.setAnimationState(AnimationState.ATTACK);
                     
                     // Firing direction

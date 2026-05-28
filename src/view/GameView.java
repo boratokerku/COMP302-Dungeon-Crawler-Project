@@ -33,12 +33,20 @@ public class GameView extends JPanel {
 
     static {
         try {
-            vt323Font = java.awt.Font.createFont(
-                java.awt.Font.TRUETYPE_FONT,
-                new java.io.File("resources/fonts/VT323-Regular.ttf")
-            ).deriveFont(24f);
-            java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
-            ge.registerFont(vt323Font);
+            java.io.File fontFile = new java.io.File("resources/fonts/VT323-Regular.ttf");
+            if (!fontFile.exists()) {
+                fontFile = new java.io.File("../resources/fonts/VT323-Regular.ttf");
+            }
+            if (fontFile.exists()) {
+                vt323Font = java.awt.Font.createFont(
+                        java.awt.Font.TRUETYPE_FONT,
+                        fontFile).deriveFont(24f);
+                java.awt.GraphicsEnvironment ge = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment();
+                ge.registerFont(vt323Font);
+            } else {
+                System.err.println("Font file not found, falling back to Monospaced: " + fontFile.getAbsolutePath());
+                vt323Font = new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 24);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             vt323Font = new java.awt.Font("Monospaced", java.awt.Font.PLAIN, 24);
@@ -72,8 +80,19 @@ public class GameView extends JPanel {
     private domain.models.entity.Knight knight;
     private domain.models.entity.Sorcerer sorcerer;
     private TileManager tileManager;
+    private ActionMenu actionMenu;
     private java.util.List<domain.models.entity.Entity> entityList;
     private domain.models.GameMode gameMode = domain.models.GameMode.ADVENTURE;
+
+    private long elapsedSeconds = 0;
+
+    public void setElapsedSeconds(long seconds) {
+        this.elapsedSeconds = seconds;
+    }
+
+    public long getElapsedSeconds() {
+        return this.elapsedSeconds;
+    }
 
     public void setGameMode(domain.models.GameMode mode) {
         this.gameMode = mode;
@@ -106,6 +125,10 @@ public class GameView extends JPanel {
     public void setTileManager(TileManager tileManager) {
         this.tileManager = tileManager;
         this.inventoryView.setTileManager(tileManager);
+    }
+
+    public void setActionMenu(ActionMenu actionMenu) {
+        this.actionMenu = actionMenu;
     }
 
     public int getTileSize() {
@@ -205,6 +228,10 @@ public class GameView extends JPanel {
             trapFlashFrames--;
         }
 
+        if (actionMenu != null && actionMenu.isVisible()) {
+            actionMenu.draw(g2d);
+        }
+
         // Kaynakları temizle
         g2d.dispose();
     }
@@ -253,21 +280,24 @@ public class GameView extends JPanel {
     private transient BufferedImage hpIconImg, energyIconImg, manaIconImg, strIconImg, defIconImg;
     private transient BufferedImage mainFrameImg;
     private transient BufferedImage pauseButtonImg;
+    private transient BufferedImage timerBgImg;
     private transient java.awt.Font hudFont;
     private transient boolean hudLoaded = false;
 
     private int pauseBtnX, pauseBtnY, pauseBtnW, pauseBtnH;
 
     public boolean isPauseButtonClicked(int mx, int my) {
-        if (pauseButtonImg == null) return false;
+        if (pauseButtonImg == null)
+            return false;
         return mx >= pauseBtnX && mx <= pauseBtnX + pauseBtnW &&
-               my >= pauseBtnY && my <= pauseBtnY + pauseBtnH;
+                my >= pauseBtnY && my <= pauseBtnY + pauseBtnH;
     }
 
     public void triggerPauseMenu() {
         javax.swing.Action togglePauseAction = this.getActionMap().get("togglePause");
         if (togglePauseAction != null) {
-            togglePauseAction.actionPerformed(new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "togglePause"));
+            togglePauseAction.actionPerformed(
+                    new java.awt.event.ActionEvent(this, java.awt.event.ActionEvent.ACTION_PERFORMED, "togglePause"));
         }
     }
 
@@ -306,6 +336,14 @@ public class GameView extends JPanel {
             }
             if (f.exists()) {
                 pauseButtonImg = javax.imageio.ImageIO.read(f);
+            }
+
+            java.io.File timerBgFile = new java.io.File("resources/images/HUDScreen/Timer.png");
+            if (!timerBgFile.exists()) {
+                timerBgFile = new java.io.File("../resources/images/HUDScreen/Timer.png");
+            }
+            if (timerBgFile.exists()) {
+                timerBgImg = javax.imageio.ImageIO.read(timerBgFile);
             }
 
             hudFont = vt323Font.deriveFont(java.awt.Font.PLAIN, 16f); // Kullanıcı talebi: 16 punto
@@ -454,7 +492,8 @@ public class GameView extends JPanel {
         // kaydır
         int y = frameY + (frameH - barH) / 2 + 7;
 
-        // Draw PauseButton to the left of the HUD bar (immediately outside mainFrame) - Much Larger
+        // Draw PauseButton to the left of the HUD bar (immediately outside mainFrame) -
+        // Much Larger
         if (pauseButtonImg != null) {
             pauseBtnH = (int) (frameH * 0.70);
             pauseBtnW = (int) (pauseButtonImg.getWidth() * ((double) pauseBtnH / pauseButtonImg.getHeight()));
@@ -469,7 +508,7 @@ public class GameView extends JPanel {
         }
 
         // 1. Health
-        drawSingleBar(g, "HP", hero.getHp(), 17, hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
+        drawSingleBar(g, "HP", hero.getHp(), hero.getMaxHp(), hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
 
         // 2. Energy
         drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap),
@@ -486,6 +525,56 @@ public class GameView extends JPanel {
         // 5. DEF
         drawSingleBar(g, "DEF", hero.getDef(), 6, defIntImg, defExtImg, defIconImg, startX + 4 * (barW + gap), y, barW,
                 barH);
+
+        // 6. Timer
+        long minutes = elapsedSeconds / 60;
+        long secs = elapsedSeconds % 60;
+        String timeStr = String.format("%02d:%02d", minutes, secs);
+
+        if (timerBgImg != null) {
+            int timerBgH = (int) (frameH * 0.70);
+            int timerBgW = (int) (timerBgImg.getWidth() * ((double) timerBgH / timerBgImg.getHeight()));
+            int timerBgX = frameX + frameW + 10;
+            // Clamp to avoid going off screen on the right
+            if (timerBgX + timerBgW > getWidth() - 5) {
+                timerBgX = getWidth() - timerBgW - 5;
+            }
+            int timerBgY = frameY + (frameH - timerBgH) / 2;
+            g.drawImage(timerBgImg, timerBgX, timerBgY, timerBgW, timerBgH, null);
+
+            g.setColor(new Color(255, 220, 100));
+            double timerScale = (double) timerBgW / timerBgImg.getWidth();
+            int textSlotW = (int) Math.round((1275 - 490) * timerScale);
+            
+            float fontSize = 26f;
+            g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, fontSize));
+            java.awt.FontMetrics tfm = g.getFontMetrics();
+            int timeStrW = tfm.stringWidth(timeStr);
+
+            // Scale down font size dynamically until it fits the text slot
+            while (timeStrW > textSlotW * 0.85 && fontSize > 10f) {
+                fontSize -= 1.0f;
+                g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, fontSize));
+                tfm = g.getFontMetrics();
+                timeStrW = tfm.stringWidth(timeStr);
+            }
+
+            int textCenterX = timerBgX + (int) Math.round(882.5 * timerScale);
+            int textX = textCenterX - timeStrW / 2;
+            int textY = timerBgY + (timerBgH + tfm.getAscent()) / 2 - 3;
+            g.drawString(timeStr, textX, textY);
+        } else {
+            // Fallback: draw plain text
+            g.setColor(new Color(255, 220, 100));
+            g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, 26f));
+            int timeStrW = g.getFontMetrics().stringWidth(timeStr);
+            int timerX = frameX + frameW + 15;
+            if (timerX + timeStrW > getWidth() - 5) {
+                timerX = getWidth() - timeStrW - 5;
+            }
+            int timerY = frameY + (frameH + g.getFontMetrics().getAscent()) / 2 - 5;
+            g.drawString(timeStr, timerX, timerY);
+        }
     }
 
     /** Delegates always-visible hotbar drawing to InventoryView. */
@@ -636,7 +725,8 @@ public class GameView extends JPanel {
     private final java.util.Map<BufferedImage, BufferedImage> redTintCache = new java.util.WeakHashMap<>();
 
     private BufferedImage getRedTintedImage(BufferedImage src) {
-        if (src == null) return null;
+        if (src == null)
+            return null;
         synchronized (redTintCache) {
             if (redTintCache.containsKey(src)) {
                 return redTintCache.get(src);
@@ -1045,7 +1135,9 @@ public class GameView extends JPanel {
                             obj instanceof domain.models.entity.Column ||
                             obj instanceof domain.models.entity.Chest ||
                             obj instanceof domain.models.entity.Crate ||
-                            (obj instanceof domain.models.staticObjects.Door && !(obj instanceof domain.models.staticObjects.LevelDoor)) ||
+                            (obj instanceof domain.models.staticObjects.Door
+                                    && !(obj instanceof domain.models.staticObjects.LevelDoor))
+                            ||
                             obj instanceof domain.models.staticObjects.Decoration ||
                             obj instanceof domain.models.entity.SearchableObject ||
                             obj instanceof domain.models.entity.Sign ||
@@ -1104,13 +1196,15 @@ public class GameView extends JPanel {
                             int dw = tileSize;
                             if (deco instanceof domain.models.staticObjects.Decoration) {
                                 dw = (int) (tileSize * 0.4);
-                            } else if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
+                            } else if (deco instanceof domain.models.staticObjects.WallObject
+                                    || deco instanceof domain.models.entity.SearchableObject) {
                                 dw = Math.max(tileSize - 6, 4);
                             }
                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                             int drawY;
-                            if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
+                            if (deco instanceof domain.models.staticObjects.WallObject
+                                    || deco instanceof domain.models.entity.SearchableObject) {
                                 drawY = offsetY + (yVal * tileSize) - 3 + (tileSize - dh) / 2; // wallOffset=6
                             } else {
                                 drawY = offsetY + (yVal * tileSize) + tileSize - dh;
@@ -1176,12 +1270,14 @@ public class GameView extends JPanel {
                         int iw = decoImg.getWidth();
                         int ih = decoImg.getHeight();
 
-                        int[] dims = getDecorDimensions(deco.getImageName(), deco.getCustomScale(), tileSize, iw, ih, deco.getName());
+                        int[] dims = getDecorDimensions(deco.getImageName(), deco.getCustomScale(), tileSize, iw, ih,
+                                deco.getName());
                         int dw = dims[0];
                         int dh = dims[1];
                         int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                         int drawY;
-                        if (deco instanceof domain.models.staticObjects.WallObject || deco instanceof domain.models.entity.SearchableObject) {
+                        if (deco instanceof domain.models.staticObjects.WallObject
+                                || deco instanceof domain.models.entity.SearchableObject) {
                             int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
                             drawY = offsetY + (yVal * tileSize) - wallOffset / 2 + (tileSize - dh) / 2;
                         } else {
@@ -1240,7 +1336,7 @@ public class GameView extends JPanel {
 
                 if (item.getSprite() != null) {
                     double scaleMult = 1.30;
-                    if (item instanceof domain.models.item.PotionItem || item instanceof domain.models.item.RingItem) {
+                    if (item instanceof domain.models.item.usables.PotionItem || item instanceof domain.models.item.wearables.RingItem) {
                         scaleMult *= 0.7; // Potions & rings render 30% smaller
                     }
                     int maxDim = (int) (tileSize * scaleMult);
@@ -1258,7 +1354,7 @@ public class GameView extends JPanel {
                     int posOffset = (tileSize - spriteSize) / 2;
                     int drawX = offsetX + (x * tileSize) + posOffset;
                     int drawY = offsetY + (yVal * tileSize) + posOffset;
-                    if (item instanceof domain.models.item.ShadowCloneScroll) {
+                    if (item instanceof domain.models.item.usables.ShadowCloneScroll) {
                         g2d.setColor(new Color(150, 50, 255)); // Mor — scroll
                     } else {
                         g2d.setColor(new Color(255, 220, 50)); // Sarı — bilinmeyen item
@@ -1338,7 +1434,8 @@ public class GameView extends JPanel {
                         dw = tileSize * 2;
                         dh = (int) (ih * ((double) dw / iw));
                     } else {
-                        int[] dims = getDecorDimensions(obj.getImageName(), obj.getCustomScale(), tileSize, iw, ih, obj.getName());
+                        int[] dims = getDecorDimensions(obj.getImageName(), obj.getCustomScale(), tileSize, iw, ih,
+                                obj.getName());
                         dw = dims[0];
                         dh = dims[1];
                     }
@@ -1373,7 +1470,7 @@ public class GameView extends JPanel {
             return new int[] { tileSize, tileSize };
         }
         String lower = img.toLowerCase();
-        
+
         boolean isAbsolute = !lower.contains("wallsearchable/");
         double baseW;
         if (lower.contains("flag") || lower.contains("banner")) {
@@ -1415,11 +1512,11 @@ public class GameView extends JPanel {
                 baseW = tileSize;
             }
         }
-        
+
         double finalW = isAbsolute ? (baseW * ((double) tileSize / 64.0)) : baseW;
         int dw = (int) Math.round(finalW * scale);
         int dh = (int) Math.round(ih * ((double) dw / iw));
-        
+
         if (lower.contains("torch") || (objName != null && objName.toLowerCase().contains("torch"))) {
             if (dw > tileSize || dh > tileSize) {
                 double f = Math.min((double) tileSize / iw, (double) tileSize / ih);
@@ -1427,7 +1524,7 @@ public class GameView extends JPanel {
                 dh = (int) Math.round(ih * f);
             }
         }
-        
+
         return new int[] { dw, dh };
     }
 

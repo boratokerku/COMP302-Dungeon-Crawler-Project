@@ -1,15 +1,16 @@
-package domain.models.item;
+package domain.models.item.wearables;
 
 import domain.logic.TakeAction;
 import domain.logic.EquipAction;
 import domain.logic.UnequipAction;
+import domain.models.item.MapItem;
 import domain.logic.DiscardAction;
 
-public class AxeItem extends MapItem {
-    public AxeItem(int x, int y) {
-        super("Battle Axe", x, y, "images/weapons/axe.png");
+public class SwordItem extends MapItem {
+    public SwordItem(int x, int y) {
+        super("Knight Sword", x, y, "images/weapons/knight_sword.png");
         this.addAction(new TakeAction());
-        this.addAction(new EquipAction(8)); // High physical attack bonus
+        this.addAction(new EquipAction(5));
         this.addAction(new UnequipAction());
         this.addAction(new DiscardAction());
     }
@@ -21,7 +22,7 @@ public class AxeItem extends MapItem {
 
     @Override
     public double getWeaponPivotY() {
-        return 0.85; // Grips from the bottom of the axe shaft
+        return 0.85; // Hand grips the hilt of the sword near the bottom
     }
 
     @Override
@@ -31,11 +32,11 @@ public class AxeItem extends MapItem {
 
     @Override
     public int getHandOffsetX() {
-        return 0;
+        return 0; // standard horizontal grip
     }
 
     @Override
     public int getHandOffsetY() {
-        return 0;
+        return 0; // standard vertical grip
     }
 }

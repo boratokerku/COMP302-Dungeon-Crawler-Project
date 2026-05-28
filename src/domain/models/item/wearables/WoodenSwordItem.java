@@ -1,15 +1,16 @@
-package domain.models.item;
+package domain.models.item.wearables;
 
 import domain.logic.TakeAction;
 import domain.logic.EquipAction;
 import domain.logic.UnequipAction;
+import domain.models.item.MapItem;
 import domain.logic.DiscardAction;
 
-public class SamuraiSwordItem extends MapItem {
-    public SamuraiSwordItem(int x, int y) {
-        super("Samurai Katana", x, y, "images/weapons/samurai_sword.png");
+public class WoodenSwordItem extends MapItem {
+    public WoodenSwordItem(int x, int y) {
+        super("Wooden Sword", x, y, "images/weapons/wooden_sword.png");
         this.addAction(new TakeAction());
-        this.addAction(new EquipAction(12)); // Epic tier melee weapon
+        this.addAction(new EquipAction(2)); // Base tier melee weapon
         this.addAction(new UnequipAction());
         this.addAction(new DiscardAction());
     }

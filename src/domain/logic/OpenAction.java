@@ -108,41 +108,7 @@ public class OpenAction implements Action {
     }
 
     private boolean canKeyOpenChest(domain.models.staticObjects.KeyItem key, domain.models.entity.Chest chest) {
-        String keyImg = key.getImageName();
-        String chestImg = chest.getImageName();
-        if (keyImg == null || chestImg == null) return true;
-
-        String k = keyImg.toLowerCase();
-        String c = chestImg.toLowerCase();
-
-        boolean isGoldKey1 = k.contains("golden_key_1");
-        boolean isGoldKey2 = k.contains("golden_key_2");
-        boolean isSilverKey = k.contains("silver_key");
-
-        boolean isGoldChest = c.contains("gold_chest");
-        boolean isSilverChest = c.contains("silver_chest");
-        // Brown, red, white, or default generic chests (which don't contain gold_chest or silver_chest)
-        boolean isBasicChest = c.contains("chest_brown") || c.contains("chest_red") || c.contains("chest_white") ||
-                               (!isGoldChest && !isSilverChest);
-
-        if (isGoldKey1) {
-            return isBasicChest;
-        }
-        if (isGoldKey2) {
-            return isGoldChest;
-        }
-        if (isSilverKey) {
-            return isSilverChest;
-        }
-
-        // Maintain compatibility for simple_key, double_key, or generic chest keys
-        if (!isGoldKey1 && !isGoldKey2 && !isSilverKey) {
-            return true;
-        }
-        if (!isBasicChest && !isGoldChest && !isSilverChest) {
-            return true;
-        }
-
-        return false;
+        // Since all keys have been unified into a single key type, any key can open any locked chest.
+        return true;
     }
 }

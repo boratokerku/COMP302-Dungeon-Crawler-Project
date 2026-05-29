@@ -253,6 +253,19 @@ public class DesignModeView extends JPanel {
             }
         });
 
+        // Bind Keyboard DELETE and BACKSPACE keys to erase the hovered tile
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "eraseHovered");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "eraseHovered");
+        this.getActionMap().put("eraseHovered", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (hoverTileX >= 0 && hoverTileY >= 0) {
+                    eraseAt(hoverTileX, hoverTileY);
+                    repaint();
+                }
+            }
+        });
+
         // Animasyonlar için (örn. Torch) periyodik repaint tetikleyici
         javax.swing.Timer animTimer = new javax.swing.Timer(120, e -> {
             if (isShowing()) {
@@ -285,6 +298,7 @@ public class DesignModeView extends JPanel {
 
     private void buildPalette() {
         // ── 1. OBSTACLES ───────────────────────────────────────────────────────
+        obstaclePalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
         // Crates
         obstaclePalette.add(new PaletteItem("Crate", "crate", true, (x, y) -> new Crate("Crate", x, y)));
         obstaclePalette.add(new PaletteItem("Crate Brown", "containers/crate_brown", true,
@@ -324,6 +338,7 @@ public class DesignModeView extends JPanel {
                 (x, y) -> new Column("Column", x, y, "colon/purple_colon_whole")));
 
         // ── 2. ITEMS ───────────────────────────────────────────────────────────
+        itemPalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
         // Potions
         itemPalette.add(new PaletteItem("HealthPotion", "images/items/potion/red_potion.png", false,
                 (x, y) -> new PotionItem(new HealthPotion("Health Potion", 5), x, y,
@@ -431,6 +446,7 @@ public class DesignModeView extends JPanel {
         wallItemPalette.add(new PaletteItem("LooseStone", "images/WallSearchable/loose_stone.png", false,
                 (x, y) -> new domain.models.entity.SearchableObject("Loose Stone", x, y,
                         "images/WallSearchable/loose_stone.png", "images/WallSearchable/loose_stone.png")));
+        wallItemPalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
     }
 
     // ─────────────────────────────────────────────────────────────────────────

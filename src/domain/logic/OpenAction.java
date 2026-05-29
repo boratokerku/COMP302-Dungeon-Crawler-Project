@@ -50,6 +50,7 @@ public class OpenAction implements Action {
                             hero.getInventory().removeItem(keyToUse);
                         }
                         chest.setLocked(false);
+                        util.helpers.SoundManager.playUnlock();
                         System.out.println("Unlocked chest using key!");
                         view.GameView.addFloatingText(tx, ty, "UNLOCKED!", java.awt.Color.GREEN);
                     } else {
@@ -95,6 +96,7 @@ public class OpenAction implements Action {
                 }
             }
             
+            util.helpers.SoundManager.playUnlock();
             // Show floating text feedback!
             view.GameView.addFloatingText(tx, ty, "OPENED!", java.awt.Color.YELLOW);
             

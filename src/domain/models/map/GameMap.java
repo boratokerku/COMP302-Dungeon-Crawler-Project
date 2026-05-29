@@ -30,20 +30,19 @@ public class GameMap extends Grid {
     private void initializeEmptyMap() {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                // --- YAN DUVARLAR (öncelik: köşeler dahil tüm sütunlar) ---
-                if (i == 0 || i == rows - 1) {
+                if ((i == 0 || i == rows - 1) && (j == 0 || j == cols - 1)) {
+                    placeObject(new domain.models.tile.WallTile("wall/wall_corner"), i, j);
+                }
+                // --- YAN DUVARLAR (sol/sağ sütunların tamamı) ---
+                else if (i == 0 || i == rows - 1) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_side"), i, j);
                 }
                 // --- ÜST DUVAR (yan duvarların arasında) ---
                 else if (j == 0) {
-                    if (i == rows / 2) {
-                        placeObject(new domain.models.tile.FloorTile(), i, j);
-                    } else {
-                        placeObject(new domain.models.tile.WallTile("wall/wall_1"), i, j);
-                    }
+                    placeObject(new domain.models.tile.WallTile("wall/wall_1"), i, j);
                 }
-                // --- ALT DUVAR (yan duvarların arasında) ---
-                else if (j >= cols - 2) {
+                // --- ALT DUVAR (yan duvarların arasında, köşeler hariç) ---
+                else if (j == cols - 1) {
                     placeObject(new domain.models.tile.WallTile("wall/wall_2"), i, j);
                 }
                 // --- ZEMİN ---
@@ -93,8 +92,8 @@ public class GameMap extends Grid {
         }
 
         if (existing instanceof domain.models.tile.WallTile) {
-            // Allow placing a Door to overwrite the WallTile completely
-            if (obj instanceof domain.models.staticObjects.Door) {
+            // Allow placing a Door or another WallTile to overwrite the WallTile completely
+            if (obj instanceof domain.models.staticObjects.Door || obj instanceof domain.models.tile.WallTile) {
                 boolean success = super.placeObject(obj, x, y);
                 if (success && obj != null) {
                     obj.setMap(this);
@@ -106,9 +105,10 @@ public class GameMap extends Grid {
                 ((domain.models.tile.WallTile) existing).setDecoration(null);
                 return true;
             }
-            // Rule: Only WallObjects and Decorations can be placed on wall tiles as decoration
+            // Rule: Only WallObjects, Decorations and SearchableObjects can be placed on wall tiles as decoration
             if (obj instanceof domain.models.staticObjects.WallObject ||
-                obj instanceof domain.models.staticObjects.Decoration) {
+                obj instanceof domain.models.staticObjects.Decoration ||
+                obj instanceof domain.models.entity.SearchableObject) {
                 ((domain.models.tile.WallTile) existing).setDecoration(obj);
                 obj.setPosition(x, y);
                 obj.setMap(this);

@@ -65,8 +65,15 @@ public class Hero extends Entity {
 
     public void heal(int amount) {
         this.hp += amount;
-        if (this.hp > 17)
-            this.hp = 17;
+        int limit = getMaxHp();
+        if (this.hp > limit)
+            this.hp = limit;
+    }
+
+    @Override
+    public int getMaxHp() {
+        int bonus = (equippedRing != null) ? equippedRing.getHpBonus() : 0;
+        return 17 + bonus;
     }
 
     public void equipWeapon(domain.models.item.MapItem weapon) {
@@ -79,11 +86,11 @@ public class Hero extends Entity {
         this.weaponAtk = atk; // Real weapon ATK
     }
 
-    public void equipWeapon(domain.models.item.SwordItem sword) {
+    public void equipWeapon(domain.models.item.wearables.SwordItem sword) {
         equipWeapon((domain.models.item.MapItem) sword);
     }
 
-    public void equipWeapon(domain.models.item.SwordItem sword, int atk) {
+    public void equipWeapon(domain.models.item.wearables.SwordItem sword, int atk) {
         equipWeapon((domain.models.item.MapItem) sword, atk);
     }
 
@@ -162,6 +169,9 @@ public class Hero extends Entity {
 
     public void unequipRing() {
         this.equippedRing = null;
+        if (this.hp > getMaxHp()) {
+            this.hp = getMaxHp();
+        }
     }
 
     public GameObject getEquippedWeapon() {
@@ -234,6 +244,7 @@ public class Hero extends Entity {
             this.x = nextX;
             this.y = nextY;
             consumeEnergyForMove();
+            util.helpers.SoundManager.playWalk();
             System.out.println("Hero moving " + dir + " to (" + this.x + ", " + this.y + ") Energy: " + this.energy);
             return true;
         } else if (!occupied) {
@@ -250,6 +261,7 @@ public class Hero extends Entity {
         int attackCost = 10;
         if (target != null && target.isAlive()) {
             if (this.energy >= attackCost) {
+                util.helpers.SoundManager.playSwing();
                 int damage = calculateDamage(this.weaponAtk);
                 target.takeDamage(damage);
                 view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP",
@@ -268,7 +280,8 @@ public class Hero extends Entity {
                         if (dropType == 0) {
                             loot = domain.models.item.MapItem.createRandomItem(target.getX(), target.getY());
                         } else if (dropType == 1) {
-                            loot = new domain.models.item.PotionItem(target.getX(), target.getY());
+                            loot = domain.models.item.usables.PotionItem.createRandomPotionItem(target.getX(),
+                                    target.getY());
                         } else {
                             int locked = countLockedChests(map);
                             int keys = countKeys(map, this);
@@ -276,8 +289,9 @@ public class Hero extends Entity {
                                 loot = new domain.models.staticObjects.KeyItem(target.getX(), target.getY());
                             } else {
                                 loot = rand.nextBoolean()
-                                    ? domain.models.item.MapItem.createRandomItem(target.getX(), target.getY())
-                                    : new domain.models.item.PotionItem(target.getX(), target.getY());
+                                        ? domain.models.item.MapItem.createRandomItem(target.getX(), target.getY())
+                                        : domain.models.item.usables.PotionItem.createRandomPotionItem(target.getX(),
+                                                target.getY());
                             }
                         }
                     }

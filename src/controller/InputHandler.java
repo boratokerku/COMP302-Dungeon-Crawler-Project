@@ -59,6 +59,28 @@ public class InputHandler implements KeyListener {
             if (gameView != null) {
                 gameView.setHotbarSlot(hotbarSlot);
             }
+            if (hero != null && hero.getInventory() != null) {
+                java.util.List<domain.models.entity.GameObject> items = hero.getInventory().getItems();
+                int itemIndex = hotbarSlot - 1;
+                if (itemIndex >= 0 && itemIndex < items.size()) {
+                    domain.models.entity.GameObject item = items.get(itemIndex);
+                    if (item != null) {
+                        for (domain.logic.Action action : item.getActions()) {
+                            String name = action.getName();
+                            if (name.equals("Use") || name.equals("Equip") || name.equals("Wear") || name.equals("Read") || name.equals("Eat")) {
+                                if (action.isAvailable(hero, item)) {
+                                    action.execute(hero, item);
+                                    System.out.println("[Hotkey " + hotbarSlot + "] Executed " + name + " on " + item.getName());
+                                    if (gameView != null) {
+                                        gameView.repaint();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             return;
         }
 
@@ -88,7 +110,8 @@ public class InputHandler implements KeyListener {
             if (hero.getEquippedWeapon() instanceof domain.models.item.MapItem) {
                 domain.models.item.MapItem weapon = (domain.models.item.MapItem) hero.getEquippedWeapon();
                 if (weapon.isRanged()) {
-                    if (hero.getMana() < weapon.getManaCost()) {
+                    int cost = Math.max(0, weapon.getManaCost() - (hero.getEquippedRing() != null ? hero.getEquippedRing().getManaCostReduction() : 0));
+                    if (hero.getMana() < cost) {
                         System.out.println("Büyü atmak için yeterli mana yok!");
                         view.GameView.addFloatingText(hero.getX(), hero.getY(), "No Mana!", java.awt.Color.CYAN);
                         return;
@@ -100,7 +123,7 @@ public class InputHandler implements KeyListener {
                     
                     // Consume stats
                     hero.setEnergy(Math.max(0, hero.getEnergy() - 10));
-                    hero.setMana(Math.max(0, hero.getMana() - weapon.getManaCost()));
+                    hero.setMana(Math.max(0, hero.getMana() - cost));
                     hero.setAnimationState(AnimationState.ATTACK);
                     
                     // Firing direction
@@ -122,6 +145,7 @@ public class InputHandler implements KeyListener {
                     );
                     
                     entities.add(proj);
+                    util.helpers.SoundManager.playShoot();
                     System.out.println("Hero fired ranged projectile! Type: " + weapon.getProjectileType() + " | Damage: " + dmg);
                     if (gameView != null) gameView.repaint();
                     return;
@@ -131,6 +155,7 @@ public class InputHandler implements KeyListener {
             // Melee fallback
             if (hero.getEnergy() >= 10) {
                 hero.setAnimationState(AnimationState.ATTACK);
+                util.helpers.SoundManager.playSwing();
             }
         } else if (code == KeyEvent.VK_I) {
             if (gameView != null) {
@@ -166,7 +191,44 @@ public class InputHandler implements KeyListener {
                     int ny = hero.getY() + dy;
                     if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
                         domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
+                        if (obj instanceof domain.models.tile.WallTile) {
+                            domain.models.entity.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
+                            if (deco instanceof domain.models.entity.SearchableObject) {
+                                obj = deco;
+                            }
+                        }
                         if (obj != null) {
+                            if (obj instanceof domain.models.entity.SearchableObject) {
+                                java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(gameView);
+                                java.awt.Frame parentFrame = (parentWindow instanceof java.awt.Frame) ? (java.awt.Frame) parentWindow : null;
+
+                                float scale = 0.35f;
+                                int width = Math.round(612 * scale);
+                                int height = Math.round(408 * scale);
+
+                                int objScreenX = gameView.getOffsetX() + obj.getX() * gameView.getTileSize();
+                                int objScreenY = gameView.getOffsetY() + obj.getY() * gameView.getTileSize();
+
+                                java.awt.Point screenLoc = gameView.getLocationOnScreen();
+                                int targetX = screenLoc.x + objScreenX + gameView.getTileSize() + 5;
+                                
+                                // If it exceeds the right bounds of the game view, place it to the left of the item
+                                if (objScreenX + gameView.getTileSize() + 5 + width > gameView.getWidth()) {
+                                    targetX = screenLoc.x + objScreenX - width - 5;
+                                }
+                                int targetY = screenLoc.y + objScreenY + (gameView.getTileSize() - height) / 2;
+
+                                final domain.models.entity.GameObject targetObj = obj;
+                                ui.SearchPopupDialog dialog = new ui.SearchPopupDialog(parentFrame, obj.getName(), () -> {
+                                    domain.logic.SearchAction sa = new domain.logic.SearchAction(null);
+                                    sa.execute(hero, targetObj);
+                                    gameView.repaint();
+                                });
+                                dialog.setLocation(targetX, targetY);
+                                dialog.setVisible(true);
+                                return;
+                            }
+
                             if (obj instanceof domain.models.staticObjects.Door) {
                                 domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
                                 if (door.isLocked()) {
@@ -207,6 +269,7 @@ public class InputHandler implements KeyListener {
                                             domain.models.staticObjects.LevelDoor levelDoor = (domain.models.staticObjects.LevelDoor) door;
                                             boolean success = levelDoor.tryUnlockWithKey(hero);
                                             if (success) {
+                                                util.helpers.SoundManager.playUnlock();
                                                 view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
                                             } else {
                                                 javax.swing.JOptionPane.showMessageDialog(
@@ -233,6 +296,7 @@ public class InputHandler implements KeyListener {
                                                 }
                                                 door.unlock();
                                                 door.open();
+                                                util.helpers.SoundManager.playUnlock();
                                                 System.out.println("Unlocked door using key!");
                                                 view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
                                             } else {

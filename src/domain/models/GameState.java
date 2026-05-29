@@ -16,6 +16,7 @@ public class GameState {
     // Global timers (kalan milisaniye)
     public long enemySpawnTimeLeft = 9000;
     public long scrollSpawnTimeLeft = 15000;
+    public long elapsedSeconds = 0;
 
     // Multi-level progression
     public int currentLevel = 1;
@@ -59,6 +60,8 @@ public class GameState {
         public String name; // Column/Crate/Chest gibi isimli nesneler için (diğerleri için null)
         public int x, y;
         public boolean isLocked; // Door kilitli mi bilgisi için
+        public boolean searched; // SearchableObject için
+        public String hiddenItemType; // SearchableObject içindeki gizli item için (varsa)
 
         public ItemRecord() {}
 
@@ -81,6 +84,15 @@ public class GameState {
             this.x = x;
             this.y = y;
             this.isLocked = isLocked;
+        }
+        
+        public ItemRecord(String type, String name, int x, int y, boolean searched, String hiddenItemType) {
+            this.type = type;
+            this.name = name;
+            this.x = x;
+            this.y = y;
+            this.searched = searched;
+            this.hiddenItemType = hiddenItemType;
         }
     }
 

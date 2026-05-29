@@ -41,8 +41,11 @@ public class OpenAction implements Action {
                     domain.models.staticObjects.KeyItem keyToUse = null;
                     for (GameObject item : hero.getInventory().getItems()) {
                         if (item instanceof domain.models.staticObjects.KeyItem) {
-                            keyToUse = (domain.models.staticObjects.KeyItem) item;
-                            break;
+                            domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) item;
+                            if (canKeyOpenChest(key, chest)) {
+                                keyToUse = key;
+                                break;
+                            }
                         }
                     }
                     if (keyToUse != null) {
@@ -102,5 +105,44 @@ public class OpenAction implements Action {
             
             contents.clear();
         }
+    }
+
+    private boolean canKeyOpenChest(domain.models.staticObjects.KeyItem key, domain.models.entity.Chest chest) {
+        String keyImg = key.getImageName();
+        String chestImg = chest.getImageName();
+        if (keyImg == null || chestImg == null) return true;
+
+        String k = keyImg.toLowerCase();
+        String c = chestImg.toLowerCase();
+
+        boolean isGoldKey1 = k.contains("golden_key_1");
+        boolean isGoldKey2 = k.contains("golden_key_2");
+        boolean isSilverKey = k.contains("silver_key");
+
+        boolean isGoldChest = c.contains("gold_chest");
+        boolean isSilverChest = c.contains("silver_chest");
+        // Brown, red, white, or default generic chests (which don't contain gold_chest or silver_chest)
+        boolean isBasicChest = c.contains("chest_brown") || c.contains("chest_red") || c.contains("chest_white") ||
+                               (!isGoldChest && !isSilverChest);
+
+        if (isGoldKey1) {
+            return isBasicChest;
+        }
+        if (isGoldKey2) {
+            return isGoldChest;
+        }
+        if (isSilverKey) {
+            return isSilverChest;
+        }
+
+        // Maintain compatibility for simple_key, double_key, or generic chest keys
+        if (!isGoldKey1 && !isGoldKey2 && !isSilverKey) {
+            return true;
+        }
+        if (!isBasicChest && !isGoldChest && !isSilverChest) {
+            return true;
+        }
+
+        return false;
     }
 }

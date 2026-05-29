@@ -275,7 +275,7 @@ public class InputHandler implements KeyListener {
                                         }
                                     }
 
-                                    String keyTypeStr = isLevelDoor ? "Level Key" : "Key";
+                                    String keyTypeStr = isLevelDoor ? "Skull Key" : "Key";
                                     String[] options = new String[]{hasKey ? "Open (Uses " + keyTypeStr + ")" : "Open (Need " + keyTypeStr + ")", "Cancel"};
 
                                     int choice = javax.swing.JOptionPane.showOptionDialog(
@@ -299,11 +299,11 @@ public class InputHandler implements KeyListener {
                                             } else {
                                                 javax.swing.JOptionPane.showMessageDialog(
                                                         gameView,
-                                                        "This door is locked! You need a Level Key to open it.",
+                                                        "This door is locked! You need a Skull Key to open it.",
                                                         "Door Locked",
                                                         javax.swing.JOptionPane.WARNING_MESSAGE
                                                 );
-                                                view.GameView.addFloatingText(nx, ny, "Level Key Required", java.awt.Color.RED);
+                                                view.GameView.addFloatingText(nx, ny, "Skull Key Required", java.awt.Color.RED);
                                             }
                                         } else {
                                             // Normal door
@@ -375,13 +375,25 @@ public class InputHandler implements KeyListener {
                                     return; // Bir etkileşim yetti, döngüden çık
                                 } else if (available.size() >= 1) {
                                     // Oyuncuya butonlu dialog penceresi sun (maliyetler dahil)
-                                    boolean hasKey = false;
-                                    for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                                        if (item instanceof domain.models.staticObjects.KeyItem) {
-                                            hasKey = true;
-                                            break;
-                                        }
-                                    }
+                                     boolean hasKey = false;
+                                     if (obj instanceof domain.models.entity.Chest) {
+                                         domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                                         for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                                             if (item instanceof domain.models.staticObjects.KeyItem) {
+                                                 if (canKeyOpenChest((domain.models.staticObjects.KeyItem) item, chest)) {
+                                                     hasKey = true;
+                                                     break;
+                                                 }
+                                             }
+                                         }
+                                     } else {
+                                         for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
+                                             if (item instanceof domain.models.staticObjects.KeyItem) {
+                                                 hasKey = true;
+                                                 break;
+                                             }
+                                         }
+                                     }
                                     
                                     String[] options;
                                     if (obj instanceof domain.models.entity.Crate) {
@@ -507,5 +519,44 @@ public class InputHandler implements KeyListener {
         if (shadowClone != null && shadowClone.isAlive()) {
             shadowClone.moveOpposite(dir, map, entities);
         }
+    }
+
+    private boolean canKeyOpenChest(domain.models.staticObjects.KeyItem key, domain.models.entity.Chest chest) {
+        String keyImg = key.getImageName();
+        String chestImg = chest.getImageName();
+        if (keyImg == null || chestImg == null) return true;
+
+        String k = keyImg.toLowerCase();
+        String c = chestImg.toLowerCase();
+
+        boolean isGoldKey1 = k.contains("golden_key_1");
+        boolean isGoldKey2 = k.contains("golden_key_2");
+        boolean isSilverKey = k.contains("silver_key");
+
+        boolean isGoldChest = c.contains("gold_chest");
+        boolean isSilverChest = c.contains("silver_chest");
+        // Brown, red, white, or default generic chests (which don't contain gold_chest or silver_chest)
+        boolean isBasicChest = c.contains("chest_brown") || c.contains("chest_red") || c.contains("chest_white") ||
+                               (!isGoldChest && !isSilverChest);
+
+        if (isGoldKey1) {
+            return isBasicChest;
+        }
+        if (isGoldKey2) {
+            return isGoldChest;
+        }
+        if (isSilverKey) {
+            return isSilverChest;
+        }
+
+        // Maintain compatibility for simple_key, double_key, or generic chest keys
+        if (!isGoldKey1 && !isGoldKey2 && !isSilverKey) {
+            return true;
+        }
+        if (!isBasicChest && !isGoldChest && !isSilverChest) {
+            return true;
+        }
+
+        return false;
     }
 }

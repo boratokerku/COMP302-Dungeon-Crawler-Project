@@ -11,7 +11,7 @@ import domain.models.item.MapItem;
 public class LevelKey extends MapItem {
 
     public LevelKey(int x, int y) {
-        this("Level Key", x, y, "images/items/key/golden_key_1.png");
+        this("Skull Key", x, y, "images/items/key/skull_key.png");
     }
 
     public LevelKey(String name, int x, int y, String imagePath) {

@@ -22,6 +22,7 @@ public class LevelDoor extends Door {
 
     public LevelDoor(String name, int x, int y) {
         super(name, x, y, true); // Always starts locked
+        this.addAction(new domain.logic.UnlockLevelGateAction());
     }
 
     /**

@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import domain.models.GameState;
 import domain.logic.SaveManager;
+import ui.HelpDialog;
 
 public class MainMenuView extends JPanel {
 
@@ -73,11 +74,10 @@ public class MainMenuView extends JPanel {
         });
 
         helpBtn.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this,
-                    "Welcome to Dungeon Crawler!\n\n" +
-                    "Use Arrow Keys or W, A, S, D to move.\n" +
-                    "Avoid enemies and survive as long as you can!\n",
-                    "Help", JOptionPane.INFORMATION_MESSAGE);
+            Window parentWindow = SwingUtilities.getWindowAncestor(this);
+            Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+            HelpDialog helpDialog = new HelpDialog(parentFrame);
+            helpDialog.setVisible(true);
         });
 
         quitBtn.addActionListener(e -> System.exit(0));

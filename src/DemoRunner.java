@@ -6,6 +6,9 @@ import domain.models.entity.*;
 import domain.models.map.GameMap;
 import domain.models.item.*;
 import domain.models.item.usables.*;
+import domain.models.item.usables.HealthPotion;
+import domain.models.item.usables.ManaPotion;
+import domain.models.item.usables.EnergyPotion;
 import domain.models.item.wearables.*;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -92,11 +95,26 @@ public class DemoRunner {
                     copy.placeObject(new domain.models.tile.FloorTile(), x, y);
                 } else if (obj instanceof domain.models.entity.Chest) {
                     domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
-                    copy.placeObject(new domain.models.entity.Chest(chest.getName(), x, y, chest.isLocked()), x, y);
+                    copy.placeObject(new domain.models.entity.Chest(chest.getName(), x, y, chest.isLocked(), chest.getImageName()), x, y);
                 } else if (obj instanceof domain.models.entity.DoubleCrate) {
                     copy.placeObject(new domain.models.entity.DoubleCrate(obj.getName(), x, y), x, y);
                 } else if (obj instanceof domain.models.entity.Crate) {
-                    copy.placeObject(new domain.models.entity.Crate(obj.getName(), x, y), x, y);
+                    domain.models.entity.Crate crate = (domain.models.entity.Crate) obj;
+                    domain.models.entity.Crate newCrate = new domain.models.entity.Crate(crate.getName(), x, y);
+                    if (isRestart) {
+                        newCrate.setHiddenItem(null);
+                    } else {
+                        if (crate.getHiddenItem() != null) {
+                            if (crate.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                                domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) crate.getHiddenItem();
+                                newCrate.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
+                            } else if (crate.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
+                                domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) crate.getHiddenItem();
+                                newCrate.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                            }
+                        }
+                    }
+                    copy.placeObject(newCrate, x, y);
                 } else if (obj instanceof domain.models.entity.Column) {
                     copy.placeObject(new domain.models.entity.Column(obj.getName(), x, y, obj.getImageName()), x, y);
                 } else if (obj instanceof domain.models.entity.Sign) {
@@ -306,38 +324,8 @@ public class DemoRunner {
         // Place static Level Door and Level Key for Adventure mode progression
         LevelManager.placeRandomLevelDoor(map, "Level Gate");
 
-        // ITEM HIDING SYSTEM: Hide the LevelKey in a random SearchableObject
-        java.util.List<domain.models.entity.SearchableObject> searchables = new java.util.ArrayList<>();
-        boolean hasHiddenKey = false;
-        for (int x = 0; x < map.getWidth(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.tile.WallTile) {
-                    domain.models.entity.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
-                    if (deco instanceof domain.models.entity.SearchableObject) {
-                        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) deco;
-                        searchables.add(so);
-                        if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                            hasHiddenKey = true;
-                        }
-                    }
-                } else if (obj instanceof domain.models.staticObjects.LevelKey) {
-                    hasHiddenKey = true;
-                }
-            }
-        }
-
-        if (!hasHiddenKey) {
-            domain.models.staticObjects.LevelKey levelKey = new domain.models.staticObjects.LevelKey(15, 12);
-            if (!searchables.isEmpty()) {
-                domain.models.entity.SearchableObject selected = searchables
-                        .get(new java.util.Random().nextInt(searchables.size()));
-                selected.setHiddenItem(levelKey);
-            } else {
-                System.out.println("Warning: No searchable locations on map.");
-                map.placeObject(levelKey, 15, 12);
-            }
-        }
+        // ITEM HIDING SYSTEM: Hide the LevelKey
+        LevelManager.hideLevelKey(map);
 
         // Save the map clone AFTER door and hidden key setups are established so that
         // restarting yields the exact same layout.
@@ -636,7 +624,7 @@ public class DemoRunner {
                 // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
                 scrollItems.add(rec);
             } else if ("SearchableObject".equals(rec.type)) {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked);
+                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
                 if (item instanceof domain.models.entity.SearchableObject) {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) item;
                     so.setSearched(rec.searched);
@@ -654,7 +642,16 @@ public class DemoRunner {
                     map.placeObject(item, rec.x, rec.y);
                 }
             } else {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked);
+                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
+                if (item instanceof domain.models.entity.Crate) {
+                    domain.models.entity.Crate crate = (domain.models.entity.Crate) item;
+                    if (rec.hiddenItemType != null) {
+                        if (rec.hiddenItemType.equals("LevelKey"))
+                            crate.setHiddenItem(new domain.models.staticObjects.LevelKey(rec.x, rec.y));
+                        else if (rec.hiddenItemType.equals("KeyItem"))
+                            crate.setHiddenItem(new domain.models.staticObjects.KeyItem(rec.x, rec.y));
+                    }
+                }
                 if (item != null)
                     map.placeObject(item, rec.x, rec.y);
             }
@@ -662,12 +659,13 @@ public class DemoRunner {
 
         // Envanter itemlarını yeniden oluştur — scroll hariç
         List<String> inventoryScrollTypes = new ArrayList<>();
-        for (String type : state.inventoryItems) {
+        for (GameState.ItemRecord rec : state.inventoryItems) {
+            String type = rec.type;
             if ("ShadowCloneScroll".equals(type)) {
                 // Scroll inputHandler gerektirir — setupGameView'da oluşturulacak
                 inventoryScrollTypes.add(type);
             } else {
-                domain.models.entity.GameObject item = createItem(type, 0, 0);
+                domain.models.entity.GameObject item = createItem(type, rec.name, 0, 0, rec.isLocked, rec.imageName);
                 if (item != null)
                     hero.getInventory().addItem(item);
             }
@@ -677,25 +675,23 @@ public class DemoRunner {
                 inventoryScrollTypes, state, domain.models.GameMode.ADVENTURE);
     }
 
-    // Item tip ismine göre nesne oluşturur — scroll hariç (scroll setupGameView'da
-    // oluşur)
     private static domain.models.entity.GameObject createItem(String type, String name, int x, int y,
-            boolean isLocked) {
+            boolean isLocked, String imgName) {
         String displayName = (name != null && !name.isEmpty()) ? name : type;
         switch (type) {
             case "PotionItem":
             case "HealthPotionItem":
                 return new PotionItem(
                         new HealthPotion("Red Potion", 5), x, y,
-                        "images/items/potion/red_potion.png");
+                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/red_potion.png");
             case "ManaPotionItem":
                 return new PotionItem(
                         new ManaPotion("Blue Potion", 20), x, y,
-                        "images/items/potion/blue_potion.png");
+                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/blue_potion.png");
             case "EnergyPotionItem":
                 return new PotionItem(
                         new EnergyPotion("Green Potion", 30), x, y,
-                        "images/items/potion/green_potion.png");
+                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/green_potion.png");
             case "SwordItem":
                 return new SwordItem(x, y);
             case "AxeItem":
@@ -713,6 +709,15 @@ public class DemoRunner {
             case "ArmorItem":
                 return new ArmorItem(x, y);
             case "RingItem":
+                if (imgName != null && !imgName.isEmpty()) {
+                    if (imgName.contains("blue")) {
+                        return new RingItem(new BlueRing("Blue Ring"), x, y, imgName);
+                    } else if (imgName.contains("red")) {
+                        return new RingItem(new RedRing("Red Ring"), x, y, imgName);
+                    } else {
+                        return new RingItem(new GreenRing("Ring of Might"), x, y, imgName);
+                    }
+                }
                 if (displayName != null && displayName.toLowerCase().contains("blue")) {
                     return new RingItem(
                             new BlueRing("Blue Ring"), x, y, "images/items/ring/blue_ring.png");
@@ -724,23 +729,26 @@ public class DemoRunner {
                             new GreenRing("Ring of Might"), x, y, "images/items/ring/green_ring.png");
                 }
             case "KeyItem":
-                return new domain.models.staticObjects.KeyItem(x, y);
+                return new domain.models.staticObjects.KeyItem(displayName, x, y,
+                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/key/golden_key_1.png");
             case "Column":
-                return new domain.models.entity.Column(displayName, x, y);
+                return new domain.models.entity.Column(displayName, x, y, imgName);
             case "Sign":
-                return new domain.models.entity.Sign(displayName, x, y, "sign/sign_brown");
+                return new domain.models.entity.Sign(displayName, x, y, imgName != null ? imgName : "sign/sign_brown");
             case "DoubleCrate":
                 return new domain.models.entity.DoubleCrate(displayName, x, y);
             case "Crate":
                 return new domain.models.entity.Crate(displayName, x, y);
             case "Chest":
-                return new domain.models.entity.Chest(displayName, x, y, isLocked);
+                return (imgName != null && !imgName.isEmpty())
+                        ? new domain.models.entity.Chest(displayName, x, y, isLocked, imgName)
+                        : new domain.models.entity.Chest(displayName, x, y, isLocked);
             case "SearchableObject":
-                return new domain.models.entity.SearchableObject(displayName, x, y, displayName);
+                return new domain.models.entity.SearchableObject(displayName, x, y, imgName);
             case "Decoration":
-                return new domain.models.staticObjects.Decoration(displayName, x, y, displayName);
+                return new domain.models.staticObjects.Decoration(displayName, x, y, imgName);
             case "WallObject":
-                return new domain.models.staticObjects.WallObject(displayName, x, y, displayName);
+                return new domain.models.staticObjects.WallObject(displayName, x, y, imgName);
             case "Door":
                 domain.models.staticObjects.Door door = new domain.models.staticObjects.Door(displayName, x, y,
                         isLocked);
@@ -750,7 +758,8 @@ public class DemoRunner {
             case "LevelDoor":
                 return new domain.models.staticObjects.LevelDoor(displayName, x, y);
             case "LevelKey":
-                return new domain.models.staticObjects.LevelKey(x, y);
+                return new domain.models.staticObjects.LevelKey(displayName, x, y,
+                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/key/skull_key.png");
             case "VictoryCoin":
                 return new VictoryCoin(x, y);
             default:
@@ -759,8 +768,13 @@ public class DemoRunner {
         }
     }
 
+    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y,
+            boolean isLocked) {
+        return createItem(type, name, x, y, isLocked, null);
+    }
+
     private static domain.models.entity.GameObject createItem(String type, String name, int x, int y) {
-        return createItem(type, name, x, y, false);
+        return createItem(type, name, x, y, false, null);
     }
 
     // Eski imza — envanter için (name yok)
@@ -778,6 +792,22 @@ public class DemoRunner {
             List<String> inventoryScrollTypes,
             GameState state,
             domain.models.GameMode mode) {
+        if (state == null && mode == domain.models.GameMode.ADVENTURE) {
+            boolean hasLevelDoor = false;
+            for (int x = 0; x < map.getWidth(); x++) {
+                for (int y = 0; y < map.getHeight(); y++) {
+                    if (map.getObjectAt(x, y) instanceof domain.models.staticObjects.LevelDoor) {
+                        hasLevelDoor = true;
+                        break;
+                    }
+                }
+                if (hasLevelDoor) break;
+            }
+            if (hasLevelDoor) {
+                LevelManager.hideLevelKey(map);
+            }
+        }
+
         final GameMap[] mapRef = new GameMap[] { map };
         AssetManager assetManager = AssetManager.getInstance();
         TileManager tileManager = new TileManager();

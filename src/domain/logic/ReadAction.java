@@ -63,9 +63,11 @@ public class ReadAction implements Action {
 
             boolean occupied = false;
             for (Entity e : entities) {
-                if (e.isAlive() && e.getX() == pos[0] && e.getY() == pos[1]) {
-                    occupied = true;
-                    break;
+                if (e.isAlive()) {
+                    if (e.occupiesTile(pos[0], pos[1])) {
+                        occupied = true;
+                        break;
+                    }
                 }
             }
             if (!occupied) return pos;

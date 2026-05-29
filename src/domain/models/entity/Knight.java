@@ -134,8 +134,8 @@ public class Knight extends Entity implements Renderable {
         if (map == null || !map.isWalkable(nextX, nextY)) return false;
         if (entities != null) {
             for (Entity e : entities) {
-                if (e != this && e.isAlive() && e.getX() == nextX && e.getY() == nextY) {
-                    return false;
+                if (e != this && e.isAlive()) {
+                    if (e.occupiesTile(nextX, nextY)) return false;
                 }
             }
         }

@@ -82,7 +82,7 @@ public class ShadowClone extends Entity implements Renderable {
         if (!map.isWalkable(nx, ny)) return false;
         for (Entity e : entities) {
             if (e == this || !e.isAlive()) continue;
-            if (e.getX() == nx && e.getY() == ny) return false;
+            if (e.occupiesTile(nx, ny)) return false;
         }
         return true;
     }

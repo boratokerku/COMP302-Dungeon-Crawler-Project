@@ -1235,13 +1235,7 @@ public class DemoRunner {
                             for (domain.models.entity.Entity enemy : entities) {
                                 if (enemy.isAlive() && enemy != hero && !(enemy instanceof ShadowClone)
                                         && !(enemy instanceof domain.models.entity.Projectile)) {
-                                    boolean hit = false;
-                                    if (enemy instanceof domain.models.entity.FinalBoss) {
-                                        hit = ((domain.models.entity.FinalBoss) enemy).occupiesTile(proj.getX(),
-                                                proj.getY());
-                                    } else {
-                                        hit = (proj.getX() == enemy.getX() && proj.getY() == enemy.getY());
-                                    }
+                                    boolean hit = enemy.occupiesTile(proj.getX(), proj.getY());
                                     if (hit) {
                                         int def = 0;
                                         if (enemy instanceof domain.models.entity.Knight) {

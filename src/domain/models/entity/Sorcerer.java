@@ -202,8 +202,8 @@ public class Sorcerer extends Entity implements Renderable {
     private boolean isOccupied(int x, int y, java.util.List<Entity> entities) {
         if (entities == null) return false;
         for (Entity e : entities) {
-            if (e != this && e.isAlive() && e.getX() == x && e.getY() == y) {
-                return true;
+            if (e != this && e.isAlive()) {
+                if (e.occupiesTile(x, y)) return true;
             }
         }
         return false;

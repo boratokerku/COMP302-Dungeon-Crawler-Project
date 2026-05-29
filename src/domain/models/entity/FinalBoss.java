@@ -29,6 +29,10 @@ public class FinalBoss extends Entity implements Renderable {
     private long lastTeleportTime;
     private Projectile pendingProjectile = null;
 
+    private static final int PROJECTILE_COOLDOWN_MS = 3000;
+    private static final int TELEPORT_COOLDOWN_MS = 6000;
+    private static final int MOVE_COOLDOWN_TICKS = 4;
+
     // Phase spawn tracking — each threshold fires once
     private boolean phase80Triggered = false;
     private boolean phase60Triggered = false;
@@ -97,6 +101,7 @@ public class FinalBoss extends Entity implements Renderable {
     /**
      * Returns true if the given position is occupied by this boss's 2x2 footprint.
      */
+    @Override
     public boolean occupiesTile(int tx, int ty) {
         return (tx == x || tx == x + 1) && (ty == y || ty == y + 1);
     }
@@ -137,21 +142,21 @@ public class FinalBoss extends Entity implements Renderable {
         // --- Phase Mechanics: spawn minions at HP thresholds ---
         checkPhaseSpawns(map, entities);
 
-        // --- Teleportation: every 10 seconds, 50% chance ---
-        if (currentTime - lastTeleportTime >= 10000) {
+        // --- Teleportation: every 6 seconds, 50% chance ---
+        if (currentTime - lastTeleportTime >= TELEPORT_COOLDOWN_MS) {
             lastTeleportTime = currentTime;
             attemptTeleport(map, entities);
         }
 
-        // --- AoE Projectile: every 6 seconds ---
-        if (currentTime - lastProjectileTime >= 6000) {
+        // --- AoE Projectile: every 3 seconds ---
+        if (currentTime - lastProjectileTime >= PROJECTILE_COOLDOWN_MS) {
             lastProjectileTime = currentTime;
             pendingProjectile = createProjectile(hero);
         }
 
-        // --- Movement: chase hero (slow, every 8 ticks) ---
+        // --- Movement: chase hero (slow, every 4 ticks) ---
         moveCooldown++;
-        if (moveCooldown >= 8) {
+        if (moveCooldown >= MOVE_COOLDOWN_TICKS) {
             moveCooldown = 0;
 
             // Check adjacency — any of the 4 boss tiles within 1 tile of hero
@@ -335,19 +340,19 @@ public class FinalBoss extends Entity implements Renderable {
     // ── Timer accessors for save/load ────────────────────────────────────────
 
     public long getProjectileTimeLeft() {
-        return Math.max(0, 6000 - (System.currentTimeMillis() - lastProjectileTime));
+        return Math.max(0, PROJECTILE_COOLDOWN_MS - (System.currentTimeMillis() - lastProjectileTime));
     }
 
     public void setProjectileTimeLeft(long timeLeft) {
-        this.lastProjectileTime = System.currentTimeMillis() - (6000 - timeLeft);
+        this.lastProjectileTime = System.currentTimeMillis() - (PROJECTILE_COOLDOWN_MS - timeLeft);
     }
 
     public long getTeleportTimeLeft() {
-        return Math.max(0, 10000 - (System.currentTimeMillis() - lastTeleportTime));
+        return Math.max(0, TELEPORT_COOLDOWN_MS - (System.currentTimeMillis() - lastTeleportTime));
     }
 
     public void setTeleportTimeLeft(long timeLeft) {
-        this.lastTeleportTime = System.currentTimeMillis() - (10000 - timeLeft);
+        this.lastTeleportTime = System.currentTimeMillis() - (TELEPORT_COOLDOWN_MS - timeLeft);
     }
 
     @Override

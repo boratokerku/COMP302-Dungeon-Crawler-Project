@@ -155,7 +155,32 @@ public class InputHandler implements KeyListener {
             // Melee fallback
             if (hero.getEnergy() >= 10) {
                 hero.setAnimationState(AnimationState.ATTACK);
-                util.helpers.SoundManager.playSwing();
+                
+                // Find target in current facing direction
+                int targetX = hero.getX();
+                int targetY = hero.getY();
+                switch (hero.getDirection()) {
+                    case UP:    targetY -= 1; break;
+                    case DOWN:  targetY += 1; break;
+                    case LEFT:  targetX -= 1; break;
+                    case RIGHT: targetX += 1; break;
+                }
+                
+                domain.models.entity.Entity targetEnemy = null;
+                for (domain.models.entity.Entity ent : entities) {
+                    if (ent != hero && ent.isAlive()) {
+                        if (ent.occupiesTile(targetX, targetY)) {
+                            targetEnemy = ent;
+                            break;
+                        }
+                    }
+                }
+                
+                if (targetEnemy != null) {
+                    hero.attack(targetEnemy, map);
+                } else {
+                    util.helpers.SoundManager.playSwing();
+                }
             }
         } else if (code == KeyEvent.VK_I) {
             if (gameView != null) {

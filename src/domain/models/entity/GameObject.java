@@ -46,6 +46,10 @@ public abstract class GameObject {
     public String getImageName() { return imageName; }
     public boolean isPassable() { return passable; }
 
+    public boolean occupiesTile(int tx, int ty) {
+        return this.x == tx && this.y == ty;
+    }
+
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;

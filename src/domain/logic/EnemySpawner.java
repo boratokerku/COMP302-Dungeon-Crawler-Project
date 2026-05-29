@@ -164,7 +164,9 @@ public class EnemySpawner {
     private boolean isFreeFloor(int x, int y, List<Entity> allEntities) {
         if (!map.isWalkable(x, y)) return false;
         for (Entity e : allEntities) {
-            if (e.isAlive() && e.getX() == x && e.getY() == y) return false;
+            if (e.isAlive()) {
+                if (e.occupiesTile(x, y)) return false;
+            }
         }
         return true;
     }

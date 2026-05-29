@@ -69,9 +69,11 @@ public class ScrollSpawner {
                 // Başka bir entity üzerine koyma
                 boolean occupied = false;
                 for (Entity e : entities) {
-                    if (e.isAlive() && e.getX() == x && e.getY() == y) {
-                        occupied = true;
-                        break;
+                    if (e.isAlive()) {
+                        if (e.occupiesTile(x, y)) {
+                            occupied = true;
+                            break;
+                        }
                     }
                 }
                 if (!occupied)

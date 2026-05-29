@@ -232,10 +232,12 @@ public class Hero extends Entity {
         boolean occupied = false;
         if (entities != null) {
             for (Entity e : entities) {
-                if (e != this && e.isAlive() && e.getX() == nextX && e.getY() == nextY) {
-                    occupied = true;
-                    this.attack(e, map); // Çarptığı düşmana saldır
-                    break;
+                if (e != this && e.isAlive()) {
+                    if (e.occupiesTile(nextX, nextY)) {
+                        occupied = true;
+                        this.attack(e, map); // Çarptığı düşmana saldır
+                        break;
+                    }
                 }
             }
         }

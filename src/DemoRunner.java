@@ -682,15 +682,15 @@ public class DemoRunner {
             case "PotionItem":
             case "HealthPotionItem":
                 return new PotionItem(
-                        new HealthPotion("Red Potion", 5), x, y,
+                        new HealthPotion("Health Potion", 5), x, y,
                         (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/red_potion.png");
             case "ManaPotionItem":
                 return new PotionItem(
-                        new ManaPotion("Blue Potion", 20), x, y,
+                        new ManaPotion("Mana Potion", 20), x, y,
                         (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/blue_potion.png");
             case "EnergyPotionItem":
                 return new PotionItem(
-                        new EnergyPotion("Green Potion", 30), x, y,
+                        new EnergyPotion("Poison Potion", 30), x, y,
                         (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/green_potion.png");
             case "SwordItem":
                 return new SwordItem(x, y);
@@ -710,23 +710,23 @@ public class DemoRunner {
                 return new ArmorItem(x, y);
             case "RingItem":
                 if (imgName != null && !imgName.isEmpty()) {
-                    if (imgName.contains("blue")) {
-                        return new RingItem(new BlueRing("Blue Ring"), x, y, imgName);
-                    } else if (imgName.contains("red")) {
-                        return new RingItem(new RedRing("Red Ring"), x, y, imgName);
+                    if (imgName.contains("blue") || imgName.contains("mana")) {
+                        return new RingItem(new BlueRing("Mana Ring"), x, y, imgName);
+                    } else if (imgName.contains("red") || imgName.contains("health")) {
+                        return new RingItem(new RedRing("Health Ring"), x, y, imgName);
                     } else {
-                        return new RingItem(new GreenRing("Ring of Might"), x, y, imgName);
+                        return new RingItem(new GreenRing("Poison Ring"), x, y, imgName);
                     }
                 }
-                if (displayName != null && displayName.toLowerCase().contains("blue")) {
+                if (displayName != null && (displayName.toLowerCase().contains("blue") || displayName.toLowerCase().contains("mana"))) {
                     return new RingItem(
-                            new BlueRing("Blue Ring"), x, y, "images/items/ring/blue_ring.png");
-                } else if (displayName != null && displayName.toLowerCase().contains("red")) {
+                            new BlueRing("Mana Ring"), x, y, "images/items/ring/blue_ring.png");
+                } else if (displayName != null && (displayName.toLowerCase().contains("red") || displayName.toLowerCase().contains("health"))) {
                     return new RingItem(
-                            new RedRing("Red Ring"), x, y, "images/items/ring/red_ring.png");
+                            new RedRing("Health Ring"), x, y, "images/items/ring/red_ring.png");
                 } else {
                     return new RingItem(
-                            new GreenRing("Ring of Might"), x, y, "images/items/ring/green_ring.png");
+                            new GreenRing("Poison Ring"), x, y, "images/items/ring/green_ring.png");
                 }
             case "KeyItem":
                 return new domain.models.staticObjects.KeyItem(displayName, x, y,

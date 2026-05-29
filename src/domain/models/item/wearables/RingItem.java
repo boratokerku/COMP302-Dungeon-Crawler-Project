@@ -21,9 +21,10 @@ public class RingItem extends MapItem {
     // Compatibility constructor
     public RingItem(String name, int x, int y, String imagePath) {
         super(name, x, y, imagePath);
-        if (name != null && name.toLowerCase().contains("blue")) {
+        String lower = name != null ? name.toLowerCase() : "";
+        if (lower.contains("blue") || lower.contains("mana")) {
             this.ring = new BlueRing(name);
-        } else if (name != null && name.toLowerCase().contains("red")) {
+        } else if (lower.contains("red") || lower.contains("health")) {
             this.ring = new RedRing(name);
         } else {
             this.ring = new GreenRing(name);
@@ -35,7 +36,7 @@ public class RingItem extends MapItem {
     }
 
     public RingItem(int x, int y) {
-        this(new GreenRing("Ring of Might"), x, y, "images/items/ring/green_ring.png");
+        this(new GreenRing("Poison Ring"), x, y, "images/items/ring/green_ring.png");
     }
 
     public Ring getRing() {

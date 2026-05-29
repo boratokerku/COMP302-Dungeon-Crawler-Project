@@ -1,12 +1,16 @@
 package domain.models.item;
 
 import domain.models.entity.GameObject;
+import domain.models.item.usables.PotionItem;
 import domain.models.item.wearables.ArmorItem;
 import domain.models.item.wearables.AxeItem;
 import domain.models.item.wearables.BowItem;
 import domain.models.item.wearables.DiamondSwordItem;
 import domain.models.item.wearables.FireWandItem;
 import domain.models.item.wearables.RingItem;
+import domain.models.item.wearables.BlueRing;
+import domain.models.item.wearables.RedRing;
+import domain.models.item.wearables.GreenRing;
 import domain.models.item.wearables.SamuraiSwordItem;
 import domain.models.item.wearables.SwordItem;
 import domain.models.item.wearables.WoodenSwordItem;
@@ -118,20 +122,30 @@ public abstract class MapItem extends GameObject {
      */
     public static MapItem createRandomWeapon(int x, int y) {
         double roll = Math.random() * 100.0;
-        if (roll < 40.0) {
+        if (roll < 20.0) {
             return new WoodenSwordItem(x, y);
-        } else if (roll < 70.0) {
+        } else if (roll < 40.0) {
             return new SwordItem(x, y);
-        } else if (roll < 85.0) {
+        } else if (roll < 55.0) {
             return new AxeItem(x, y);
-        } else if (roll < 95.0) {
+        } else if (roll < 65.0) {
             return new BowItem(x, y);
-        } else if (roll < 98.0) {
+        } else if (roll < 72.0) {
             return new FireWandItem(x, y);
-        } else if (roll < 99.5) {
+        } else if (roll < 77.0) {
             return new SamuraiSwordItem(x, y);
-        } else {
+        } else if (roll < 80.0) {
             return new DiamondSwordItem(x, y);
+        } else if (roll < 85.0) {
+            return new PotionItem("Steel Sword 1", x, y, "images/weapons/steel_sword_1.png");
+        } else if (roll < 90.0) {
+            return new PotionItem("Golden Sword 1", x, y, "images/weapons/golden_sword_1.png");
+        } else if (roll < 95.0) {
+            return new PotionItem("Iron Sword 1", x, y, "images/weapons/iron_sword_1.png");
+        } else if (roll < 98.0) {
+            return new PotionItem("Small Knife", x, y, "images/weapons/small_knife.png");
+        } else {
+            return new PotionItem("Knight Hammer", x, y, "images/weapons/knight_hammer.png");
         }
     }
 
@@ -142,7 +156,14 @@ public abstract class MapItem extends GameObject {
         } else if (roll < 90.0) {
             return new ArmorItem(x, y); // 10% chance for Steel Armor
         } else {
-            return new RingItem(x, y); // 10% chance for Ring of Might
+            double ringRoll = Math.random();
+            if (ringRoll < 0.33) {
+                return new RingItem(new BlueRing("Mana Ring"), x, y, "images/items/ring/blue_ring.png");
+            } else if (ringRoll < 0.66) {
+                return new RingItem(new RedRing("Health Ring"), x, y, "images/items/ring/red_ring.png");
+            } else {
+                return new RingItem(new GreenRing("Poison Ring"), x, y, "images/items/ring/green_ring.png");
+            }
         }
     }
 }

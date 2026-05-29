@@ -827,23 +827,44 @@ public class GameView extends JPanel {
                             g2d.fillOval(px, py, size, size);
                         }
                     } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
-                        // Blazing Fireball (Orange-Red glowing orb)
-                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
-                        int size = tileSize / 2;
-                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
-                        g2d.fillOval(px, py, size, size);
-                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
-                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                        BufferedImage fireballImg = assetManager.getProjectileFireball();
+                        if (fireballImg != null) {
+                            int px = (int) Math.round(offsetX + (proj.getExactX() * tileSize));
+                            int py = (int) Math.round(offsetY + (proj.getExactY() * tileSize));
+                            g2d.drawImage(fireballImg, px, py, tileSize, tileSize, null);
+                        } else {
+                            // Fallback if image fails
+                            int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                            int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                            int size = tileSize / 2;
+                            g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                            g2d.fillOval(px, py, size, size);
+                            g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                            g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                        }
+                    } else if ("SORCERER_FIREBALL".equalsIgnoreCase(proj.getType())) {
+                        BufferedImage sorcererImg = assetManager.getProjectileSorcererFireball();
+                        if (sorcererImg != null) {
+                            int px = (int) Math.round(offsetX + (proj.getExactX() * tileSize));
+                            int py = (int) Math.round(offsetY + (proj.getExactY() * tileSize));
+                            g2d.drawImage(sorcererImg, px, py, tileSize, tileSize, null);
+                        } else {
+                            // Fallback (Purple Mage Spell)
+                            int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                            int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                            int size = tileSize / 2;
+                            g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                            g2d.fillOval(px, py, size, size);
+                            g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
+                            g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                        }
                     } else {
-                        // Purple Mage Spell
+                        // Other projectiles fallback
                         int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
                         int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
                         int size = tileSize / 2;
-                        g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                        g2d.setColor(new java.awt.Color(255, 69, 0, 220));
                         g2d.fillOval(px, py, size, size);
-                        g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
-                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
                     }
                     continue;
                 } else if (e instanceof domain.models.entity.ShadowClone) {
@@ -1058,14 +1079,21 @@ public class GameView extends JPanel {
                         g2d.fillOval(px, py, size, size);
                     }
                 } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
-                    // Blazing Fireball (Orange-Red glowing orb)
-                    int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                    int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
-                    int size = tileSize / 2;
-                    g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
-                    g2d.fillOval(px, py, size, size);
-                    g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
-                    g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    BufferedImage fireballImg = assetManager.getProjectileFireball();
+                    if (fireballImg != null) {
+                        int px = (int) Math.round(offsetX + (proj.getExactX() * tileSize));
+                        int py = (int) Math.round(offsetY + (proj.getExactY() * tileSize));
+                        g2d.drawImage(fireballImg, px, py, tileSize, tileSize, null);
+                    } else {
+                        // Fallback
+                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    }
                 } else if ("BOSS_FIREBALL".equalsIgnoreCase(proj.getType())) {
                     // Boss Fireball — larger, darker, more menacing
                     int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 6);
@@ -1077,15 +1105,29 @@ public class GameView extends JPanel {
                     g2d.drawOval(px - 3, py - 3, size + 6, size + 6);
                     g2d.setColor(new java.awt.Color(255, 150, 0, 120)); // Outer glow
                     g2d.drawOval(px - 5, py - 5, size + 10, size + 10);
+                } else if ("SORCERER_FIREBALL".equalsIgnoreCase(proj.getType())) {
+                    BufferedImage sorcererImg = assetManager.getProjectileSorcererFireball();
+                    if (sorcererImg != null) {
+                        int px = (int) Math.round(offsetX + (proj.getExactX() * tileSize));
+                        int py = (int) Math.round(offsetY + (proj.getExactY() * tileSize));
+                        g2d.drawImage(sorcererImg, px, py, tileSize, tileSize, null);
+                    } else {
+                        // Fallback (Purple Mage Spell)
+                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    }
                 } else {
-                    // Purple Mage Spell
+                    // Other projectiles fallback
                     int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
                     int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
                     int size = tileSize / 2;
-                    g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                    g2d.setColor(new java.awt.Color(255, 69, 0, 220));
                     g2d.fillOval(px, py, size, size);
-                    g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
-                    g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
                 }
             }
         }

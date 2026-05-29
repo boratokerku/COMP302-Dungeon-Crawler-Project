@@ -298,7 +298,6 @@ public class DesignModeView extends JPanel {
 
     private void buildPalette() {
         // ── 1. OBSTACLES ───────────────────────────────────────────────────────
-        obstaclePalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
         // Crates
         obstaclePalette.add(new PaletteItem("Crate", "crate", true, (x, y) -> new Crate("Crate", x, y)));
         obstaclePalette.add(new PaletteItem("Crate Brown", "containers/crate_brown", true,
@@ -336,9 +335,9 @@ public class DesignModeView extends JPanel {
                 (x, y) -> new Column("Column", x, y, "colon/gray_colon_whole")));
         obstaclePalette.add(new PaletteItem("PurpleCol", "colon/purple_colon_whole", true,
                 (x, y) -> new Column("Column", x, y, "colon/purple_colon_whole")));
+        obstaclePalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
 
         // ── 2. ITEMS ───────────────────────────────────────────────────────────
-        itemPalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
         // Potions
         itemPalette.add(new PaletteItem("HealthPotion", "images/items/potion/red_potion.png", false,
                 (x, y) -> new PotionItem(new HealthPotion("Health Potion", 5), x, y,
@@ -394,6 +393,7 @@ public class DesignModeView extends JPanel {
                 (x, y) -> new PotionItem("Book", x, y, "images/items/readings/book.png")));
         itemPalette.add(new PaletteItem("Totem1", "images/items/readings/totem_1.png", false,
                 (x, y) -> new PotionItem("Totem 1", x, y, "images/items/readings/totem_1.png")));
+        itemPalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
 
         // ── 3. WALL ITEM ───────────────────────────────────────────────────────
         // Decorative (WallDecoration)

@@ -22,6 +22,7 @@ public class ActionMenu {
     private int hoveredIndex = -1;
 
     private BufferedImage bgImg;
+    private BufferedImage smallBgImg;
     private Font vtFont;
 
     private final int padding = 15;
@@ -42,6 +43,18 @@ public class ActionMenu {
             }
         } catch (Exception e) {
             System.err.println("Could not load action_menu.png: " + e.getMessage());
+        }
+
+        try {
+            File imgFile = new File("resources/images/PopUpImages/PopUpActionMenu.png");
+            if (!imgFile.exists()) {
+                imgFile = new File("../resources/images/PopUpImages/PopUpActionMenu.png");
+            }
+            if (imgFile.exists()) {
+                smallBgImg = ImageIO.read(imgFile);
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load PopUpActionMenu.png: " + e.getMessage());
         }
 
         try {
@@ -75,35 +88,47 @@ public class ActionMenu {
         this.actions = obj.getActions();
         this.hoveredIndex = -1;
 
-        if (bgImg != null) {
-            this.width = 350;
-            this.height = 200;
-        } else {
-            // Fallback dynamic calculation
-            Graphics g = invoker.getGraphics();
-            if (g != null) {
-                Font font = vtFont != null ? vtFont : g.getFont();
-                g.setFont(font);
-                FontMetrics fm = g.getFontMetrics();
-                
-                int maxW = fm.stringWidth(obj.getName()) + 10;
-                if (actions.isEmpty()) {
-                    maxW = Math.max(maxW, fm.stringWidth("No actions available"));
-                } else {
-                    for (Action action : actions) {
-                        String label = action.getName() + " " + obj.getName();
-                        if (!action.isAvailable(hero, obj)) {
-                            label += " [Unavailable]";
+        boolean isItem = obj instanceof domain.models.item.MapItem;
+
+        if (isItem) {
+            if (bgImg != null) {
+                this.width = 350;
+                this.height = 200;
+            } else {
+                // Fallback dynamic calculation
+                Graphics g = invoker.getGraphics();
+                if (g != null) {
+                    Font font = vtFont != null ? vtFont : g.getFont();
+                    g.setFont(font);
+                    FontMetrics fm = g.getFontMetrics();
+                    
+                    int maxW = fm.stringWidth(obj.getName()) + 10;
+                    if (actions.isEmpty()) {
+                        maxW = Math.max(maxW, fm.stringWidth("No actions available"));
+                    } else {
+                        for (Action action : actions) {
+                            String label = action.getName() + " " + obj.getName();
+                            if (!action.isAvailable(hero, obj)) {
+                                label += " [Unavailable]";
+                            }
+                            maxW = Math.max(maxW, fm.stringWidth(label));
                         }
-                        maxW = Math.max(maxW, fm.stringWidth(label));
                     }
+                    this.width = maxW + padding * 2 + 10;
+                    int count = actions.isEmpty() ? 1 : actions.size();
+                    this.height = titleHeight + 10 + (count * lineSpacing) + padding * 2;
+                } else {
+                    this.width = 250;
+                    this.height = 150;
                 }
-                this.width = maxW + padding * 2 + 10;
-                int count = actions.isEmpty() ? 1 : actions.size();
-                this.height = titleHeight + 10 + (count * lineSpacing) + padding * 2;
+            }
+        } else {
+            if (smallBgImg != null) {
+                this.width = 271;
+                this.height = 140;
             } else {
                 this.width = 250;
-                this.height = 150;
+                this.height = 130;
             }
         }
 
@@ -135,29 +160,41 @@ public class ActionMenu {
     }
 
     private int getLineIndexAt(int localX, int localY) {
-        if (bgImg != null) {
-            if (localX < 10 || localX > 340) {
+        boolean isItem = targetObject instanceof domain.models.item.MapItem;
+        if (isItem) {
+            if (bgImg != null) {
+                if (localX < 10 || localX > 340) {
+                    return -1;
+                }
+                if (localY >= 32 && localY <= 57) return 0;
+                if (localY >= 66 && localY <= 91) return 1;
+                if (localY >= 98 && localY <= 123) return 2;
+                if (localY >= 130 && localY <= 154) return 3;
+                if (localY >= 161 && localY <= 186) return 4;
                 return -1;
             }
-            if (localY >= 32 && localY <= 57) return 0;
-            if (localY >= 66 && localY <= 91) return 1;
-            if (localY >= 98 && localY <= 123) return 2;
-            if (localY >= 130 && localY <= 154) return 3;
-            if (localY >= 161 && localY <= 186) return 4;
-            return -1;
         } else {
-            // Fallback vertical division
-            int localYStart = padding + titleHeight + 5;
-            int localYDiff = localY - localYStart;
-            if (localYDiff >= 0) {
-                int index = localYDiff / lineSpacing;
-                int count = actions.isEmpty() ? 1 : actions.size();
-                if (index >= 0 && index < count) {
-                    return index;
+            if (smallBgImg != null) {
+                if (localX < 35 || localX > 240) {
+                    return -1;
                 }
+                if (localY >= 32 && localY <= 75) return 0;
+                if (localY >= 87 && localY <= 122) return 1;
+                return -1;
             }
-            return -1;
         }
+
+        // Fallback vertical division
+        int localYStart = padding + titleHeight + 5;
+        int localYDiff = localY - localYStart;
+        if (localYDiff >= 0) {
+            int index = localYDiff / lineSpacing;
+            int count = actions.isEmpty() ? 1 : actions.size();
+            if (index >= 0 && index < count) {
+                return index;
+            }
+        }
+        return -1;
     }
 
     public boolean contains(int mx, int my) {
@@ -212,111 +249,180 @@ public class ActionMenu {
         Font oldFont = g.getFont();
         Stroke oldStroke = g.getStroke();
 
-        // 1. Draw outer shell (background image)
-        if (bgImg != null) {
-            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            g.drawImage(bgImg, x, y, width, height, null);
+        boolean isItem = targetObject instanceof domain.models.item.MapItem;
 
-            // Draw Title centered vertically in the header area [0, 32]
-            g.setFont(vtFont != null ? vtFont.deriveFont(Font.BOLD, 22f) : new Font("Monospaced", Font.BOLD, 16));
-            g.setColor(new Color(255, 215, 0)); // Gold title
-            FontMetrics tfm = g.getFontMetrics();
-            String titleText = targetObject != null ? targetObject.getName() : "Action Menu";
-            int titleX = x + (width - tfm.stringWidth(titleText)) / 2;
-            int titleY = y + 24; // Baseline centered in header
-            g.drawString(titleText, titleX, titleY);
+        if (isItem) {
+            // Draw large action menu
+            if (bgImg != null) {
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                g.drawImage(bgImg, x, y, width, height, null);
 
-            // Draw Actions
-            g.setFont(vtFont != null ? vtFont : new Font("Monospaced", Font.PLAIN, 14));
-            FontMetrics afm = g.getFontMetrics();
+                // Draw Actions
+                g.setFont(vtFont != null ? vtFont : new Font("Monospaced", Font.PLAIN, 14));
+                FontMetrics afm = g.getFontMetrics();
 
-            int[] centersY = {44, 78, 110, 142, 174};
-            int[] startsY = {32, 66, 98, 130, 161};
-            int[] heights = {25, 25, 25, 25, 25};
+                int[] centersY = {44, 78, 110, 142, 174};
+                int[] startsY = {32, 66, 98, 130, 161};
+                int[] heights = {25, 25, 25, 25, 25};
 
-            for (int i = 0; i < 5; i++) {
-                if (i < actions.size()) {
-                    Action action = actions.get(i);
-                    boolean available = action.isAvailable(hero, targetObject);
-                    String label = action.getName() + " " + targetObject.getName();
-                    if (!available) {
-                        label += " [Unavailable]";
+                for (int i = 0; i < 5; i++) {
+                    if (i < actions.size()) {
+                        Action action = actions.get(i);
+                        boolean available = action.isAvailable(hero, targetObject);
+                        String label = action.getName() + " " + targetObject.getName();
+                        if (!available) {
+                            label += " [Unavailable]";
+                        }
+
+                        // Draw hover highlight box if hovered and available
+                        if (available && i == hoveredIndex) {
+                            g.setColor(new Color(255, 255, 255, 40));
+                            g.fillRect(x + 10, y + startsY[i], 330, heights[i]);
+                            g.setColor(new Color(255, 215, 0)); // Bright gold text
+                        } else if (!available) {
+                            g.setColor(new Color(140, 140, 140)); // Disabled gray text
+                        } else {
+                            g.setColor(new Color(255, 235, 180)); // Soft gold/yellow text
+                        }
+
+                        // Push the normal texts a little to the right (x + 40 instead of x + 20)
+                        int textX = x + 40;
+                        int textY = y + centersY[i] + afm.getAscent() / 2 - 3;
+                        g.drawString(label, textX, textY);
                     }
+                }
+            } else {
+                // Fallback: draw semi-transparent dark container with brown border
+                g.setColor(new Color(30, 20, 15, 240));
+                g.fillRoundRect(x, y, width, height, 10, 10);
+                g.setColor(new Color(130, 90, 60));
+                g.setStroke(new BasicStroke(2));
+                g.drawRoundRect(x, y, width, height, 10, 10);
 
-                    // Draw hover highlight box if hovered and available
-                    if (available && i == hoveredIndex) {
-                        g.setColor(new Color(255, 255, 255, 40));
-                        g.fillRect(x + 10, y + startsY[i], 330, heights[i]);
-                        g.setColor(new Color(255, 215, 0)); // Bright gold text
-                    } else if (!available) {
-                        g.setColor(new Color(140, 140, 140)); // Disabled gray text
-                    } else {
-                        g.setColor(new Color(255, 235, 180)); // Soft gold/yellow text
+                // Draw actions line by line
+                g.setFont(vtFont != null ? vtFont : new Font("Monospaced", Font.PLAIN, 14));
+                FontMetrics afm = g.getFontMetrics();
+                int actionStartY = y + padding + 10;
+
+                if (actions.isEmpty()) {
+                    g.setColor(new Color(150, 150, 150)); // Grey
+                    int textX = x + padding + 5;
+                    int textY = actionStartY + afm.getAscent();
+                    g.drawString("No actions available", textX, textY);
+                } else {
+                    for (int i = 0; i < actions.size(); i++) {
+                        Action action = actions.get(i);
+                        boolean available = action.isAvailable(hero, targetObject);
+                        String label = action.getName() + " " + targetObject.getName();
+                        if (!available) {
+                            label += " [Unavailable]";
+                        }
+
+                        int textX = x + padding + 5;
+                        int textY = actionStartY + i * lineSpacing + afm.getAscent();
+
+                        // Draw hover highlight box if hovered and available
+                        if (available && i == hoveredIndex) {
+                            g.setColor(new Color(255, 255, 255, 40));
+                            g.fillRect(x + padding - 5, actionStartY + i * lineSpacing, width - (padding * 2) + 10,
+                                    lineSpacing - 2);
+
+                            g.setColor(new Color(255, 215, 0)); // Bright gold text
+                        } else if (!available) {
+                            g.setColor(new Color(140, 140, 140)); // Disabled gray text
+                        } else {
+                            g.setColor(new Color(255, 235, 180)); // Soft gold/yellow text
+                        }
+
+                        g.drawString(label, textX, textY);
                     }
-
-                    int textX = x + 20;
-                    int textY = y + centersY[i] + afm.getAscent() / 2 - 3;
-                    g.drawString(label, textX, textY);
                 }
             }
         } else {
-            // Fallback: draw semi-transparent dark container with brown border
-            g.setColor(new Color(30, 20, 15, 240));
-            g.fillRoundRect(x, y, width, height, 10, 10);
-            g.setColor(new Color(130, 90, 60));
-            g.setStroke(new BasicStroke(2));
-            g.drawRoundRect(x, y, width, height, 10, 10);
+            // Draw small action menu
+            if (smallBgImg != null) {
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                g.drawImage(smallBgImg, x, y, width, height, null);
 
-            // Draw Title
-            g.setFont(vtFont != null ? vtFont.deriveFont(Font.BOLD, 22f) : new Font("Monospaced", Font.BOLD, 16));
-            g.setColor(new Color(255, 215, 0)); // Gold title
-            FontMetrics tfm = g.getFontMetrics();
-            String titleText = targetObject != null ? targetObject.getName() : "Action Menu";
-            int titleX = x + (width - tfm.stringWidth(titleText)) / 2;
-            int titleY = y + padding + tfm.getAscent();
-            g.drawString(titleText, titleX, titleY);
+                // Draw Actions
+                g.setFont(vtFont != null ? vtFont : new Font("Monospaced", Font.PLAIN, 14));
+                FontMetrics afm = g.getFontMetrics();
 
-            // Draw small gold separator line
-            int sepY = y + padding + titleHeight - 2;
-            g.setColor(new Color(150, 110, 80));
-            g.drawLine(x + padding, sepY, x + width - padding, sepY);
+                int[] centersY = {53, 104};
+                int[] startsY = {32, 87};
+                int[] heights = {43, 35};
 
-            // Draw actions line by line
-            g.setFont(vtFont != null ? vtFont : new Font("Monospaced", Font.PLAIN, 14));
-            FontMetrics afm = g.getFontMetrics();
-            int actionStartY = sepY + 10;
+                for (int i = 0; i < 2; i++) {
+                    if (i < actions.size()) {
+                        Action action = actions.get(i);
+                        boolean available = action.isAvailable(hero, targetObject);
+                        String label = action.getName() + " " + targetObject.getName();
+                        if (!available) {
+                            label += " [Unavailable]";
+                        }
 
-            if (actions.isEmpty()) {
-                g.setColor(new Color(150, 150, 150)); // Grey
-                int textX = x + padding + 5;
-                int textY = actionStartY + afm.getAscent();
-                g.drawString("No actions available", textX, textY);
+                        // Draw hover highlight box if hovered and available
+                        if (available && i == hoveredIndex) {
+                            g.setColor(new Color(255, 255, 255, 40));
+                            g.fillRect(x + 35, y + startsY[i], 205, heights[i]);
+                            g.setColor(new Color(255, 215, 0)); // Bright gold text
+                        } else if (!available) {
+                            g.setColor(new Color(140, 140, 140)); // Disabled gray text
+                        } else {
+                            g.setColor(new Color(255, 235, 180)); // Soft gold/yellow text
+                        }
+
+                        // Push a little right
+                        int textX = x + 45;
+                        int textY = y + centersY[i] + afm.getAscent() / 2 - 3;
+                        g.drawString(label, textX, textY);
+                    }
+                }
             } else {
-                for (int i = 0; i < actions.size(); i++) {
-                    Action action = actions.get(i);
-                    boolean available = action.isAvailable(hero, targetObject);
-                    String label = action.getName() + " " + targetObject.getName();
-                    if (!available) {
-                        label += " [Unavailable]";
-                    }
+                // Fallback: draw semi-transparent dark container with brown border
+                g.setColor(new Color(30, 20, 15, 240));
+                g.fillRoundRect(x, y, width, height, 10, 10);
+                g.setColor(new Color(130, 90, 60));
+                g.setStroke(new BasicStroke(2));
+                g.drawRoundRect(x, y, width, height, 10, 10);
 
+                // Draw actions line by line
+                g.setFont(vtFont != null ? vtFont : new Font("Monospaced", Font.PLAIN, 14));
+                FontMetrics afm = g.getFontMetrics();
+                int actionStartY = y + padding + 10;
+
+                if (actions.isEmpty()) {
+                    g.setColor(new Color(150, 150, 150)); // Grey
                     int textX = x + padding + 5;
-                    int textY = actionStartY + i * lineSpacing + afm.getAscent();
+                    int textY = actionStartY + afm.getAscent();
+                    g.drawString("No actions available", textX, textY);
+                } else {
+                    for (int i = 0; i < actions.size(); i++) {
+                        Action action = actions.get(i);
+                        boolean available = action.isAvailable(hero, targetObject);
+                        String label = action.getName() + " " + targetObject.getName();
+                        if (!available) {
+                            label += " [Unavailable]";
+                        }
 
-                    // Draw hover highlight box if hovered and available
-                    if (available && i == hoveredIndex) {
-                        g.setColor(new Color(255, 255, 255, 40));
-                        g.fillRect(x + padding - 5, actionStartY + i * lineSpacing, width - (padding * 2) + 10,
-                                lineSpacing - 2);
+                        int textX = x + padding + 5;
+                        int textY = actionStartY + i * lineSpacing + afm.getAscent();
 
-                        g.setColor(new Color(255, 215, 0)); // Bright gold text
-                    } else if (!available) {
-                        g.setColor(new Color(140, 140, 140)); // Disabled gray text
-                    } else {
-                        g.setColor(new Color(255, 235, 180)); // Soft gold/yellow text
+                        // Draw hover highlight box if hovered and available
+                        if (available && i == hoveredIndex) {
+                            g.setColor(new Color(255, 255, 255, 40));
+                            g.fillRect(x + padding - 5, actionStartY + i * lineSpacing, width - (padding * 2) + 10,
+                                    lineSpacing - 2);
+
+                            g.setColor(new Color(255, 215, 0)); // Bright gold text
+                        } else if (!available) {
+                            g.setColor(new Color(140, 140, 140)); // Disabled gray text
+                        } else {
+                            g.setColor(new Color(255, 235, 180)); // Soft gold/yellow text
+                        }
+
+                        g.drawString(label, textX, textY);
                     }
-
-                    g.drawString(label, textX, textY);
                 }
             }
         }

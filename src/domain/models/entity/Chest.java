@@ -9,7 +9,6 @@ public class Chest extends GameObject {
         java.util.List<GameObject> contents = new java.util.ArrayList<>();
         contents.add(domain.models.item.usables.PotionItem.createRandomPotionItem(x, y));
         this.addAction(new domain.logic.OpenAction(contents));
-        this.addAction(new domain.logic.BreakAction());
     }
 
     public Chest(String name, int x, int y, boolean isLocked) {

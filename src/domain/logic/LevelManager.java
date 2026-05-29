@@ -165,7 +165,7 @@ public class LevelManager {
         placeRandomLevelDoor(map, "Boss Gate");
 
         // Level Key hidden in the level
-        map.placeObject(new LevelKey(2, 3), 2, 3);
+        hideLevelKey(map);
     }
 
     private void populateDepthsEnemies(GameMap map, List<Entity> entities, Hero hero) {
@@ -316,5 +316,118 @@ public class LevelManager {
 
         System.out.println("Placed static LevelDoor '" + name + "' randomly at (" + doorX + ", " + doorY
                 + ") and cleared front tile.");
+    }
+
+    public static void hideLevelKey(GameMap map) {
+        if (map == null) return;
+
+        // 1. Remove any existing LevelKey from the map floor/cells
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.staticObjects.LevelKey) {
+                    map.removeObject(obj);
+                }
+            }
+        }
+
+        // 2. Gather candidates
+        List<domain.models.entity.Crate> crateCandidates = new ArrayList<>();
+        List<domain.models.entity.SearchableObject> searchableCandidates = new ArrayList<>();
+        List<domain.models.tile.WallTile> bannerCandidates = new ArrayList<>();
+
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.entity.Crate) {
+                    crateCandidates.add((domain.models.entity.Crate) obj);
+                } else if (obj instanceof domain.models.entity.SearchableObject) {
+                    searchableCandidates.add((domain.models.entity.SearchableObject) obj);
+                } else if (obj instanceof domain.models.tile.WallTile) {
+                    domain.models.tile.WallTile wt = (domain.models.tile.WallTile) obj;
+                    GameObject deco = wt.getDecoration();
+                    if (deco instanceof domain.models.entity.SearchableObject) {
+                        searchableCandidates.add((domain.models.entity.SearchableObject) deco);
+                    } else if (deco instanceof domain.models.staticObjects.WallObject) {
+                        String img = deco.getImageName();
+                        if (img != null && (img.toLowerCase().contains("flag") || img.toLowerCase().contains("banner"))) {
+                            bannerCandidates.add(wt);
+                        }
+                    }
+                }
+            }
+        }
+
+        int total = crateCandidates.size() + searchableCandidates.size() + bannerCandidates.size();
+        Random rand = new Random();
+
+        if (total > 0) {
+            int choice = rand.nextInt(total);
+            if (choice < crateCandidates.size()) {
+                domain.models.entity.Crate crate = crateCandidates.get(choice);
+                crate.setHiddenItem(new domain.models.staticObjects.LevelKey(crate.getX(), crate.getY()));
+                System.out.println("Hid LevelKey inside Crate at (" + crate.getX() + ", " + crate.getY() + ")");
+            } else if (choice < crateCandidates.size() + searchableCandidates.size()) {
+                int idx = choice - crateCandidates.size();
+                domain.models.entity.SearchableObject so = searchableCandidates.get(idx);
+                so.setHiddenItem(new domain.models.staticObjects.LevelKey(so.getX(), so.getY()));
+                System.out.println("Hid LevelKey inside SearchableObject at (" + so.getX() + ", " + so.getY() + ")");
+            } else {
+                int idx = choice - crateCandidates.size() - searchableCandidates.size();
+                domain.models.tile.WallTile wt = bannerCandidates.get(idx);
+                GameObject banner = wt.getDecoration();
+                String img = banner.getImageName();
+                int bx = wt.getX();
+                int by = wt.getY();
+                domain.models.entity.SearchableObject searchable = new domain.models.entity.SearchableObject("WallSearchable", bx, by, img, img);
+                searchable.setHiddenItem(new domain.models.staticObjects.LevelKey(bx, by));
+                wt.setDecoration(searchable);
+                searchable.setMap(map);
+                System.out.println("Converted banner to SearchableObject and hid LevelKey at (" + bx + ", " + by + ")");
+            }
+        } else {
+            // Fallback: Place on floor at 2, 3 if possible
+            map.placeObject(new domain.models.staticObjects.LevelKey(2, 3), 2, 3);
+            System.out.println("No hidden candidates found. Placed LevelKey on floor at (2, 3)");
+        }
+    }
+
+    public static void clearAllOtherSkullKeys(GameMap map, int excludeX, int excludeY) {
+        if (map == null) return;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                GameObject obj = map.getObjectAt(x, y);
+                // 1. Remove from floor
+                if (obj instanceof domain.models.staticObjects.LevelKey) {
+                    if (x != excludeX || y != excludeY) {
+                        map.removeObject(obj);
+                    }
+                }
+                // 2. Remove hidden items from Crates
+                if (obj instanceof domain.models.entity.Crate) {
+                    domain.models.entity.Crate crate = (domain.models.entity.Crate) obj;
+                    if (crate.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                        crate.setHiddenItem(null);
+                    }
+                }
+                // 3. Remove hidden items from SearchableObjects (on floor or walls)
+                if (obj instanceof domain.models.entity.SearchableObject) {
+                    domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
+                    if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                        so.setHiddenItem(null);
+                    }
+                }
+                if (obj instanceof domain.models.tile.WallTile) {
+                    domain.models.tile.WallTile wt = (domain.models.tile.WallTile) obj;
+                    GameObject deco = wt.getDecoration();
+                    if (deco instanceof domain.models.entity.SearchableObject) {
+                        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) deco;
+                        if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                            so.setHiddenItem(null);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -12,13 +12,16 @@ public class BreakAction implements Action {
     @Override
     public boolean isAvailable(Hero hero, GameObject target) {
         if (target instanceof domain.models.entity.Chest) {
-            return ((domain.models.entity.Chest) target).isLocked();
+            return false;
         }
         return true;
     }
 
     @Override
     public void execute(Hero hero, GameObject target) {
+        if (target instanceof domain.models.entity.Chest) {
+            return;
+        }
         hero.setEnergy(Math.max(0, hero.getEnergy() - 10));
         
         double successChance = hero.getStr() / 20.0;
@@ -38,16 +41,31 @@ public class BreakAction implements Action {
                 // Remove the container first
                 map.removeObject(target);
                 
-                // Drop a high-quality random loot on the floor!
-                domain.models.item.MapItem loot = domain.models.item.MapItem.createRandomItem(tx, ty);
+                GameObject loot = null;
+                if (target instanceof domain.models.entity.Crate) {
+                    loot = ((domain.models.entity.Crate) target).getHiddenItem();
+                }
+                
+                boolean isLevelKey = (loot instanceof domain.models.staticObjects.LevelKey);
+                
+                if (loot == null) {
+                    loot = domain.models.item.MapItem.createRandomItem(tx, ty);
+                }
+                
                 if (loot != null) {
+                    loot.setPosition(tx, ty);
                     map.placeObject(loot, tx, ty);
                     System.out.println("Broke " + containerType + " open! Dropped " + loot.getName() + " at (" + tx + ", " + ty + ")");
                 }
                 
                 util.helpers.SoundManager.playEnemyHit();
                 // Show floating text feedback!
-                view.GameView.addFloatingText(tx, ty, "BROKEN!", java.awt.Color.GREEN);
+                if (isLevelKey) {
+                    view.GameView.addFloatingText(tx, ty, "Level key found!", new java.awt.Color(255, 215, 0));
+                    domain.logic.LevelManager.clearAllOtherSkullKeys(map, tx, ty);
+                } else {
+                    view.GameView.addFloatingText(tx, ty, "BROKEN!", java.awt.Color.GREEN);
+                }
             }
         } else {
             if (target != null) {

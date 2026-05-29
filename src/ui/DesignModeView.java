@@ -294,11 +294,11 @@ public class DesignModeView extends JPanel {
 
         // Chests & Bags (Floor interactive Chest obstacles)
         obstaclePalette.add(new PaletteItem("BrChest", "containers/chest_brown", true,
-                (x, y) -> new domain.models.entity.Chest("Brown Chest", x, y, false, "containers/chest_brown")));
+                (x, y) -> new domain.models.entity.Chest("Brown Chest", x, y, true, "containers/chest_brown")));
         obstaclePalette.add(new PaletteItem("RedChest", "containers/chest_red", true,
-                (x, y) -> new domain.models.entity.Chest("Red Chest", x, y, false, "containers/chest_red")));
+                (x, y) -> new domain.models.entity.Chest("Red Chest", x, y, true, "containers/chest_red")));
         obstaclePalette.add(new PaletteItem("WhChest", "containers/chest_white", true,
-                (x, y) -> new domain.models.entity.Chest("White Chest", x, y, false, "containers/chest_white")));
+                (x, y) -> new domain.models.entity.Chest("White Chest", x, y, true, "containers/chest_white")));
         obstaclePalette.add(new PaletteItem("GoldChest", "containers/gold_chest_closed", true,
                 (x, y) -> new domain.models.entity.Chest("Gold Chest", x, y, true, "containers/gold_chest_closed")));
         obstaclePalette.add(new PaletteItem("SilvChest", "containers/silver_chest_closed", true,
@@ -348,12 +348,6 @@ public class DesignModeView extends JPanel {
                 (x, y) -> new KeyItem("Golden Key 2", x, y, "images/items/key/golden_key_2.png")));
         itemPalette.add(new PaletteItem("SilverKey", "images/items/key/silver_key.png", false,
                 (x, y) -> new KeyItem("Silver Key", x, y, "images/items/key/silver_key.png")));
-        itemPalette.add(new PaletteItem("SimpleKey", "images/items/key/simple_key.png", false,
-                (x, y) -> new KeyItem("Simple Key", x, y, "images/items/key/simple_key.png")));
-        itemPalette.add(new PaletteItem("SkullKey", "images/items/key/skull_key.png", false,
-                (x, y) -> new KeyItem("Skull Key", x, y, "images/items/key/skull_key.png")));
-        itemPalette.add(new PaletteItem("DoubleKey", "images/items/key/double_key.png", false,
-                (x, y) -> new KeyItem("Double Key", x, y, "images/items/key/double_key.png")));
 
         // Rings
         itemPalette.add(
@@ -1581,7 +1575,9 @@ public class DesignModeView extends JPanel {
                 case "KeyItem" -> imgName != null && !imgName.isEmpty()
                         ? new KeyItem(name, x, y, imgName)
                         : new KeyItem(x, y);
-                case "Chest" -> new Chest(name, x, y, locked);
+                case "Chest" -> imgName != null && !imgName.isEmpty()
+                        ? new Chest(name, x, y, locked, imgName)
+                        : new Chest(name, x, y, locked);
                 case "DoubleCrate" -> new DoubleCrate(name, x, y);
                 case "Crate" -> new Crate(name, x, y);
                 case "Column" -> imgName != null && !imgName.isEmpty()

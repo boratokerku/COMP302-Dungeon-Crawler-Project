@@ -170,6 +170,12 @@ public class MouseHandler extends MouseAdapter {
             return;
         }
 
+        if (obj == null || obj.getActions() == null || obj.getActions().isEmpty()) {
+            actionMenu.hideMenu();
+            gameView.repaint();
+            return;
+        }
+
         // We show the Action Menu inside GameView, passing e.getComponent() logic
         // actually handled by actionMenu parent,
         // but actionMenu is a child of GameView (we'll add it).

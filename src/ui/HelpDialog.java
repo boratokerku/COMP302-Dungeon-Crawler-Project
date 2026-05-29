@@ -6,26 +6,24 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-/**
- * Design Mode'ta haritayı temizlemek istediğimizde gösterilen özel görsel popup.
- */
-public class ClearMapDialog extends JDialog {
-    private boolean confirmed = false;
-    private BufferedImage bgImage;
-    private BufferedImage confirmImage;
-    private BufferedImage cancelImage;
+public class HelpDialog extends JDialog {
+    private BufferedImage helpBoxImg;
+    private BufferedImage objectiveBoxImg;
+    private BufferedImage leftArrowImg;
+    private BufferedImage rightArrowImg;
+    private BufferedImage confirmImg;
 
-    public ClearMapDialog(Frame owner) {
-        super(owner, "Clear Map", true);
+    private int page = 1; // 1 = HelpBox, 2 = ObjectiveBox
+
+    public HelpDialog(Frame owner) {
+        super(owner, "Help & Objective", true);
         setUndecorated(true);
-        setBackground(new Color(0, 0, 0, 0)); // Şeffaf arka plan
+        setBackground(new Color(0, 0, 0, 0)); // Transparent window background
 
         loadImages();
 
-        // 0.65x scale to make the popup slightly smaller while maintaining aspect ratio
-        float scale = 0.65f;
-        int width = Math.round(546 * scale);
-        int height = Math.round(457 * scale);
+        int width = 577;
+        int height = 433;
         setSize(width, height);
         setLocationRelativeTo(owner);
 
@@ -33,10 +31,11 @@ public class ClearMapDialog extends JDialog {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                if (bgImage != null) {
+                BufferedImage activeBg = (page == 1) ? helpBoxImg : objectiveBoxImg;
+                if (activeBg != null) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                    g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
+                    g2.drawImage(activeBg, 0, 0, getWidth(), getHeight(), null);
                     g2.dispose();
                 }
             }
@@ -44,46 +43,77 @@ public class ClearMapDialog extends JDialog {
         contentPanel.setOpaque(false);
         contentPanel.setLayout(null);
 
-        // Kenarlıkları kırp
-        BufferedImage trimmedConfirm = trimImage(confirmImage);
-        BufferedImage trimmedCancel = trimImage(cancelImage);
+        // Trim transparency from button assets for precise bounds
+        BufferedImage trimmedLeft = trimImage(leftArrowImg);
+        BufferedImage trimmedRight = trimImage(rightArrowImg);
+        BufferedImage trimmedConfirm = trimImage(confirmImg);
 
-        int btnHeight = Math.round(55 * scale);
-        int confirmW = getWidthForHeight(trimmedConfirm, btnHeight, Math.round(162 * scale));
-        int cancelW = getWidthForHeight(trimmedCancel, btnHeight, Math.round(172 * scale));
+        // Standard scaled sizes
+        int arrowH = 45;
+        int leftW = getWidthForHeight(trimmedLeft, arrowH, 48);
+        int rightW = getWidthForHeight(trimmedRight, arrowH, 48);
 
+        int confirmH = 35;
+        int confirmW = getWidthForHeight(trimmedConfirm, confirmH, 125);
+
+        ImageButton leftArrowBtn = new ImageButton(trimmedLeft, "<");
+        ImageButton rightArrowBtn = new ImageButton(trimmedRight, ">");
         ImageButton confirmBtn = new ImageButton(trimmedConfirm, "Confirm");
-        ImageButton cancelBtn = new ImageButton(trimmedCancel, "Cancel");
+
+        // Positions
+        // below right for rightArrowBtn: page 1
+        int marginX = 45;
+        int marginY = 40;
+        int btnY = height - arrowH - marginY;
+
+        rightArrowBtn.setBounds(width - rightW - marginX, btnY, rightW, arrowH);
+
+        // below left for leftArrowBtn: page 2
+        leftArrowBtn.setBounds(marginX, btnY, leftW, arrowH);
+
+        // right below for confirmBtn: page 2 (aligned vertically)
+        int confirmY = height - confirmH - marginY;
+        confirmBtn.setBounds(width - confirmW - marginX, confirmY, confirmW, confirmH);
+
+        // Action Listeners
+        rightArrowBtn.addActionListener(e -> {
+            page = 2;
+            leftArrowBtn.setVisible(true);
+            confirmBtn.setVisible(true);
+            rightArrowBtn.setVisible(false);
+            contentPanel.repaint();
+        });
+
+        leftArrowBtn.addActionListener(e -> {
+            page = 1;
+            leftArrowBtn.setVisible(false);
+            confirmBtn.setVisible(false);
+            rightArrowBtn.setVisible(true);
+            contentPanel.repaint();
+        });
 
         confirmBtn.addActionListener(e -> {
-            confirmed = true;
             dispose();
         });
 
-        cancelBtn.addActionListener(e -> {
-            confirmed = false;
-            dispose();
-        });
+        // Set initial visibility
+        leftArrowBtn.setVisible(false);
+        confirmBtn.setVisible(false);
+        rightArrowBtn.setVisible(true);
 
-        // Butonları hizala ve yerleştir
-        int spacing = Math.round(20 * scale);
-        int totalWidth = confirmW + cancelW + spacing;
-        int startX = (width - totalWidth) / 2;
-        int btnY = Math.round(345 * scale);
-
-        confirmBtn.setBounds(startX, btnY, confirmW, btnHeight);
-        cancelBtn.setBounds(startX + confirmW + spacing, btnY, cancelW, btnHeight);
-
+        contentPanel.add(leftArrowBtn);
+        contentPanel.add(rightArrowBtn);
         contentPanel.add(confirmBtn);
-        contentPanel.add(cancelBtn);
 
         setContentPane(contentPanel);
     }
 
     private void loadImages() {
-        bgImage = loadImg("resources/images/PopUpImages/ClearMapBox.png");
-        confirmImage = loadImg("resources/images/PopUpImages/ConfirmButton_Build.png");
-        cancelImage = loadImg("resources/images/PopUpImages/CancelButton.png");
+        helpBoxImg = loadImg("resources/images/HelperMenuImages/HelpBox.png");
+        objectiveBoxImg = loadImg("resources/images/HelperMenuImages/ObjectiveBox.png");
+        leftArrowImg = loadImg("resources/images/PopUpImages/LeftArrowButton.png");
+        rightArrowImg = loadImg("resources/images/PopUpImages/RightArrowButton.png");
+        confirmImg = loadImg("resources/images/PopUpImages/ConfirmButton.png");
     }
 
     private BufferedImage loadImg(String path) {
@@ -105,10 +135,6 @@ public class ClearMapDialog extends JDialog {
         if (img == null) return fallbackWidth;
         float aspect = img.getWidth() / (float) img.getHeight();
         return Math.round(targetHeight * aspect);
-    }
-
-    public boolean isConfirmed() {
-        return confirmed;
     }
 
     private BufferedImage trimImage(BufferedImage img) {

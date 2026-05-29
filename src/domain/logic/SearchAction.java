@@ -44,9 +44,16 @@ public class SearchAction implements Action {
             }
 
             int dropY = (so.getY() == 0) ? 1 : so.getY() - 1;
-            map.placeObject(so.getHiddenItem(), so.getX(), dropY);
+            GameObject hidden = so.getHiddenItem();
+            hidden.setPosition(so.getX(), dropY);
+            map.placeObject(hidden, so.getX(), dropY);
 
-            view.GameView.addFloatingText(so.getX(), so.getY(), "Found Key!", java.awt.Color.YELLOW);
+            if (hidden instanceof domain.models.staticObjects.LevelKey) {
+                view.GameView.addFloatingText(so.getX(), so.getY(), "Level key found!", new java.awt.Color(255, 215, 0));
+                domain.logic.LevelManager.clearAllOtherSkullKeys(map, so.getX(), dropY);
+            } else {
+                view.GameView.addFloatingText(so.getX(), so.getY(), "Found Key!", java.awt.Color.YELLOW);
+            }
             System.out.println("You found something! A key was hidden here. It fell to the ground.");
             return;
         }

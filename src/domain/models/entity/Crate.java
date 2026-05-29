@@ -10,6 +10,16 @@ public class Crate extends GameObject {
         this(name, x, y, getSpriteForName(name));
     }
 
+    private GameObject hiddenItem = null;
+
+    public GameObject getHiddenItem() {
+        return this.hiddenItem;
+    }
+
+    public void setHiddenItem(GameObject hiddenItem) {
+        this.hiddenItem = hiddenItem;
+    }
+
     private static String getSpriteForName(String name) {
         if (name != null && name.toLowerCase().contains("brown")) {
             return "containers/crate_brown";

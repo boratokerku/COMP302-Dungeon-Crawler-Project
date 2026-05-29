@@ -544,7 +544,7 @@ public class GameView extends JPanel {
 
             g.setColor(new Color(255, 220, 100));
             double timerScale = (double) timerBgW / timerBgImg.getWidth();
-            int textSlotW = (int) Math.round((1275 - 490) * timerScale);
+            int textSlotW = (int) Math.round(720.0 * timerScale);
             
             float fontSize = 26f;
             g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, fontSize));
@@ -559,7 +559,7 @@ public class GameView extends JPanel {
                 timeStrW = tfm.stringWidth(timeStr);
             }
 
-            int textCenterX = timerBgX + (int) Math.round(882.5 * timerScale);
+            int textCenterX = timerBgX + (int) Math.round(910.0 * timerScale);
             int textX = textCenterX - timeStrW / 2;
             int textY = timerBgY + (timerBgH + tfm.getAscent()) / 2 - 3;
             g.drawString(timeStr, textX, textY);

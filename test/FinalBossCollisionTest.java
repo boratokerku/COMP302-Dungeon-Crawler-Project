@@ -1,4 +1,3 @@
-package test;
 
 import domain.models.Direction;
 import domain.models.entity.*;
@@ -21,7 +20,7 @@ public class FinalBossCollisionTest {
     @BeforeEach
     public void setUp() {
         map = new GameMap(12, 12);
-        
+
         hero = new Hero(2, 2);
         hero.setCurrentMap(map);
         hero.setEnergy(100);
@@ -123,7 +122,7 @@ public class FinalBossCollisionTest {
     public void testKnightCollision_CannotMoveIntoBossTiles() {
         Knight knight = new Knight(3, 4);
         entities.add(knight);
-        hero.setPosition(4, 4); 
+        hero.setPosition(4, 4);
         for (int i = 0; i < 4; i++) {
             knight.followHero(hero, map, entities);
         }
@@ -134,11 +133,11 @@ public class FinalBossCollisionTest {
     public void testShadowCloneCollision_CannotMoveIntoBossTiles() {
         ShadowClone clone = new ShadowClone(3, 4);
         entities.add(clone);
-        clone.moveOpposite(Direction.LEFT, map, entities); 
+        clone.moveOpposite(Direction.LEFT, map, entities);
         assertEquals(3, clone.getX());
 
         clone.setPosition(6, 4);
-        clone.moveOpposite(Direction.RIGHT, map, entities); 
+        clone.moveOpposite(Direction.RIGHT, map, entities);
         assertEquals(6, clone.getX());
     }
 }

@@ -95,7 +95,8 @@ public class DemoRunner {
                     copy.placeObject(new domain.models.tile.FloorTile(), x, y);
                 } else if (obj instanceof domain.models.entity.Chest) {
                     domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
-                    copy.placeObject(new domain.models.entity.Chest(chest.getName(), x, y, chest.isLocked(), chest.getImageName()), x, y);
+                    copy.placeObject(new domain.models.entity.Chest(chest.getName(), x, y, chest.isLocked(),
+                            chest.getImageName()), x, y);
                 } else if (obj instanceof domain.models.entity.DoubleCrate) {
                     copy.placeObject(new domain.models.entity.DoubleCrate(obj.getName(), x, y), x, y);
                 } else if (obj instanceof domain.models.entity.Crate) {
@@ -106,11 +107,15 @@ public class DemoRunner {
                     } else {
                         if (crate.getHiddenItem() != null) {
                             if (crate.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                                domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) crate.getHiddenItem();
-                                newCrate.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()));
+                                domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) crate
+                                        .getHiddenItem();
+                                newCrate.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y,
+                                        lk.getImageName()));
                             } else if (crate.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
-                                domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) crate.getHiddenItem();
-                                newCrate.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()));
+                                domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) crate
+                                        .getHiddenItem();
+                                newCrate.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y,
+                                        key.getImageName()));
                             }
                         }
                     }
@@ -624,7 +629,8 @@ public class DemoRunner {
                 // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
                 scrollItems.add(rec);
             } else if ("SearchableObject".equals(rec.type)) {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
+                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked,
+                        rec.imageName);
                 if (item instanceof domain.models.entity.SearchableObject) {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) item;
                     so.setSearched(rec.searched);
@@ -642,7 +648,8 @@ public class DemoRunner {
                     map.placeObject(item, rec.x, rec.y);
                 }
             } else {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
+                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked,
+                        rec.imageName);
                 if (item instanceof domain.models.entity.Crate) {
                     domain.models.entity.Crate crate = (domain.models.entity.Crate) item;
                     if (rec.hiddenItemType != null) {
@@ -724,10 +731,12 @@ public class DemoRunner {
                         return new RingItem(new GreenRing("Poison Ring"), x, y, imgName);
                     }
                 }
-                if (displayName != null && (displayName.toLowerCase().contains("blue") || displayName.toLowerCase().contains("mana"))) {
+                if (displayName != null
+                        && (displayName.toLowerCase().contains("blue") || displayName.toLowerCase().contains("mana"))) {
                     return new RingItem(
                             new BlueRing("Mana Ring"), x, y, "images/items/ring/blue_ring.png");
-                } else if (displayName != null && (displayName.toLowerCase().contains("red") || displayName.toLowerCase().contains("health"))) {
+                } else if (displayName != null && (displayName.toLowerCase().contains("red")
+                        || displayName.toLowerCase().contains("health"))) {
                     return new RingItem(
                             new RedRing("Health Ring"), x, y, "images/items/ring/red_ring.png");
                 } else {
@@ -807,7 +816,8 @@ public class DemoRunner {
                         break;
                     }
                 }
-                if (hasLevelDoor) break;
+                if (hasLevelDoor)
+                    break;
             }
             if (hasLevelDoor) {
                 LevelManager.hideLevelKey(map);

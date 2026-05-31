@@ -597,6 +597,10 @@ public class GameView extends JPanel {
         repaint();
     }
 
+    public int getSelectedSlot() {
+        return inventoryView.getSelectedSlot();
+    }
+
     private final java.util.Map<String, BufferedImage> weaponImageCache = new java.util.HashMap<>();
 
     private BufferedImage getWeaponImage(String imageName) {

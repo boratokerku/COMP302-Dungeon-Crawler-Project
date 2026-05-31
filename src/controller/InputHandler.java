@@ -105,6 +105,27 @@ public class InputHandler implements KeyListener {
                 hero.setAnimationState(AnimationState.WALK_RIGHT);
             }
             moveCloneOpposite(Direction.RIGHT);
+        } else if (code == KeyEvent.VK_Q) {
+            if (hero != null && hero.getInventory() != null && gameView != null) {
+                int selectedSlot = gameView.getSelectedSlot();
+                java.util.List<domain.models.entity.GameObject> items = hero.getInventory().getItems();
+                int itemIndex = selectedSlot - 1;
+                if (itemIndex >= 0 && itemIndex < items.size()) {
+                    domain.models.entity.GameObject item = items.get(itemIndex);
+                    if (item != null) {
+                        for (domain.logic.Action action : item.getActions()) {
+                            if (action.getName().equals("Discard")) {
+                                if (action.isAvailable(hero, item)) {
+                                    action.execute(hero, item);
+                                    System.out.println("[Hotkey Q] Discarded item " + item.getName() + " from slot " + selectedSlot);
+                                    gameView.repaint();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         else if (code == KeyEvent.VK_SPACE) {
             if (hero.getEquippedWeapon() instanceof domain.models.item.MapItem) {

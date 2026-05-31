@@ -390,8 +390,8 @@ public class DesignModeView extends JPanel {
         itemPalette.add(new PaletteItem("Armor", "images/items/steel_armor.png", false, (x, y) -> new ArmorItem(x, y)));
 
         // Readings
-        itemPalette.add(new PaletteItem("Shadow Clone", "images/items/readings/totem_1.png", false,
-                (x, y) -> new PotionItem("Shadow Clone", x, y, "images/items/readings/totem_1.png")));
+        itemPalette.add(new PaletteItem("Shadow Clone", "images/items/readings/totem_3.png", false,
+                (x, y) -> new PotionItem("Shadow Clone", x, y, "images/items/readings/totem_3.png")));
 
         // ── 3. WALL ITEM ───────────────────────────────────────────────────────
         // Decorative (WallDecoration)

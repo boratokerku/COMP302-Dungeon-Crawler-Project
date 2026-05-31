@@ -863,6 +863,19 @@ public class DemoRunner {
             }
         }
 
+        // Design mode'dan gelen "Shadow Clone" PotionItem'larını gerçek
+        // ShadowCloneScroll'a dönüştür
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.item.usables.PotionItem
+                        && "Shadow Clone".equals(obj.getName())) {
+                    ShadowCloneScroll scroll = new ShadowCloneScroll(x, y, entities, map, inputHandler);
+                    map.placeObject(scroll, x, y);
+                }
+            }
+        }
+
         // Scroll'ları şimdi yerleştir — inputHandler hazır, tam işlevsel oluşturulur
         for (GameState.ItemRecord rec : scrollItems) {
             ShadowCloneScroll scroll = new ShadowCloneScroll(
@@ -1334,23 +1347,19 @@ public class DemoRunner {
                                 }
                             }
                         } else {
-                            // Düşman mermisinin Hero veya Clone'a çarpma kontrolü
-                            ShadowClone activeClone = inputHandler.getShadowClone();
-                            Entity target = (activeClone != null && activeClone.isAlive()) ? activeClone : hero;
-
-                            if (proj.isAlive() && proj.getX() == target.getX() && proj.getY() == target.getY()) {
-                                int def = (target instanceof domain.models.entity.Hero)
-                                        ? ((domain.models.entity.Hero) target).getDef()
-                                        : 0;
-                                int damage = Math.max(1, proj.getDamage() - def); // Minimum 1 damage to prevent
-                                                                                  // complete invincibility
-                                target.takeDamage(damage);
-                                view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP",
+                            // Düşman mermisinin Hero'ya çarpma kontrolü
+                            // Spesifikasyon: Klon hasar almaz, mermiler klondan geçer
+                            if (proj.isAlive() && proj.getX() == hero.getX() && proj.getY() == hero.getY()) {
+                                int def = ((domain.models.entity.Hero) hero).getDef();
+                                int damage = Math.max(1, proj.getDamage() - def);
+                                hero.takeDamage(damage);
+                                view.GameView.addFloatingText(hero.getX(), hero.getY(), "-" + damage + " HP",
                                         new java.awt.Color(255, 200, 50));
                                 proj.setHp(0); // Mermi yok ol
-                                System.out.println("Target hit by projectile! Damage: " + damage + " | Target HP: "
-                                        + target.getHp());
+                                System.out.println("Hero hit by projectile! Damage: " + damage + " | Hero HP: "
+                                        + hero.getHp());
                             }
+                            // Clone'a çarpan mermiler geçer — klon hasar almaz, mermi yok olmaz
                         }
                     }
                 }

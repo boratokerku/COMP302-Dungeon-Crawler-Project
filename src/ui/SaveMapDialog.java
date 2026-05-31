@@ -52,7 +52,7 @@ public class SaveMapDialog extends JDialog {
                 if (bgImage != null) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                    
+
                     // Draw background frame to fit the window exactly
                     g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
 
@@ -118,7 +118,8 @@ public class SaveMapDialog extends JDialog {
         confirmBtn.addActionListener(e -> {
             String text = nameField.getText().trim();
             if (text.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid map name.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Please enter a valid map name.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             saved = true;
@@ -174,26 +175,47 @@ public class SaveMapDialog extends JDialog {
     }
 
     private int getWidthForHeight(BufferedImage img, int targetHeight, int fallbackWidth) {
-        if (img == null) return fallbackWidth;
+        if (img == null)
+            return fallbackWidth;
         float aspect = img.getWidth() / (float) img.getHeight();
         return Math.round(targetHeight * aspect);
     }
 
     private BufferedImage trimImage(BufferedImage img) {
-        if (img == null) return null;
+        if (img == null)
+            return null;
         int w = img.getWidth(), h = img.getHeight();
         int top = 0, bottom = h - 1, left = 0, right = w - 1;
         try {
-            outer: for (int y = 0; y < h; y++) for (int x = 0; x < w; x++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { top = y; break outer; }
-            outer: for (int y = h-1; y >= 0; y--) for (int x = 0; x < w; x++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { bottom = y; break outer; }
-            outer: for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { left = x; break outer; }
-            outer: for (int x = w-1; x >= 0; x--) for (int y = 0; y < h; y++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { right = x; break outer; }
-        } catch (Exception e) { return img; }
-        if (right <= left || bottom <= top) return img;
+            outer: for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        top = y;
+                        break outer;
+                    }
+            outer: for (int y = h - 1; y >= 0; y--)
+                for (int x = 0; x < w; x++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        bottom = y;
+                        break outer;
+                    }
+            outer: for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        left = x;
+                        break outer;
+                    }
+            outer: for (int x = w - 1; x >= 0; x--)
+                for (int y = 0; y < h; y++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        right = x;
+                        break outer;
+                    }
+        } catch (Exception e) {
+            return img;
+        }
+        if (right <= left || bottom <= top)
+            return img;
         return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
     }
 
@@ -233,12 +255,14 @@ public class SaveMapDialog extends JDialog {
                     hovered = true;
                     repaint();
                 }
+
                 @Override
                 public void mouseExited(java.awt.event.MouseEvent e) {
                     hovered = false;
                     pressed = false;
                     repaint();
                 }
+
                 @Override
                 public void mousePressed(java.awt.event.MouseEvent e) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
@@ -246,6 +270,7 @@ public class SaveMapDialog extends JDialog {
                         repaint();
                     }
                 }
+
                 @Override
                 public void mouseReleased(java.awt.event.MouseEvent e) {
                     if (SwingUtilities.isLeftMouseButton(e)) {

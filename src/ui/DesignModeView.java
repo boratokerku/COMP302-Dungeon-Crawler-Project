@@ -1038,7 +1038,28 @@ public class DesignModeView extends JPanel {
     private void doSave() {
         if (!validateChestKeyCounts())
             return;
-        String name = JOptionPane.showInputDialog(this, "Harita adı girin:", "Save Map", JOptionPane.PLAIN_MESSAGE);
+
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+
+        java.util.List<String> existingMaps = new java.util.ArrayList<>();
+        File dir = new File("saves/maps");
+        if (dir.exists() && dir.listFiles() != null) {
+            File[] files = dir.listFiles((d, n) -> n.endsWith(".mapjson"));
+            if (files != null) {
+                for (File f : files) {
+                    existingMaps.add(f.getName().replace(".mapjson", ""));
+                }
+            }
+        }
+
+        SaveMapDialog dialog = new SaveMapDialog(parentFrame, existingMaps);
+        dialog.setVisible(true);
+
+        if (!dialog.isSaved())
+            return;
+
+        String name = dialog.getMapName();
         if (name == null || name.trim().isEmpty())
             return;
         name = name.trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
@@ -1057,36 +1078,54 @@ public class DesignModeView extends JPanel {
 
     // ── 4. Load Map ──────────────────────────────────────────────────────────
     private void doLoad() {
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+
+        java.util.List<String> existingMaps = new java.util.ArrayList<>();
         File dir = new File("saves/maps");
-        if (!dir.exists() || dir.listFiles() == null) {
+        if (dir.exists() && dir.listFiles() != null) {
+            File[] files = dir.listFiles((d, n) -> n.endsWith(".mapjson"));
+            if (files != null) {
+                for (File f : files) {
+                    existingMaps.add(f.getName().replace(".mapjson", ""));
+                }
+            }
+        }
+
+        if (existingMaps.isEmpty()) {
             showMsg("Kayıtlı harita bulunamadı.", "Yükle");
             return;
         }
-        File[] files = dir.listFiles((d, n) -> n.endsWith(".mapjson"));
-        if (files == null || files.length == 0) {
-            showMsg("Kayıtlı harita bulunamadı.", "Yükle");
-            return;
-        }
-        String[] names = new String[files.length];
-        for (int i = 0; i < files.length; i++)
-            names[i] = files[i].getName().replace(".mapjson", "");
 
-        String chosen = (String) JOptionPane.showInputDialog(
-                this, "Yüklenecek haritayı seçin:", "Load Map",
-                JOptionPane.PLAIN_MESSAGE, null, names, names[0]);
-        if (chosen == null)
-            return;
+        LoadMapDialog dialog = new LoadMapDialog(parentFrame, existingMaps);
+        dialog.setVisible(true);
 
-        try (FileReader fr = new FileReader("saves/maps/" + chosen + ".mapjson")) {
-            StringBuilder sb = new StringBuilder();
-            int c;
-            while ((c = fr.read()) != -1)
-                sb.append((char) c);
-            loadMapFromJson(sb.toString());
-            repaint();
-            showMsg("Harita yüklendi: " + chosen, "Yükleme Başarılı");
-        } catch (Exception ex) {
-            showMsg("Yükleme hatası: " + ex.getMessage(), "Hata");
+        if (dialog.isLoaded()) {
+            String chosen = dialog.getSelectedMapName();
+            try (FileReader fr = new FileReader("saves/maps/" + chosen + ".mapjson")) {
+                StringBuilder sb = new StringBuilder();
+                int c;
+                while ((c = fr.read()) != -1)
+                    sb.append((char) c);
+                loadMapFromJson(sb.toString());
+                repaint();
+                showMsg("Harita yüklendi: " + chosen, "Yükleme Başarılı");
+            } catch (Exception ex) {
+                showMsg("Yükleme hatası: " + ex.getMessage(), "Hata");
+            }
+        } else if (dialog.isDeleteRequested()) {
+            String deleteTarget = dialog.getDeleteMapName();
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete map: " + deleteTarget + "?", "Delete Map", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                File file = new File("saves/maps/" + deleteTarget + ".mapjson");
+                if (file.exists() && file.delete()) {
+                    showMsg("Harita silindi: " + deleteTarget, "Silindi");
+                } else {
+                    showMsg("Silme hatası.", "Hata");
+                }
+            }
+            // Re-run doLoad to show the dialog again
+            doLoad();
         }
     }
 

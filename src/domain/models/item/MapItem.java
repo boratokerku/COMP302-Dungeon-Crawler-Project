@@ -136,16 +136,12 @@ public abstract class MapItem extends GameObject {
             return new SamuraiSwordItem(x, y);
         } else if (roll < 80.0) {
             return new DiamondSwordItem(x, y);
-        } else if (roll < 85.0) {
-            return new PotionItem("Steel Sword 1", x, y, "images/weapons/steel_sword_1.png");
-        } else if (roll < 90.0) {
-            return new PotionItem("Golden Sword 1", x, y, "images/weapons/golden_sword_1.png");
-        } else if (roll < 95.0) {
-            return new PotionItem("Iron Sword 1", x, y, "images/weapons/iron_sword_1.png");
-        } else if (roll < 98.0) {
-            return new PotionItem("Small Knife", x, y, "images/weapons/small_knife.png");
+        } else if (roll < 87.0) {
+            return new domain.models.item.wearables.SteelSwordItem(x, y);
+        } else if (roll < 94.0) {
+            return new domain.models.item.wearables.GoldenSwordItem(x, y);
         } else {
-            return new PotionItem("Knight Hammer", x, y, "images/weapons/knight_hammer.png");
+            return new domain.models.item.wearables.KnightHammerItem(x, y);
         }
     }
 
@@ -162,7 +158,7 @@ public abstract class MapItem extends GameObject {
             } else if (ringRoll < 0.66) {
                 return new RingItem(new RedRing("Health Ring"), x, y, "images/items/ring/red_ring.png");
             } else {
-                return new RingItem(new GreenRing("Poison Ring"), x, y, "images/items/ring/green_ring.png");
+                return new RingItem(new GreenRing("Energy Ring"), x, y, "images/items/ring/green_ring.png");
             }
         }
     }

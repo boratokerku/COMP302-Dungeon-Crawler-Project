@@ -642,8 +642,7 @@ public class GameView extends JPanel {
 
     private String lastLoggedWeapon = null;
 
-    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh) {
-        domain.models.entity.GameObject equipped = hero.getEquippedWeapon();
+    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh, domain.models.entity.GameObject equipped) {
         if (!(equipped instanceof domain.models.item.MapItem)) {
             if (lastLoggedWeapon != null) {
                 System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL or not MapItem");
@@ -775,7 +774,12 @@ public class GameView extends JPanel {
     private void drawHero(Graphics2D g2d, int yVal) {
         if (hero == null || hero.getY() != yVal)
             return;
-        BufferedImage frame = assetManager.getHeroSprite(hero.getAnimationState());
+        BufferedImage frame;
+        if (gameMode == domain.models.GameMode.TEAM_MATCH) {
+            frame = assetManager.getKnightSprite();
+        } else {
+            frame = assetManager.getHeroSprite(hero.getAnimationState());
+        }
 
         if (frame != null) {
             boolean isHitFlash = (System.currentTimeMillis() - hero.getLastHitTime() < 250);
@@ -794,10 +798,10 @@ public class GameView extends JPanel {
             if (hero.getDirection() == Direction.LEFT) {
                 // Resmi yatayda aynalayarak çiziyoruz
                 g2d.drawImage(frame, x + dw, y, -dw, dh, null);
-                drawEquippedWeapon(g2d, x, y, Direction.LEFT, dw, dh);
+                drawEquippedWeapon(g2d, x, y, Direction.LEFT, dw, dh, hero.getEquippedWeapon());
             } else {
                 g2d.drawImage(frame, x, y, dw, dh, null);
-                drawEquippedWeapon(g2d, x, y, Direction.RIGHT, dw, dh);
+                drawEquippedWeapon(g2d, x, y, Direction.RIGHT, dw, dh, hero.getEquippedWeapon());
             }
         }
     }
@@ -970,6 +974,14 @@ public class GameView extends JPanel {
                     drawTeamAura(g2d, e, dx + dw / 2, dy + dh - 5, tileSize);
 
                     g2d.drawImage(frame, dx, dy, dw, dh, null);
+
+                    if (e instanceof domain.models.entity.Knight) {
+                        domain.models.item.MapItem weapon = ((domain.models.entity.Knight) e).getEquippedWeapon();
+                        if (weapon != null) {
+                            // By default draw it facing RIGHT for enemies since they don't have a specific facing direction stored
+                            drawEquippedWeapon(g2d, dx, dy, Direction.RIGHT, dw, dh, weapon);
+                        }
+                    }
 
                     // Draw thin health bar above regular enemies
                     int barW = (int) (dw * 0.8);
@@ -1170,8 +1182,13 @@ public class GameView extends JPanel {
         if (team == domain.models.Team.NONE || team == null)
             return;
 
-        Color centerColor = (team == domain.models.Team.CYAN) ? new Color(0, 255, 255, 150)
-                : new Color(255, 140, 0, 150);
+        Color centerColor;
+        if (entity instanceof domain.models.entity.Hero) {
+            centerColor = new Color(138, 43, 226, 150); // Purple for Hero
+        } else {
+            centerColor = (team == domain.models.Team.CYAN) ? new Color(0, 255, 255, 150)
+                    : new Color(255, 140, 0, 150);
+        }
         Color edgeColor = new Color(0, 0, 0, 0);
 
         int radius = size / 2 + 15;

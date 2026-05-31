@@ -23,6 +23,10 @@ public class EquipAction implements Action {
         this.delayMs = delayMs;
     }
 
+    public int getAtkBonus() {
+        return atkBonus;
+    }
+
     @Override
     public String getName() {
         return "Equip";

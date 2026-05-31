@@ -5,6 +5,7 @@ import domain.logic.LevelManager;
 import domain.models.entity.Entity;
 import domain.models.entity.Hero;
 import domain.models.map.GameMap;
+import ui.SaveGameDialog;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -227,7 +228,7 @@ public class PauseMenu extends JPanel {
         Window parentWindow = SwingUtilities.getWindowAncestor(this);
         Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
 
-        ui.SaveGameDialog dialog = new ui.SaveGameDialog(parentFrame, existingSaves);
+        SaveGameDialog dialog = new SaveGameDialog(parentFrame, existingSaves);
         dialog.setVisible(true);
 
         if (dialog.isSaved()) {

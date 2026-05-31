@@ -2,6 +2,8 @@ package view;
 
 import domain.logic.SaveManager;
 import domain.models.GameState;
+import ui.LoadGameDialog;
+
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -287,7 +289,7 @@ public class GameOverMenu extends JPanel {
         Window parentWindow = SwingUtilities.getWindowAncestor(this);
         Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
 
-        ui.LoadGameDialog dialog = new ui.LoadGameDialog(parentFrame, saves);
+        LoadGameDialog dialog = new LoadGameDialog(parentFrame, saves);
         dialog.setVisible(true);
 
         if (dialog.isLoaded()) {

@@ -254,8 +254,10 @@ public class DesignModeView extends JPanel {
         });
 
         // Bind Keyboard DELETE and BACKSPACE keys to erase the hovered tile
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "eraseHovered");
-        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "eraseHovered");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0),
+                "eraseHovered");
+        this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0),
+                "eraseHovered");
         this.getActionMap().put("eraseHovered", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -303,18 +305,19 @@ public class DesignModeView extends JPanel {
         obstaclePalette.add(new PaletteItem("Crate Brown", "containers/crate_brown", true,
                 (x, y) -> new Crate("Crate Brown", x, y)));
         obstaclePalette
-                .add(new PaletteItem("DbCrate", "double_crate", true, (x, y) -> new DoubleCrate("DoubleCrate", x, y)));
+                .add(new PaletteItem("Double Crate", "double_crate", true,
+                        (x, y) -> new DoubleCrate("DoubleCrate", x, y)));
 
         // Chests & Bags (Floor interactive Chest obstacles)
-        obstaclePalette.add(new PaletteItem("BrChest", "containers/chest_brown", true,
+        obstaclePalette.add(new PaletteItem("Brown Chest", "containers/chest_brown", true,
                 (x, y) -> new domain.models.entity.Chest("Brown Chest", x, y, true, "containers/chest_brown")));
-        obstaclePalette.add(new PaletteItem("RedChest", "containers/chest_red", true,
+        obstaclePalette.add(new PaletteItem("Red Chest", "containers/chest_red", true,
                 (x, y) -> new domain.models.entity.Chest("Red Chest", x, y, true, "containers/chest_red")));
-        obstaclePalette.add(new PaletteItem("WhChest", "containers/chest_white", true,
-                (x, y) -> new domain.models.entity.Chest("White Chest", x, y, true, "containers/chest_white")));
-        obstaclePalette.add(new PaletteItem("GoldChest", "containers/gold_chest_closed", true,
+        obstaclePalette.add(new PaletteItem("Blue Chest", "containers/chest_white", true,
+                (x, y) -> new domain.models.entity.Chest("Blue Chest", x, y, true, "containers/chest_white")));
+        obstaclePalette.add(new PaletteItem("Gold Chest", "containers/gold_chest_closed", true,
                 (x, y) -> new domain.models.entity.Chest("Gold Chest", x, y, true, "containers/gold_chest_closed")));
-        obstaclePalette.add(new PaletteItem("SilvChest", "containers/silver_chest_closed", true,
+        obstaclePalette.add(new PaletteItem("Silver Chest", "containers/silver_chest_closed", true,
                 (x, y) -> new domain.models.entity.Chest("Silver Chest", x, y, true,
                         "containers/silver_chest_closed")));
         obstaclePalette.add(new PaletteItem("Bag", "containers/bag", true,
@@ -333,67 +336,63 @@ public class DesignModeView extends JPanel {
         // Optional original obstacles to maintain full functionality:
         obstaclePalette.add(new PaletteItem("Column", "colon/gray_colon_whole", true,
                 (x, y) -> new Column("Column", x, y, "colon/gray_colon_whole")));
-        obstaclePalette.add(new PaletteItem("PurpleCol", "colon/purple_colon_whole", true,
-                (x, y) -> new Column("Column", x, y, "colon/purple_colon_whole")));
-        obstaclePalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
+        obstaclePalette.add(new PaletteItem("Purple Column", "colon/purple_colon_whole", true,
+                (x, y) -> new Column("Purple Column", x, y, "colon/purple_colon_whole")));
 
         // ── 2. ITEMS ───────────────────────────────────────────────────────────
         // Potions
-        itemPalette.add(new PaletteItem("HealthPotion", "images/items/potion/red_potion.png", false,
+        itemPalette.add(new PaletteItem("Health Potion", "images/items/potion/red_potion.png", false,
                 (x, y) -> new PotionItem(new HealthPotion("Health Potion", 5), x, y,
                         "images/items/potion/red_potion.png")));
-        itemPalette.add(new PaletteItem("ManaPotion", "images/items/potion/blue_potion.png", false,
+        itemPalette.add(new PaletteItem("Mana Potion", "images/items/potion/blue_potion.png", false,
                 (x, y) -> new PotionItem(new ManaPotion("Mana Potion", 20), x, y,
                         "images/items/potion/blue_potion.png")));
-        itemPalette.add(new PaletteItem("PoisonPotion", "images/items/potion/green_potion.png", false,
-                (x, y) -> new PotionItem(new EnergyPotion("Poison Potion", 30), x, y,
+        itemPalette.add(new PaletteItem("Energy Potion", "images/items/potion/green_potion.png", false,
+                (x, y) -> new PotionItem(new EnergyPotion("Energy Potion", 30), x, y,
                         "images/items/potion/green_potion.png")));
 
         // Keys
-        itemPalette.add(new PaletteItem("GoldKey1", "images/items/key/golden_key_1.png", false,
-                (x, y) -> new KeyItem("Golden Key 1", x, y, "images/items/key/golden_key_1.png")));
+        itemPalette.add(new PaletteItem("Gold Key", "images/items/key/golden_key_1.png", false,
+                (x, y) -> new KeyItem("Gold Key", x, y, "images/items/key/golden_key_1.png")));
 
         // Rings
-        itemPalette.add(new PaletteItem("PoisonRing", "images/items/ring/green_ring.png", false,
-                (x, y) -> new RingItem(new GreenRing("Poison Ring"), x, y, "images/items/ring/green_ring.png")));
-        itemPalette.add(new PaletteItem("HealthRing", "images/items/ring/red_ring.png", false,
+        itemPalette.add(new PaletteItem("Energy Ring", "images/items/ring/green_ring.png", false,
+                (x, y) -> new RingItem(new GreenRing("Energy Ring"), x, y, "images/items/ring/green_ring.png")));
+        itemPalette.add(new PaletteItem("Health Ring", "images/items/ring/red_ring.png", false,
                 (x, y) -> new RingItem(new RedRing("Health Ring"), x, y, "images/items/ring/red_ring.png")));
-        itemPalette.add(new PaletteItem("ManaRing", "images/items/ring/blue_ring.png", false,
+        itemPalette.add(new PaletteItem("Mana Ring", "images/items/ring/blue_ring.png", false,
                 (x, y) -> new RingItem(new BlueRing("Mana Ring"), x, y, "images/items/ring/blue_ring.png")));
 
         // Weapons
         itemPalette
                 .add(new PaletteItem("Sword", "images/weapons/knight_sword.png", false, (x, y) -> new SwordItem(x, y)));
-        itemPalette.add(new PaletteItem("WdSword", "images/weapons/wooden_sword.png", false,
+        itemPalette.add(new PaletteItem("Wooden Sword", "images/weapons/wooden_sword.png", false,
                 (x, y) -> new WoodenSwordItem(x, y)));
         itemPalette.add(new PaletteItem("Katana", "images/weapons/samurai_sword.png", false,
                 (x, y) -> new SamuraiSwordItem(x, y)));
-        itemPalette.add(new PaletteItem("DiamondSword", "images/weapons/diamond_sword_1.png", false,
+        itemPalette.add(new PaletteItem("Diamond Sword", "images/weapons/diamond_sword_1.png", false,
                 (x, y) -> new DiamondSwordItem(x, y)));
-        itemPalette.add(new PaletteItem("SteelSword1", "images/weapons/steel_sword_1.png", false,
-                (x, y) -> new PotionItem("Steel Sword 1", x, y, "images/weapons/steel_sword_1.png")));
-        itemPalette.add(new PaletteItem("GoldSword1", "images/weapons/golden_sword_1.png", false,
-                (x, y) -> new PotionItem("Golden Sword 1", x, y, "images/weapons/golden_sword_1.png")));
-        itemPalette.add(new PaletteItem("IronSword1", "images/weapons/iron_sword_1.png", false,
-                (x, y) -> new PotionItem("Iron Sword 1", x, y, "images/weapons/iron_sword_1.png")));
+        itemPalette.add(new PaletteItem("Steel Sword", "images/weapons/steel_sword_1.png", false,
+                (x, y) -> new PotionItem("Steel Sword", x, y, "images/weapons/steel_sword_1.png")));
+        itemPalette.add(new PaletteItem("Golden Sword", "images/weapons/golden_sword_1.png", false,
+                (x, y) -> new PotionItem("Golden Sword", x, y, "images/weapons/golden_sword_1.png")));
+        itemPalette.add(new PaletteItem("Iron Sword", "images/weapons/iron_sword_1.png", false,
+                (x, y) -> new PotionItem("Iron Sword", x, y, "images/weapons/iron_sword_1.png")));
         itemPalette.add(new PaletteItem("Axe", "images/weapons/axe.png", false, (x, y) -> new AxeItem(x, y)));
         itemPalette.add(new PaletteItem("Bow", "images/weapons/bow.png", false, (x, y) -> new BowItem(x, y)));
         itemPalette.add(
-                new PaletteItem("FireWand", "images/weapons/fire_wand.png", false, (x, y) -> new FireWandItem(x, y)));
-        itemPalette.add(new PaletteItem("SmallKnife", "images/weapons/small_knife.png", false,
+                new PaletteItem("Fire Wand", "images/weapons/fire_wand.png", false, (x, y) -> new FireWandItem(x, y)));
+        itemPalette.add(new PaletteItem("Small Knife", "images/weapons/small_knife.png", false,
                 (x, y) -> new PotionItem("Small Knife", x, y, "images/weapons/small_knife.png")));
-        itemPalette.add(new PaletteItem("KnightHammer", "images/weapons/knight_hammer.png", false,
+        itemPalette.add(new PaletteItem("Knight Hammer", "images/weapons/knight_hammer.png", false,
                 (x, y) -> new PotionItem("Knight Hammer", x, y, "images/weapons/knight_hammer.png")));
 
         // Armor
         itemPalette.add(new PaletteItem("Armor", "images/items/steel_armor.png", false, (x, y) -> new ArmorItem(x, y)));
 
         // Readings
-        itemPalette.add(new PaletteItem("Book", "images/items/readings/book.png", false,
-                (x, y) -> new PotionItem("Book", x, y, "images/items/readings/book.png")));
-        itemPalette.add(new PaletteItem("Totem1", "images/items/readings/totem_1.png", false,
-                (x, y) -> new PotionItem("Totem 1", x, y, "images/items/readings/totem_1.png")));
-        itemPalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
+        itemPalette.add(new PaletteItem("Shadow Clone", "images/items/readings/totem_1.png", false,
+                (x, y) -> new PotionItem("Shadow Clone", x, y, "images/items/readings/totem_1.png")));
 
         // ── 3. WALL ITEM ───────────────────────────────────────────────────────
         // Decorative (WallDecoration)
@@ -411,42 +410,42 @@ public class DesignModeView extends JPanel {
         wallItemPalette.add(new PaletteItem("Cobweb", "images/WallDecoration/cobweb.png", false,
                 (x, y) -> new domain.models.staticObjects.WallObject("Cobweb", x, y,
                         "images/WallDecoration/cobweb.png")));
-        wallItemPalette.add(new PaletteItem("RedFlag", "images/WallDecoration/red_flag.png", false,
-                (x, y) -> new domain.models.staticObjects.WallObject("Red Flag", x, y,
+        wallItemPalette.add(new PaletteItem("Red Banner", "images/WallDecoration/red_flag.png", false,
+                (x, y) -> new domain.models.staticObjects.WallObject("Red Banner", x, y,
                         "images/WallDecoration/red_flag.png")));
-        wallItemPalette.add(new PaletteItem("GreenFlag", "images/WallDecoration/green_flag.png", false,
-                (x, y) -> new domain.models.staticObjects.WallObject("Green Flag", x, y,
+        wallItemPalette.add(new PaletteItem("Green Banner", "images/WallDecoration/green_flag.png", false,
+                (x, y) -> new domain.models.staticObjects.WallObject("Green Banner", x, y,
                         "images/WallDecoration/green_flag.png")));
-        wallItemPalette.add(new PaletteItem("BlueFlag", "images/WallDecoration/blue_flag.png", false,
-                (x, y) -> new domain.models.staticObjects.WallObject("Blue Flag", x, y,
+        wallItemPalette.add(new PaletteItem("Blue Banner", "images/WallDecoration/blue_flag.png", false,
+                (x, y) -> new domain.models.staticObjects.WallObject("Blue Banner", x, y,
                         "images/WallDecoration/blue_flag.png")));
-        wallItemPalette.add(new PaletteItem("AcidOoze", "images/WallDecoration/acid_ooze.png", false,
+        wallItemPalette.add(new PaletteItem("Acid Ooze", "images/WallDecoration/acid_ooze.png", false,
                 (x, y) -> new domain.models.staticObjects.WallObject("Acid Ooze", x, y,
                         "images/WallDecoration/acid_ooze.png")));
-        wallItemPalette.add(new PaletteItem("BloodStain", "images/WallDecoration/blood_stain.png", false,
+        wallItemPalette.add(new PaletteItem("Blood Stain", "images/WallDecoration/blood_stain.png", false,
                 (x, y) -> new domain.models.staticObjects.WallObject("Blood Stain", x, y,
                         "images/WallDecoration/blood_stain.png")));
 
         // Searchable (WallSearchable)
-        wallItemPalette.add(new PaletteItem("MissingBrick", "images/WallSearchable/missing_brick.png", false,
+        wallItemPalette.add(new PaletteItem("Missing Brick", "images/WallSearchable/missing_brick.png", false,
                 (x, y) -> new domain.models.entity.SearchableObject("Missing Brick", x, y,
                         "images/WallSearchable/missing_brick.png", "images/WallSearchable/missing_brick.png")));
-        wallItemPalette.add(new PaletteItem("WallGrill", "images/WallSearchable/wall_grill.png", false,
+        wallItemPalette.add(new PaletteItem("Wall Grill", "images/WallSearchable/wall_grill.png", false,
                 (x, y) -> new domain.models.entity.SearchableObject("Wall Grill", x, y,
                         "images/WallSearchable/wall_grill.png", "images/WallSearchable/wall_grill.png")));
-        wallItemPalette.add(new PaletteItem("PipeHole", "images/WallSearchable/pipe_hole.png", false,
+        wallItemPalette.add(new PaletteItem("Pipe Hole", "images/WallSearchable/pipe_hole.png", false,
                 (x, y) -> new domain.models.entity.SearchableObject("Pipe Hole", x, y,
                         "images/WallSearchable/pipe_hole.png", "images/WallSearchable/pipe_hole.png")));
         wallItemPalette.add(new PaletteItem("Gargoyle", "images/WallSearchable/gargoyle.png", false,
                 (x, y) -> new domain.models.entity.SearchableObject("Gargoyle", x, y,
                         "images/WallSearchable/gargoyle.png", "images/WallSearchable/gargoyle.png")));
-        wallItemPalette.add(new PaletteItem("WallCavity", "images/WallSearchable/wall_cavity.png", false,
+        wallItemPalette.add(new PaletteItem("Wall Cavity", "images/WallSearchable/wall_cavity.png", false,
                 (x, y) -> new domain.models.entity.SearchableObject("Wall Cavity", x, y,
                         "images/WallSearchable/wall_cavity.png", "images/WallSearchable/wall_cavity.png")));
-        wallItemPalette.add(new PaletteItem("LooseStone", "images/WallSearchable/loose_stone.png", false,
+        wallItemPalette.add(new PaletteItem("Loose Stone", "images/WallSearchable/loose_stone.png", false,
                 (x, y) -> new domain.models.entity.SearchableObject("Loose Stone", x, y,
                         "images/WallSearchable/loose_stone.png", "images/WallSearchable/loose_stone.png")));
-        wallItemPalette.add(new PaletteItem("Eraser", "images/BuildMode/eraser_icon.png", false, null));
+
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -1192,7 +1191,8 @@ public class DesignModeView extends JPanel {
 
             if (attempts < 100) {
                 String chosenType = chestTypes[rand.nextInt(chestTypes.length)];
-                boolean locked = (i == 0) && !chosenType.equals("Bag"); // en az 1 tanesi kilitli sandık olsun (torba hariç)
+                boolean locked = (i == 0) && !chosenType.equals("Bag"); // en az 1 tanesi kilitli sandık olsun (torba
+                                                                        // hariç)
                 if (locked)
                     lockedChestCount++;
                 map.placeObject(new Chest(chosenType, cx, cy, locked), cx, cy);
@@ -1550,7 +1550,8 @@ public class DesignModeView extends JPanel {
                     if (lowerName.contains("blue") || lowerName.contains("mana")) {
                         yield new PotionItem(new ManaPotion("Mana Potion", 20), x, y,
                                 "images/items/potion/blue_potion.png");
-                    } else if (lowerName.contains("green") || lowerName.contains("poison") || lowerName.contains("energy")) {
+                    } else if (lowerName.contains("green") || lowerName.contains("poison")
+                            || lowerName.contains("energy")) {
                         yield new PotionItem(new EnergyPotion("Poison Potion", 30), x, y,
                                 "images/items/potion/green_potion.png");
                     } else {

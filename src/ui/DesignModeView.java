@@ -1114,13 +1114,12 @@ public class DesignModeView extends JPanel {
             }
         } else if (dialog.isDeleteRequested()) {
             String deleteTarget = dialog.getDeleteMapName();
-            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete map: " + deleteTarget + "?", "Delete Map", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
+            DeleteConfirmDialog confirmDialog = new DeleteConfirmDialog(parentFrame, "Delete map: " + deleteTarget + "?");
+            confirmDialog.setVisible(true);
+            if (confirmDialog.isConfirmed()) {
                 File file = new File("saves/maps/" + deleteTarget + ".mapjson");
-                if (file.exists() && file.delete()) {
-                    showMsg("Harita silindi: " + deleteTarget, "Silindi");
-                } else {
-                    showMsg("Silme hatası.", "Hata");
+                if (file.exists()) {
+                    file.delete();
                 }
             }
             // Re-run doLoad to show the dialog again

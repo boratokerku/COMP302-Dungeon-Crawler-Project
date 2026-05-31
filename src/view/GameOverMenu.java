@@ -3,6 +3,7 @@ package view;
 import domain.logic.SaveManager;
 import domain.models.GameState;
 import ui.LoadGameDialog;
+import ui.DeleteConfirmDialog;
 
 
 import javax.imageio.ImageIO;
@@ -281,10 +282,6 @@ public class GameOverMenu extends JPanel {
 
     private void showLoadDialog() {
         List<GameState> saves = SaveManager.listSaves();
-        if (saves.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No saved games found.", "Load Game", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
 
         Window parentWindow = SwingUtilities.getWindowAncestor(this);
         Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
@@ -299,10 +296,9 @@ public class GameOverMenu extends JPanel {
             }
         } else if (dialog.isDeleteRequested()) {
             GameState toDelete = dialog.getDeleteState();
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Are you sure you want to delete " + toDelete.saveName + "?", "Confirm Delete",
-                    JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
+            DeleteConfirmDialog confirmDialog = new DeleteConfirmDialog(parentFrame, "Delete " + toDelete.saveName + "?");
+            confirmDialog.setVisible(true);
+            if (confirmDialog.isConfirmed()) {
                 File f = new File("saves/" + toDelete.saveName + ".json");
                 f.delete();
             }

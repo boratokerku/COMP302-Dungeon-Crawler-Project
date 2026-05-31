@@ -11,11 +11,12 @@ public class LoadMapDialog extends JDialog {
     private BufferedImage bgImage;
     private BufferedImage loadButtonImage;
     private BufferedImage cancelButtonImage;
+    private BufferedImage deleteButtonImage;
 
     private JList<String> mapList;
     private ImageButton loadBtn;
     private ImageButton cancelBtn;
-    private RetroTextButton deleteBtn;
+    private ImageButton deleteBtn;
 
     private boolean loaded = false;
     private String selectedMapName = null;
@@ -89,26 +90,28 @@ public class LoadMapDialog extends JDialog {
         // Buttons
         BufferedImage trimmedLoad = trimImage(loadButtonImage);
         BufferedImage trimmedCancel = trimImage(cancelButtonImage);
+        BufferedImage trimmedDelete = trimImage(deleteButtonImage);
 
-        float scale = 0.6f;
+        float scale = 0.45f;
         int btnHeight = Math.round(55 * scale);
         int loadW = getWidthForHeight(trimmedLoad, btnHeight, Math.round(130 * scale));
         int cancelW = getWidthForHeight(trimmedCancel, btnHeight, Math.round(130 * scale));
+        int deleteW = getWidthForHeight(trimmedDelete, btnHeight, Math.round(130 * scale));
 
         loadBtn = new ImageButton(trimmedLoad, "Load");
         cancelBtn = new ImageButton(trimmedCancel, "Cancel");
 
         // Custom stylized Delete button
-        deleteBtn = new RetroTextButton("Delete");
+        deleteBtn = new ImageButton(trimmedDelete, "Delete");
 
         // Position buttons at the bottom (centered horizontally)
-        int totalBtnWidth = loadW + 90 + cancelW + 30; // 15px gaps
+        int totalBtnWidth = loadW + deleteW + cancelW + 30; // 15px gaps
         int startX = (DIALOG_W - totalBtnWidth) / 2;
         int btnY = 260;
 
         loadBtn.setBounds(startX, btnY, loadW, btnHeight);
-        deleteBtn.setBounds(startX + loadW + 15, btnY, 90, btnHeight);
-        cancelBtn.setBounds(startX + loadW + 15 + 90 + 15, btnY, cancelW, btnHeight);
+        deleteBtn.setBounds(startX + loadW + 15, btnY, deleteW, btnHeight);
+        cancelBtn.setBounds(startX + loadW + 15 + deleteW + 15, btnY, cancelW, btnHeight);
 
         contentPanel.add(loadBtn);
         contentPanel.add(deleteBtn);
@@ -177,6 +180,7 @@ public class LoadMapDialog extends JDialog {
         bgImage = trimImage(loadImg("resources/images/PopUpImages/BlankDialogBox.png"));
         loadButtonImage = loadImg("resources/images/PopUpImages/ConfirmButton_Build.png");
         cancelButtonImage = loadImg("resources/images/PopUpImages/CancelButton.png");
+        deleteButtonImage = loadImg("resources/images/PopUpImages/DeleteButton.png");
     }
 
     private BufferedImage loadImg(String path) {

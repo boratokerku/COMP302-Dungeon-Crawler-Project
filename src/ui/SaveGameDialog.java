@@ -16,9 +16,6 @@ public class SaveGameDialog extends JDialog {
     private BufferedImage cancelButtonImage;
 
     private JTextField nameField;
-    private JCheckBox overwriteCheck;
-    private JComboBox<String> saveCombo;
-    private JLabel comboLabel;
     private ImageButton confirmBtn;
     private ImageButton cancelBtn;
 
@@ -36,33 +33,11 @@ public class SaveGameDialog extends JDialog {
 
         // Initial setup
         nameField = new JTextField(15);
-        nameField.setFont(new Font("Arial", Font.PLAIN, 14));
+        nameField.setFont(getRetroFont(Font.PLAIN, 18f));
         nameField.setBackground(new Color(40, 20, 30));
         nameField.setForeground(Color.WHITE);
         nameField.setCaretColor(Color.WHITE);
         nameField.setBorder(BorderFactory.createLineBorder(new Color(150, 100, 120), 1));
-
-        overwriteCheck = new JCheckBox("Overwrite Existing Save");
-        overwriteCheck.setFont(new Font("Arial", Font.BOLD, 12));
-        overwriteCheck.setForeground(new Color(255, 215, 0));
-        overwriteCheck.setOpaque(false);
-        overwriteCheck.setFocusPainted(false);
-
-        comboLabel = new JLabel("Select Save:");
-        comboLabel.setFont(new Font("Arial", Font.BOLD, 12));
-        comboLabel.setForeground(Color.LIGHT_GRAY);
-        comboLabel.setVisible(false);
-
-        saveCombo = new JComboBox<>();
-        saveCombo.setFont(new Font("Arial", Font.PLAIN, 12));
-        saveCombo.setBackground(new Color(40, 20, 30));
-        saveCombo.setForeground(Color.WHITE);
-        saveCombo.setBorder(BorderFactory.createLineBorder(new Color(150, 100, 120), 1));
-        saveCombo.setVisible(false);
-
-        for (GameState s : existingSaves) {
-            saveCombo.addItem(s.saveName);
-        }
 
         // Layout container
         JPanel contentPanel = new JPanel() {
@@ -80,33 +55,15 @@ public class SaveGameDialog extends JDialog {
         contentPanel.setOpaque(false);
         contentPanel.setLayout(null);
 
-        // Title
-        JLabel titleLabel = new JLabel("SAVE GAME");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(255, 215, 0));
-        titleLabel.setBounds(30, 25, 200, 25);
-        contentPanel.add(titleLabel);
-
         // Name Label & Field
         JLabel nameLabel = new JLabel("Save Name:");
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 12));
+        nameLabel.setFont(getRetroFont(Font.BOLD, 18f));
         nameLabel.setForeground(Color.LIGHT_GRAY);
-        nameLabel.setBounds(35, 65, 100, 20);
+        nameLabel.setBounds(35, 80, 100, 20);
         contentPanel.add(nameLabel);
 
-        nameField.setBounds(135, 65, 190, 24);
+        nameField.setBounds(135, 80, 190, 24);
         contentPanel.add(nameField);
-
-        // Overwrite checkbox
-        overwriteCheck.setBounds(31, 100, 220, 25);
-        contentPanel.add(overwriteCheck);
-
-        // Overwrite label & combo box
-        comboLabel.setBounds(35, 135, 100, 20);
-        contentPanel.add(comboLabel);
-
-        saveCombo.setBounds(135, 135, 190, 24);
-        contentPanel.add(saveCombo);
 
         // Buttons
         BufferedImage trimmedConfirm = trimImage(confirmButtonImage);
@@ -120,40 +77,17 @@ public class SaveGameDialog extends JDialog {
         confirmBtn = new ImageButton(trimmedConfirm, "Save");
         cancelBtn = new ImageButton(trimmedCancel, "Cancel");
 
-        confirmBtn.setBounds(80, 185, confirmW, btnHeight);
-        cancelBtn.setBounds(85 + confirmW, 185, cancelW, btnHeight);
+        confirmBtn.setBounds(80, 135, confirmW, btnHeight);
+        cancelBtn.setBounds(85 + confirmW, 135, cancelW, btnHeight);
 
         contentPanel.add(confirmBtn);
         contentPanel.add(cancelBtn);
 
-        // Listener for expansion
-        overwriteCheck.addActionListener(e -> {
-            boolean selected = overwriteCheck.isSelected();
-            comboLabel.setVisible(selected);
-            saveCombo.setVisible(selected);
-            if (selected) {
-                if (saveCombo.getItemCount() > 0) {
-                    nameField.setText((String) saveCombo.getSelectedItem());
-                    nameField.setEnabled(false);
-                }
-                adjustSize(true);
-            } else {
-                nameField.setEnabled(true);
-                nameField.setText("");
-                adjustSize(false);
-            }
-        });
-
-        saveCombo.addActionListener(e -> {
-            if (overwriteCheck.isSelected() && saveCombo.getSelectedItem() != null) {
-                nameField.setText((String) saveCombo.getSelectedItem());
-            }
-        });
-
         confirmBtn.addActionListener(e -> {
             String text = nameField.getText().trim();
             if (text.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid save name.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Please enter a valid save name.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
             saved = true;
@@ -167,19 +101,24 @@ public class SaveGameDialog extends JDialog {
         });
 
         setContentPane(contentPanel);
-        adjustSize(false);
+        setSize(370, 210);
         setLocationRelativeTo(owner);
     }
 
-    private void adjustSize(boolean expanded) {
-        int w = 370;
-        int h = expanded ? 290 : 230;
-        setSize(w, h);
-        int btnY = expanded ? 225 : 165;
-        confirmBtn.setLocation(confirmBtn.getX(), btnY);
-        cancelBtn.setLocation(cancelBtn.getX(), btnY);
-        revalidate();
-        repaint();
+    private Font getRetroFont(int style, float size) {
+        try {
+            File fontFile = new File("resources/fonts/VT323-Regular.ttf");
+            if (!fontFile.exists()) {
+                fontFile = new File("../resources/fonts/VT323-Regular.ttf");
+            }
+            if (fontFile.exists()) {
+                Font f = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+                return f.deriveFont(style, size);
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load retro font: " + e.getMessage());
+        }
+        return new Font("Monospaced", style, (int) size);
     }
 
     private void loadImages() {
@@ -204,42 +143,64 @@ public class SaveGameDialog extends JDialog {
     }
 
     private int getWidthForHeight(BufferedImage img, int targetHeight, int fallbackWidth) {
-        if (img == null) return fallbackWidth;
+        if (img == null)
+            return fallbackWidth;
         float aspect = img.getWidth() / (float) img.getHeight();
         return Math.round(targetHeight * aspect);
     }
 
     private BufferedImage trimImage(BufferedImage img) {
-        if (img == null) return null;
+        if (img == null)
+            return null;
         int w = img.getWidth(), h = img.getHeight();
         int top = 0, bottom = h - 1, left = 0, right = w - 1;
         try {
-            outer: for (int y = 0; y < h; y++) for (int x = 0; x < w; x++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { top = y; break outer; }
-            outer: for (int y = h-1; y >= 0; y--) for (int x = 0; x < w; x++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { bottom = y; break outer; }
-            outer: for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { left = x; break outer; }
-            outer: for (int x = w-1; x >= 0; x--) for (int y = 0; y < h; y++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { right = x; break outer; }
-        } catch (Exception e) { return img; }
-        if (right <= left || bottom <= top) return img;
+            outer: for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        top = y;
+                        break outer;
+                    }
+            outer: for (int y = h - 1; y >= 0; y--)
+                for (int x = 0; x < w; x++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        bottom = y;
+                        break outer;
+                    }
+            outer: for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        left = x;
+                        break outer;
+                    }
+            outer: for (int x = w - 1; x >= 0; x--)
+                for (int y = 0; y < h; y++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        right = x;
+                        break outer;
+                    }
+        } catch (Exception e) {
+            return img;
+        }
+        if (right <= left || bottom <= top)
+            return img;
         return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
     }
 
-    private void drawNineSlice(Graphics g, BufferedImage img, int x, int y, int width, int height, int top, int right, int bottom, int left) {
+    private void drawNineSlice(Graphics g, BufferedImage img, int x, int y, int width, int height, int top, int right,
+            int bottom, int left) {
         int iw = img.getWidth();
         int ih = img.getHeight();
 
-        int[] sx = {0, left, iw - right, iw};
-        int[] sy = {0, top, ih - bottom, ih};
+        int[] sx = { 0, left, iw - right, iw };
+        int[] sy = { 0, top, ih - bottom, ih };
 
-        int[] dx = {x, x + left, x + width - right, x + width};
-        int[] dy = {y, y + top, y + height - bottom, y + height};
+        int[] dx = { x, x + left, x + width - right, x + width };
+        int[] dy = { y, y + top, y + height - bottom, y + height };
 
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
-                g.drawImage(img, dx[c], dy[r], dx[c+1], dy[r+1], sx[c], sy[r], sx[c+1], sy[r+1], null);
+                g.drawImage(img, dx[c], dy[r], dx[c + 1], dy[r + 1], sx[c], sy[r], sx[c + 1], sy[r + 1], null);
             }
         }
     }
@@ -261,7 +222,7 @@ public class SaveGameDialog extends JDialog {
             this.img = image;
             if (this.img == null) {
                 setText(fallbackText);
-                setFont(new Font("Arial", Font.BOLD, 14));
+                setFont(getRetroFont(Font.BOLD, 18f));
                 setForeground(new Color(255, 220, 100));
                 setContentAreaFilled(true);
                 setBackground(new Color(60, 40, 20));
@@ -280,12 +241,14 @@ public class SaveGameDialog extends JDialog {
                     hovered = true;
                     repaint();
                 }
+
                 @Override
                 public void mouseExited(java.awt.event.MouseEvent e) {
                     hovered = false;
                     pressed = false;
                     repaint();
                 }
+
                 @Override
                 public void mousePressed(java.awt.event.MouseEvent e) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
@@ -293,6 +256,7 @@ public class SaveGameDialog extends JDialog {
                         repaint();
                     }
                 }
+
                 @Override
                 public void mouseReleased(java.awt.event.MouseEvent e) {
                     if (SwingUtilities.isLeftMouseButton(e)) {

@@ -13,11 +13,12 @@ public class LoadGameDialog extends JDialog {
     private BufferedImage bgImage;
     private BufferedImage loadButtonImage;
     private BufferedImage cancelButtonImage;
+    private BufferedImage deleteButtonImage;
 
     private JList<String> saveList;
     private ImageButton loadBtn;
     private ImageButton cancelBtn;
-    private JButton deleteBtn;
+    private ImageButton deleteBtn;
 
     private boolean loaded = false;
     private GameState selectedState = null;
@@ -52,13 +53,6 @@ public class LoadGameDialog extends JDialog {
         setSize(400, 340);
         setLocationRelativeTo(owner);
 
-        // Title
-        JLabel titleLabel = new JLabel("LOAD GAME");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(255, 215, 0));
-        titleLabel.setBounds(30, 25, 200, 25);
-        contentPanel.add(titleLabel);
-
         // JList and ScrollPane for save records
         String[] labels = saves.stream()
                 .map(s -> s.saveName + "  —  " + s.timestamp)
@@ -66,44 +60,41 @@ public class LoadGameDialog extends JDialog {
 
         saveList = new JList<>(labels);
         saveList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        saveList.setSelectedIndex(0);
-        saveList.setFont(new Font("Arial", Font.PLAIN, 13));
+        if (!saves.isEmpty()) {
+            saveList.setSelectedIndex(0);
+        }
+        saveList.setFont(getRetroFont(Font.PLAIN, 20f));
         saveList.setBackground(new Color(40, 20, 30));
         saveList.setForeground(Color.WHITE);
         saveList.setSelectionBackground(new Color(150, 60, 90));
         saveList.setSelectionForeground(Color.WHITE);
 
         JScrollPane scrollPane = new JScrollPane(saveList);
-        scrollPane.setBounds(30, 65, 340, 180);
+        scrollPane.setBounds(30, 80, 340, 180);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(150, 100, 120), 1));
         contentPanel.add(scrollPane);
 
         // Buttons
         BufferedImage trimmedLoad = trimImage(loadButtonImage);
         BufferedImage trimmedCancel = trimImage(cancelButtonImage);
+        BufferedImage trimmedDelete = trimImage(deleteButtonImage);
 
-        float scale = 0.6f;
+        float scale = 0.45f;
         int btnHeight = Math.round(55 * scale);
         int loadW = getWidthForHeight(trimmedLoad, btnHeight, Math.round(130 * scale));
         int cancelW = getWidthForHeight(trimmedCancel, btnHeight, Math.round(130 * scale));
+        int deleteW = getWidthForHeight(trimmedDelete, btnHeight, Math.round(130 * scale));
 
         loadBtn = new ImageButton(trimmedLoad, "Load");
         cancelBtn = new ImageButton(trimmedCancel, "Cancel");
+        deleteBtn = new ImageButton(trimmedDelete, "Delete");
 
-        // Delete button is styled using dark red text layout to stand out as secondary
-        deleteBtn = new JButton("Delete");
-        deleteBtn.setFont(new Font("Arial", Font.BOLD, 12));
-        deleteBtn.setForeground(new Color(255, 120, 120));
-        deleteBtn.setBackground(new Color(70, 15, 20));
-        deleteBtn.setBorder(BorderFactory.createLineBorder(new Color(200, 50, 50), 1));
-        deleteBtn.setFocusPainted(false);
-        deleteBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        // Position buttons at the bottom
-        int startX = 30;
+        // Position buttons at the bottom (centered horizontally)
+        int totalBtnWidth = loadW + deleteW + cancelW + 30; // 15px gaps
+        int startX = (400 - totalBtnWidth) / 2;
         loadBtn.setBounds(startX, 270, loadW, btnHeight);
-        deleteBtn.setBounds(startX + loadW + 15, 270, 90, btnHeight);
-        cancelBtn.setBounds(startX + loadW + 15 + 90 + 15, 270, cancelW, btnHeight);
+        deleteBtn.setBounds(startX + loadW + 15, 270, deleteW, btnHeight);
+        cancelBtn.setBounds(startX + loadW + 15 + deleteW + 15, 270, cancelW, btnHeight);
 
         contentPanel.add(loadBtn);
         contentPanel.add(deleteBtn);
@@ -151,10 +142,27 @@ public class LoadGameDialog extends JDialog {
         setContentPane(contentPanel);
     }
 
+    private Font getRetroFont(int style, float size) {
+        try {
+            File fontFile = new File("resources/fonts/VT323-Regular.ttf");
+            if (!fontFile.exists()) {
+                fontFile = new File("../resources/fonts/VT323-Regular.ttf");
+            }
+            if (fontFile.exists()) {
+                Font f = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+                return f.deriveFont(style, size);
+            }
+        } catch (Exception e) {
+            System.err.println("Could not load retro font: " + e.getMessage());
+        }
+        return new Font("Monospaced", style, (int) size);
+    }
+
     private void loadImages() {
         bgImage = loadImg("resources/images/PopUpImages/LoadGameBox.png");
         loadButtonImage = loadImg("resources/images/PopUpImages/ConfirmButton_Build.png");
         cancelButtonImage = loadImg("resources/images/PopUpImages/CancelButton.png");
+        deleteButtonImage = loadImg("resources/images/PopUpImages/DeleteButton.png");
     }
 
     private BufferedImage loadImg(String path) {
@@ -173,42 +181,64 @@ public class LoadGameDialog extends JDialog {
     }
 
     private int getWidthForHeight(BufferedImage img, int targetHeight, int fallbackWidth) {
-        if (img == null) return fallbackWidth;
+        if (img == null)
+            return fallbackWidth;
         float aspect = img.getWidth() / (float) img.getHeight();
         return Math.round(targetHeight * aspect);
     }
 
     private BufferedImage trimImage(BufferedImage img) {
-        if (img == null) return null;
+        if (img == null)
+            return null;
         int w = img.getWidth(), h = img.getHeight();
         int top = 0, bottom = h - 1, left = 0, right = w - 1;
         try {
-            outer: for (int y = 0; y < h; y++) for (int x = 0; x < w; x++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { top = y; break outer; }
-            outer: for (int y = h-1; y >= 0; y--) for (int x = 0; x < w; x++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { bottom = y; break outer; }
-            outer: for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { left = x; break outer; }
-            outer: for (int x = w-1; x >= 0; x--) for (int y = 0; y < h; y++)
-                if (((img.getRGB(x,y) >> 24) & 0xff) > 10) { right = x; break outer; }
-        } catch (Exception e) { return img; }
-        if (right <= left || bottom <= top) return img;
+            outer: for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        top = y;
+                        break outer;
+                    }
+            outer: for (int y = h - 1; y >= 0; y--)
+                for (int x = 0; x < w; x++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        bottom = y;
+                        break outer;
+                    }
+            outer: for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        left = x;
+                        break outer;
+                    }
+            outer: for (int x = w - 1; x >= 0; x--)
+                for (int y = 0; y < h; y++)
+                    if (((img.getRGB(x, y) >> 24) & 0xff) > 10) {
+                        right = x;
+                        break outer;
+                    }
+        } catch (Exception e) {
+            return img;
+        }
+        if (right <= left || bottom <= top)
+            return img;
         return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
     }
 
-    private void drawNineSlice(Graphics g, BufferedImage img, int x, int y, int width, int height, int top, int right, int bottom, int left) {
+    private void drawNineSlice(Graphics g, BufferedImage img, int x, int y, int width, int height, int top, int right,
+            int bottom, int left) {
         int iw = img.getWidth();
         int ih = img.getHeight();
 
-        int[] sx = {0, left, iw - right, iw};
-        int[] sy = {0, top, ih - bottom, ih};
+        int[] sx = { 0, left, iw - right, iw };
+        int[] sy = { 0, top, ih - bottom, ih };
 
-        int[] dx = {x, x + left, x + width - right, x + width};
-        int[] dy = {y, y + top, y + height - bottom, y + height};
+        int[] dx = { x, x + left, x + width - right, x + width };
+        int[] dy = { y, y + top, y + height - bottom, y + height };
 
         for (int r = 0; r < 3; r++) {
             for (int c = 0; c < 3; c++) {
-                g.drawImage(img, dx[c], dy[r], dx[c+1], dy[r+1], sx[c], sy[r], sx[c+1], sy[r+1], null);
+                g.drawImage(img, dx[c], dy[r], dx[c + 1], dy[r + 1], sx[c], sy[r], sx[c + 1], sy[r + 1], null);
             }
         }
     }
@@ -238,7 +268,7 @@ public class LoadGameDialog extends JDialog {
             this.img = image;
             if (this.img == null) {
                 setText(fallbackText);
-                setFont(new Font("Arial", Font.BOLD, 14));
+                setFont(getRetroFont(Font.BOLD, 18f));
                 setForeground(new Color(255, 220, 100));
                 setContentAreaFilled(true);
                 setBackground(new Color(60, 40, 20));
@@ -257,12 +287,14 @@ public class LoadGameDialog extends JDialog {
                     hovered = true;
                     repaint();
                 }
+
                 @Override
                 public void mouseExited(java.awt.event.MouseEvent e) {
                     hovered = false;
                     pressed = false;
                     repaint();
                 }
+
                 @Override
                 public void mousePressed(java.awt.event.MouseEvent e) {
                     if (SwingUtilities.isLeftMouseButton(e)) {
@@ -270,6 +302,7 @@ public class LoadGameDialog extends JDialog {
                         repaint();
                     }
                 }
+
                 @Override
                 public void mouseReleased(java.awt.event.MouseEvent e) {
                     if (SwingUtilities.isLeftMouseButton(e)) {

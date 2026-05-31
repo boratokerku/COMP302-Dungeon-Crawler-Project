@@ -5,46 +5,32 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.List;
 
-public class SaveMapDialog extends JDialog {
+public class DeleteConfirmDialog extends JDialog {
     private BufferedImage bgImage;
-    private BufferedImage bookIcon;
     private BufferedImage confirmButtonImage;
     private BufferedImage cancelButtonImage;
+    private boolean confirmed = false;
 
-    private JTextField nameField;
-    private JLabel nameLabel;
-    private ImageButton confirmBtn;
-    private ImageButton cancelBtn;
-
-    private boolean saved = false;
-    private String resultMapName = null;
-
-    private static final int DIALOG_W = 460;
-    private static final int DIALOG_H = 240;
-
-    public SaveMapDialog(Frame owner, List<String> existingMaps) {
-        super(owner, "Save Map", true);
+    public DeleteConfirmDialog(Window owner, String message) {
+        super(owner instanceof Frame ? (Frame) owner : null, "Confirm Delete", ModalityType.APPLICATION_MODAL);
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0));
-        setSize(DIALOG_W, DIALOG_H);
 
         loadImages();
 
-        // Initial setup
-        nameField = new JTextField(15);
-        nameField.setFont(getRetroFont(Font.PLAIN, 18f));
-        nameField.setBackground(new Color(30, 15, 22));
-        nameField.setForeground(new Color(255, 235, 180));
-        nameField.setCaretColor(Color.WHITE);
-        nameField.setBorder(BorderFactory.createLineBorder(new Color(180, 140, 60), 1));
+        int dialogW = 380;
+        int dialogH = 220;
+        if (bgImage != null) {
+            dialogW = bgImage.getWidth();
+            dialogH = bgImage.getHeight();
+        }
+        setSize(dialogW, dialogH);
+        setLocationRelativeTo(owner);
 
-        nameLabel = new JLabel("Map Name:");
-        nameLabel.setFont(getRetroFont(Font.BOLD, 18f));
-        nameLabel.setForeground(Color.LIGHT_GRAY);
+        final int finalDialogW = dialogW;
+        final int finalDialogH = dialogH;
 
-        // Layout container
         JPanel contentPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -52,32 +38,7 @@ public class SaveMapDialog extends JDialog {
                 if (bgImage != null) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                    
-                    // Draw background frame to fit the window exactly
                     g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
-
-                    // Draw Book decoration icon on the left
-                    if (bookIcon != null) {
-                        g2.drawImage(bookIcon, 35, 98, 48, 48, null);
-                    }
-
-                    // Render custom retro title with shadow
-                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                    Font titleFont = getRetroFont(Font.BOLD, 30f);
-                    g2.setFont(titleFont);
-                    String titleText = "SAVE MAP";
-                    FontMetrics fm = g2.getFontMetrics();
-                    int titleX = (getWidth() - fm.stringWidth(titleText)) / 2;
-                    int titleY = 62;
-
-                    // Shadow
-                    g2.setColor(Color.BLACK);
-                    g2.drawString(titleText, titleX + 2, titleY + 2);
-
-                    // Foreground (gold)
-                    g2.setColor(new Color(255, 215, 0));
-                    g2.drawString(titleText, titleX, titleY);
-
                     g2.dispose();
                 }
             }
@@ -85,29 +46,21 @@ public class SaveMapDialog extends JDialog {
         contentPanel.setOpaque(false);
         contentPanel.setLayout(null);
 
-        // Position components
-        nameLabel.setBounds(100, 103, 100, 24);
-        contentPanel.add(nameLabel);
-
-        nameField.setBounds(210, 103, 210, 24);
-        contentPanel.add(nameField);
-
         // Buttons
         BufferedImage trimmedConfirm = trimImage(confirmButtonImage);
         BufferedImage trimmedCancel = trimImage(cancelButtonImage);
 
-        float scale = 0.6f;
+        float scale = 0.55f;
         int btnHeight = Math.round(55 * scale);
         int confirmW = getWidthForHeight(trimmedConfirm, btnHeight, Math.round(130 * scale));
         int cancelW = getWidthForHeight(trimmedCancel, btnHeight, Math.round(130 * scale));
 
-        confirmBtn = new ImageButton(trimmedConfirm, "Save");
-        cancelBtn = new ImageButton(trimmedCancel, "Cancel");
+        ImageButton confirmBtn = new ImageButton(trimmedConfirm, "Yes");
+        ImageButton cancelBtn = new ImageButton(trimmedCancel, "No");
 
-        // Center the buttons horizontally at the bottom (fixed position)
         int totalBtnWidth = confirmW + cancelW + 20;
-        int startX = (DIALOG_W - totalBtnWidth) / 2;
-        int btnY = 170;
+        int startX = (dialogW - totalBtnWidth) / 2;
+        int btnY = Math.round(dialogH * 0.70f);
 
         confirmBtn.setBounds(startX, btnY, confirmW, btnHeight);
         cancelBtn.setBounds(startX + confirmW + 20, btnY, cancelW, btnHeight);
@@ -116,23 +69,20 @@ public class SaveMapDialog extends JDialog {
         contentPanel.add(cancelBtn);
 
         confirmBtn.addActionListener(e -> {
-            String text = nameField.getText().trim();
-            if (text.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid map name.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            saved = true;
-            resultMapName = text;
+            confirmed = true;
             dispose();
         });
 
         cancelBtn.addActionListener(e -> {
-            saved = false;
+            confirmed = false;
             dispose();
         });
 
         setContentPane(contentPanel);
-        setLocationRelativeTo(owner);
+    }
+
+    public boolean isConfirmed() {
+        return confirmed;
     }
 
     private Font getRetroFont(int style, float size) {
@@ -152,8 +102,7 @@ public class SaveMapDialog extends JDialog {
     }
 
     private void loadImages() {
-        bgImage = trimImage(loadImg("resources/images/PopUpImages/BlankDialogBox.png"));
-        bookIcon = loadImg("resources/images/items/readings/book.png");
+        bgImage = loadImg("resources/images/PopUpImages/DeletePopUp.png");
         confirmButtonImage = loadImg("resources/images/PopUpImages/ConfirmButton_Build.png");
         cancelButtonImage = loadImg("resources/images/PopUpImages/CancelButton.png");
     }
@@ -195,14 +144,6 @@ public class SaveMapDialog extends JDialog {
         } catch (Exception e) { return img; }
         if (right <= left || bottom <= top) return img;
         return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
-    }
-
-    public boolean isSaved() {
-        return saved;
-    }
-
-    public String getMapName() {
-        return resultMapName;
     }
 
     private class ImageButton extends JButton {

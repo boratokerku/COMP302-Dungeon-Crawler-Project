@@ -10,6 +10,7 @@ import domain.models.GameState;
 import domain.logic.SaveManager;
 import ui.HelpDialog;
 import ui.LoadGameDialog;
+import ui.DeleteConfirmDialog;
 
 public class MainMenuView extends JPanel {
 
@@ -94,10 +95,6 @@ public class MainMenuView extends JPanel {
     // Save listesini gösterir — Load ve Delete seçenekleriyle
     private void showLoadDialog() {
         List<GameState> saves = SaveManager.listSaves();
-        if (saves.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No saved games found.", "Load Game", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
 
         Window parentWindow = SwingUtilities.getWindowAncestor(this);
         Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
@@ -111,10 +108,9 @@ public class MainMenuView extends JPanel {
             }
         } else if (dialog.isDeleteRequested()) {
             GameState toDelete = dialog.getDeleteState();
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Are you sure you want to delete " + toDelete.saveName + "?", "Confirm Delete",
-                    JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
+            DeleteConfirmDialog confirmDialog = new DeleteConfirmDialog(parentFrame, "Delete " + toDelete.saveName + "?");
+            confirmDialog.setVisible(true);
+            if (confirmDialog.isConfirmed()) {
                 java.io.File f = new java.io.File("saves/" + toDelete.saveName + ".json");
                 f.delete();
             }

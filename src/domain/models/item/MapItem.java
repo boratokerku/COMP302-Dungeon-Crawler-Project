@@ -76,6 +76,14 @@ public abstract class MapItem extends GameObject {
     }
 
     // Default item stat bonuses for Armors and Rings
+    public boolean isWeapon() {
+        return !(this instanceof PotionItem || 
+                 this instanceof ArmorItem || 
+                 this instanceof RingItem || 
+                 this.getClass().getSimpleName().contains("Key") || 
+                 this.getClass().getSimpleName().contains("Coin"));
+    }
+
     public int getDefBonus() {
         return 0;
     }

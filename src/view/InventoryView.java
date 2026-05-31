@@ -178,6 +178,33 @@ public class InventoryView {
             domain.models.entity.GameObject item = i < items.size() ? items.get(i) : null;
             hotbar.setItemInSlot(i + 1, item);
         }
+        syncEquippedWeaponWithSelectionOnly();
+    }
+
+    public domain.models.entity.GameObject getSelectedItem() {
+        return hotbar.getSlot(hotbar.getSelectedSlot());
+    }
+
+    public void syncEquippedWeaponWithSelectionOnly() {
+        if (hero == null) return;
+        domain.models.entity.GameObject item = hotbar.getSlot(hotbar.getSelectedSlot());
+        if (item instanceof domain.models.item.MapItem && ((domain.models.item.MapItem) item).isWeapon()) {
+            if (hero.getEquippedWeapon() != item) {
+                // Find the EquipAction on the weapon and execute it!
+                for (domain.logic.Action action : item.getActions()) {
+                    if ("Equip".equals(action.getName())) {
+                        if (action.isAvailable(hero, item)) {
+                            action.execute(hero, item);
+                        }
+                        break;
+                    }
+                }
+            }
+        } else {
+            if (hero.getEquippedWeapon() != null) {
+                hero.unequipWeapon();
+            }
+        }
     }
 
     /**
@@ -247,7 +274,7 @@ public class InventoryView {
 
                 if (screenX >= slotX && screenX <= slotX + slotW &&
                         screenY >= slotY && screenY <= slotY + slotH) {
-                    hotbar.setSelectedSlot(slotIndex);
+                    selectSlot(slotIndex);
                     return hotbar.getSlot(slotIndex);
                 }
             }
@@ -259,7 +286,7 @@ public class InventoryView {
 
                 if (screenX >= slotX && screenX <= slotX + slotWidth &&
                         screenY >= slotY && screenY <= slotY + slotHeight) {
-                    hotbar.setSelectedSlot(slotIndex);
+                    selectSlot(slotIndex);
                     return hotbar.getSlot(slotIndex);
                 }
             }
@@ -269,11 +296,13 @@ public class InventoryView {
 
     public void scrollSelection(int offset) {
         hotbar.scroll(offset);
+        syncHotbarItems();
     }
 
     public void selectSlot(int slot) {
         if (slot >= 1 && slot <= InventoryHotbar.SLOT_COUNT) {
             hotbar.setSelectedSlot(slot);
+            syncHotbarItems();
         }
     }
 

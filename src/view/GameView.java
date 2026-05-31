@@ -643,18 +643,28 @@ public class GameView extends JPanel {
     private String lastLoggedWeapon = null;
 
     private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh) {
-        if (hero.getEquippedWeapon() == null) {
+        domain.models.entity.GameObject equipped = hero.getEquippedWeapon();
+        if (!(equipped instanceof domain.models.item.MapItem)) {
             if (lastLoggedWeapon != null) {
-                System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL");
+                System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL or not MapItem");
                 lastLoggedWeapon = null;
             }
             return;
         }
 
-        String path = hero.getEquippedWeapon().getImageName();
+        domain.models.item.MapItem mapItem = (domain.models.item.MapItem) equipped;
+        if (!mapItem.isWeapon()) {
+            if (lastLoggedWeapon != null) {
+                System.out.println("[DEBUG] drawEquippedWeapon: Equipped item is not a weapon: " + mapItem.getName());
+                lastLoggedWeapon = null;
+            }
+            return;
+        }
+
+        String path = mapItem.getImageName();
         if (!path.equals(lastLoggedWeapon)) {
             System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon changed to: "
-                    + hero.getEquippedWeapon().getName() + " (path: " + path + ")");
+                    + mapItem.getName() + " (path: " + path + ")");
             lastLoggedWeapon = path;
         }
 
@@ -664,7 +674,18 @@ public class GameView extends JPanel {
             return;
         }
 
-        int wSize = dw / 2; // weapon size scales with the hero's width
+        int wSize = (int) (dw * 0.7); // weapon size scales with the hero's width (enlarged from dw / 2)
+
+        // Preserve aspect ratio of the weapon image
+        int imgW = weaponImg.getWidth();
+        int imgH = weaponImg.getHeight();
+        int wDraw = wSize;
+        int hDraw = wSize;
+        if (imgW > imgH) {
+            hDraw = (int) Math.round(wSize * ((double) imgH / imgW));
+        } else if (imgH > imgW) {
+            wDraw = (int) Math.round(wSize * ((double) imgW / imgH));
+        }
 
         // Dynamically fetch weapon metadata (or use defaults)
         double pivotX = 0.5;
@@ -673,15 +694,11 @@ public class GameView extends JPanel {
         int customHandX = 0;
         int customHandY = 0;
 
-        domain.models.entity.GameObject equipped = hero.getEquippedWeapon();
-        if (equipped instanceof domain.models.item.MapItem) {
-            domain.models.item.MapItem item = (domain.models.item.MapItem) equipped;
-            pivotX = item.getWeaponPivotX();
-            pivotY = item.getWeaponPivotY();
-            angleOffset = item.getWeaponAngleOffset();
-            customHandX = item.getHandOffsetX();
-            customHandY = item.getHandOffsetY();
-        }
+        pivotX = mapItem.getWeaponPivotX();
+        pivotY = mapItem.getWeaponPivotY();
+        angleOffset = mapItem.getWeaponAngleOffset();
+        customHandX = mapItem.getHandOffsetX();
+        customHandY = mapItem.getHandOffsetY();
 
         java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
 
@@ -708,20 +725,17 @@ public class GameView extends JPanel {
 
         // 4. Calculate dynamic rotation angle (melee swing angle defaults to 45 deg, or
         // customized per weapon)
-        double swingAngle = Math.toRadians(45);
-        if (equipped instanceof domain.models.item.MapItem) {
-            swingAngle = ((domain.models.item.MapItem) equipped).getBaseRotationAngle();
-        }
+        double swingAngle = mapItem.getBaseRotationAngle();
         double totalAngle = swingAngle + angleOffset;
         g2d.rotate(totalAngle);
 
         // 5. Calculate offset based on weapon pivot points
-        int px = (int) (pivotX * wSize);
-        int py = (int) (pivotY * wSize);
+        int px = (int) (pivotX * wDraw);
+        int py = (int) (pivotY * hDraw);
 
         // 6. Draw the weapon icon such that the pivot (px, py) aligns exactly with hand
         // (0,0)
-        g2d.drawImage(weaponImg, -px, -py, wSize, wSize, null);
+        g2d.drawImage(weaponImg, -px, -py, wDraw, hDraw, null);
 
         g2d.setTransform(oldTransform);
     }
@@ -1072,7 +1086,19 @@ public class GameView extends JPanel {
                         java.awt.geom.AffineTransform old = g2d.getTransform();
                         g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
                         g2d.rotate(angle);
-                        g2d.drawImage(arrowImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
+
+                        // Preserve aspect ratio of the arrow image
+                        int imgW = arrowImg.getWidth();
+                        int imgH = arrowImg.getHeight();
+                        int aDrawW = tileSize;
+                        int aDrawH = tileSize;
+                        if (imgW > imgH) {
+                            aDrawH = (int) Math.round(tileSize * ((double) imgH / imgW));
+                        } else if (imgH > imgW) {
+                            aDrawW = (int) Math.round(tileSize * ((double) imgW / imgH));
+                        }
+
+                        g2d.drawImage(arrowImg, -aDrawW / 2, -aDrawH / 2, aDrawW, aDrawH, null);
                         g2d.setTransform(old);
                     } else {
                         // Fallback if arrow image fails

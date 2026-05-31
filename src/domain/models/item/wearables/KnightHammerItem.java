@@ -6,11 +6,11 @@ import domain.logic.UnequipAction;
 import domain.logic.DiscardAction;
 import domain.models.item.MapItem;
 
-public class DiamondSwordItem extends MapItem {
-    public DiamondSwordItem(int x, int y) {
-        super("Diamond Sword", x, y, "images/weapons/diamond_sword_1.png");
+public class KnightHammerItem extends MapItem {
+    public KnightHammerItem(int x, int y) {
+        super("Knight Hammer", x, y, "images/weapons/knight_hammer.png");
         this.addAction(new TakeAction());
-        this.addAction(new EquipAction(16, 400)); // Legendary tier melee weapon
+        this.addAction(new EquipAction(20, 1200)); // 20 atk, 1.2s delay
         this.addAction(new UnequipAction());
         this.addAction(new DiscardAction());
     }
@@ -22,6 +22,6 @@ public class DiamondSwordItem extends MapItem {
 
     @Override
     public double getWeaponPivotY() {
-        return 0.85; // Hand grips near the bottom hilt
+        return 0.85; // Grip near bottom handle
     }
 }

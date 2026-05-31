@@ -6,13 +6,21 @@ import domain.models.entity.GameObject;
 public class EquipAction implements Action {
 
     private final int atkBonus;
+    private final int delayMs;
 
     public EquipAction() {
         this.atkBonus = 10;
+        this.delayMs = 800; // default delay
     }
 
     public EquipAction(int atkBonus) {
         this.atkBonus = atkBonus;
+        this.delayMs = 800; // default delay
+    }
+
+    public EquipAction(int atkBonus, int delayMs) {
+        this.atkBonus = atkBonus;
+        this.delayMs = delayMs;
     }
 
     @Override
@@ -28,8 +36,8 @@ public class EquipAction implements Action {
     @Override
     public void execute(Hero hero, GameObject target) {
         if (target instanceof domain.models.item.MapItem) {
-            hero.equipWeapon((domain.models.item.MapItem) target, atkBonus);
-            System.out.println("Equipped: " + target.getName() + " | ATK: " + atkBonus + " | STR: " + hero.getStr());
+            hero.equipWeapon((domain.models.item.MapItem) target, atkBonus, delayMs);
+            System.out.println("Equipped: " + target.getName() + " | ATK: " + atkBonus + " | Delay: " + delayMs + "ms | STR: " + hero.getStr());
         }
     }
 }

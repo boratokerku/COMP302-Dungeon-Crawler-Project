@@ -14,6 +14,8 @@ public class Hero extends Entity {
     private AnimationState currentAnimationState = AnimationState.IDLE;
     private domain.models.inventory.Inventory inventory;
     private int weaponAtk = 0;
+    private int attackDelayMs = 800; // default 0.8 seconds
+    private long lastAttackTime = 0;
     private domain.models.item.MapItem equippedWeapon;
     private domain.models.item.MapItem equippedArmor = null;
     private domain.models.item.MapItem equippedRing = null;
@@ -79,11 +81,19 @@ public class Hero extends Entity {
     public void equipWeapon(domain.models.item.MapItem weapon) {
         this.equippedWeapon = weapon;
         this.weaponAtk = 5; // Default ATK
+        this.attackDelayMs = 800;
     }
 
     public void equipWeapon(domain.models.item.MapItem weapon, int atk) {
         this.equippedWeapon = weapon;
         this.weaponAtk = atk; // Real weapon ATK
+        this.attackDelayMs = 800;
+    }
+
+    public void equipWeapon(domain.models.item.MapItem weapon, int atk, int delayMs) {
+        this.equippedWeapon = weapon;
+        this.weaponAtk = atk;
+        this.attackDelayMs = delayMs;
     }
 
     public void equipWeapon(domain.models.item.wearables.SwordItem sword) {
@@ -94,9 +104,14 @@ public class Hero extends Entity {
         equipWeapon((domain.models.item.MapItem) sword, atk);
     }
 
+    public void equipWeapon(domain.models.item.wearables.SwordItem sword, int atk, int delayMs) {
+        equipWeapon((domain.models.item.MapItem) sword, atk, delayMs);
+    }
+
     public void unequipWeapon() {
         this.equippedWeapon = null;
         this.weaponAtk = 0;
+        this.attackDelayMs = 800;
     }
 
     // We put this in the Hero class using Information Expert
@@ -260,6 +275,11 @@ public class Hero extends Entity {
      * Hero attacks the entity in the current facing direction.
      */
     public void attack(Entity target, domain.models.map.GameMap map) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastAttackTime < this.attackDelayMs) {
+            return; // Wait for attack cooldown
+        }
+
         int attackCost = 10;
         if (target != null && target.isAlive()) {
             if (this.energy >= attackCost) {
@@ -269,6 +289,7 @@ public class Hero extends Entity {
                 view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP",
                         new java.awt.Color(255, 60, 60));
                 this.energy -= attackCost; // Saldırı maliyeti
+                this.lastAttackTime = currentTime;
                 System.out.println("Hero attacked target! Damage: " + damage + " Energy: " + this.energy);
 
                 if (!target.isAlive() && map != null) {

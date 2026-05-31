@@ -694,6 +694,12 @@ public class DemoRunner {
                         (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/green_potion.png");
             case "SwordItem":
                 return new SwordItem(x, y);
+            case "SteelSwordItem":
+                return new SteelSwordItem(x, y);
+            case "GoldenSwordItem":
+                return new GoldenSwordItem(x, y);
+            case "KnightHammerItem":
+                return new KnightHammerItem(x, y);
             case "AxeItem":
                 return new AxeItem(x, y);
             case "WoodenSwordItem":

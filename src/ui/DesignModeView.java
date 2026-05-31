@@ -23,6 +23,9 @@ import domain.models.item.wearables.RedRing;
 import domain.models.item.wearables.GreenRing;
 import domain.models.item.wearables.SamuraiSwordItem;
 import domain.models.item.wearables.SwordItem;
+import domain.models.item.wearables.SteelSwordItem;
+import domain.models.item.wearables.GoldenSwordItem;
+import domain.models.item.wearables.KnightHammerItem;
 import domain.models.item.wearables.WoodenSwordItem;
 import domain.models.map.GameMap;
 import domain.models.staticObjects.*;
@@ -373,19 +376,15 @@ public class DesignModeView extends JPanel {
         itemPalette.add(new PaletteItem("Diamond Sword", "images/weapons/diamond_sword_1.png", false,
                 (x, y) -> new DiamondSwordItem(x, y)));
         itemPalette.add(new PaletteItem("Steel Sword", "images/weapons/steel_sword_1.png", false,
-                (x, y) -> new PotionItem("Steel Sword", x, y, "images/weapons/steel_sword_1.png")));
+                (x, y) -> new SteelSwordItem(x, y)));
         itemPalette.add(new PaletteItem("Golden Sword", "images/weapons/golden_sword_1.png", false,
-                (x, y) -> new PotionItem("Golden Sword", x, y, "images/weapons/golden_sword_1.png")));
-        itemPalette.add(new PaletteItem("Iron Sword", "images/weapons/iron_sword_1.png", false,
-                (x, y) -> new PotionItem("Iron Sword", x, y, "images/weapons/iron_sword_1.png")));
+                (x, y) -> new GoldenSwordItem(x, y)));
         itemPalette.add(new PaletteItem("Axe", "images/weapons/axe.png", false, (x, y) -> new AxeItem(x, y)));
         itemPalette.add(new PaletteItem("Bow", "images/weapons/bow.png", false, (x, y) -> new BowItem(x, y)));
         itemPalette.add(
                 new PaletteItem("Fire Wand", "images/weapons/fire_wand.png", false, (x, y) -> new FireWandItem(x, y)));
-        itemPalette.add(new PaletteItem("Small Knife", "images/weapons/small_knife.png", false,
-                (x, y) -> new PotionItem("Small Knife", x, y, "images/weapons/small_knife.png")));
         itemPalette.add(new PaletteItem("Knight Hammer", "images/weapons/knight_hammer.png", false,
-                (x, y) -> new PotionItem("Knight Hammer", x, y, "images/weapons/knight_hammer.png")));
+                (x, y) -> new KnightHammerItem(x, y)));
 
         // Armor
         itemPalette.add(new PaletteItem("Armor", "images/items/steel_armor.png", false, (x, y) -> new ArmorItem(x, y)));

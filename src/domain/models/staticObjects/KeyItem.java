@@ -9,7 +9,7 @@ public class KeyItem extends MapItem {
     private boolean isSingleUse = true;
 
     public KeyItem(int x, int y) {
-        this("Golden Key", x, y, "images/items/key/golden_key_1.png");
+        this("Golden Key 1", x, y, "images/items/key/golden_key_1.png");
     }
 
     public KeyItem(String name, int x, int y, String imagePath) {

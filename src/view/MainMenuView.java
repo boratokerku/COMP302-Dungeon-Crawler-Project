@@ -98,63 +98,27 @@ public class MainMenuView extends JPanel {
             return;
         }
 
-        // Liste: "SaveName — 2026-05-04 21:00"
-        String[] labels = saves.stream()
-                .map(s -> s.saveName + "  —  " + s.timestamp)
-                .toArray(String[]::new);
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
 
-        // Özel dialog — Load ve Delete butonları
-        JDialog dialog = new JDialog((java.awt.Frame) null, "Load Game", true);
-        dialog.setLayout(new java.awt.BorderLayout(10, 10));
-
-        JList<String> list = new JList<>(labels);
-        list.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        list.setSelectedIndex(0);
-        list.setFont(new Font("Arial", Font.PLAIN, 14));
-
-        JScrollPane scrollPane = new JScrollPane(list);
-        scrollPane.setPreferredSize(new java.awt.Dimension(380, 200));
-        dialog.add(scrollPane, java.awt.BorderLayout.CENTER);
-
-        JPanel btnPanel = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
-        JButton loadBtn2  = new JButton("Load");
-        JButton deleteBtn = new JButton("Delete");
-        JButton cancelBtn = new JButton("Cancel");
-
-        loadBtn2.addActionListener(ev -> {
-            int idx = list.getSelectedIndex();
-            if (idx >= 0 && onLoadGame != null) {
-                dialog.dispose();
-                onLoadGame.accept(saves.get(idx));
-            }
-        });
-
-        deleteBtn.addActionListener(ev -> {
-            int idx = list.getSelectedIndex();
-            if (idx >= 0) {
-                int confirm = JOptionPane.showConfirmDialog(dialog,
-                        "Are you sure you want to delete " + saves.get(idx).saveName + "?", "Confirm",
-                        JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    java.io.File f = new java.io.File("saves/" + saves.get(idx).saveName + ".json");
-                    if (f.delete()) {
-                        dialog.dispose();
-                        showLoadDialog(); // Listeyi yenile
-                    }
-                }
-            }
-        });
-
-        cancelBtn.addActionListener(ev -> dialog.dispose());
-
-        btnPanel.add(loadBtn2);
-        btnPanel.add(deleteBtn);
-        btnPanel.add(cancelBtn);
-        dialog.add(btnPanel, java.awt.BorderLayout.SOUTH);
-
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
+        ui.LoadGameDialog dialog = new ui.LoadGameDialog(parentFrame, saves);
         dialog.setVisible(true);
+
+        if (dialog.isLoaded()) {
+            if (onLoadGame != null) {
+                onLoadGame.accept(dialog.getSelectedState());
+            }
+        } else if (dialog.isDeleteRequested()) {
+            GameState toDelete = dialog.getDeleteState();
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Are you sure you want to delete " + toDelete.saveName + "?", "Confirm Delete",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                java.io.File f = new java.io.File("saves/" + toDelete.saveName + ".json");
+                f.delete();
+            }
+            showLoadDialog(); // Refresh list
+        }
     }
 
     @Override

@@ -13,8 +13,6 @@ public class RingItem extends MapItem {
         super(ring.getName(), x, y, imagePath);
         this.ring = ring;
         this.addAction(new TakeAction());
-        this.addAction(new WearAction());
-        this.addAction(new TakeOffAction());
         this.addAction(new DiscardAction());
     }
 
@@ -30,8 +28,6 @@ public class RingItem extends MapItem {
             this.ring = new GreenRing(name);
         }
         this.addAction(new TakeAction());
-        this.addAction(new WearAction());
-        this.addAction(new TakeOffAction());
         this.addAction(new DiscardAction());
     }
 
@@ -51,6 +47,11 @@ public class RingItem extends MapItem {
     @Override
     public int getHpBonus() {
         return ring != null ? ring.getHpBonus() : 0;
+    }
+
+    @Override
+    public int getEnergyBonus() {
+        return ring != null ? ring.getEnergyBonus() : 0;
     }
 
     @Override

@@ -88,6 +88,10 @@ public abstract class MapItem extends GameObject {
         return 0;
     }
 
+    public int getEnergyBonus() {
+        return 0;
+    }
+
     public int getManaCostReduction() {
         return 0;
     }

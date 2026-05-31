@@ -305,11 +305,11 @@ public class DesignModeView extends JPanel {
         // ── 1. OBSTACLES ───────────────────────────────────────────────────────
         // Crates
         obstaclePalette.add(new PaletteItem("Crate", "crate", true, (x, y) -> new Crate("Crate", x, y)));
-        obstaclePalette.add(new PaletteItem("Crate Brown", "containers/crate_brown", true,
-                (x, y) -> new Crate("Crate Brown", x, y)));
+        obstaclePalette.add(new PaletteItem("Brown Crate", "containers/crate_brown", true,
+                (x, y) -> new Crate("Brown Crate", x, y)));
         obstaclePalette
                 .add(new PaletteItem("Double Crate", "double_crate", true,
-                        (x, y) -> new DoubleCrate("DoubleCrate", x, y)));
+                        (x, y) -> new DoubleCrate("Double Crate", x, y)));
 
         // Chests & Bags (Floor interactive Chest obstacles)
         obstaclePalette.add(new PaletteItem("Brown Chest", "containers/chest_brown", true,

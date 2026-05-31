@@ -20,6 +20,8 @@ public class Hero extends Entity {
     private domain.models.item.MapItem equippedArmor = null;
     private domain.models.item.MapItem equippedRing = null;
     private domain.models.map.GameMap currentMap = null;
+    private int lastMaxHp = 17;
+    private int lastMaxEnergy = 100;
 
     public void setCurrentMap(domain.models.map.GameMap map) {
         this.currentMap = map;
@@ -32,7 +34,9 @@ public class Hero extends Entity {
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
         this.str = new Random().nextInt(8) + 8;
-        this.inventory = new domain.models.inventory.Inventory(8); // 2x4 layout
+        this.inventory = new domain.models.inventory.Inventory(8, this); // 2x4 layout
+        this.lastMaxHp = 17;
+        this.lastMaxEnergy = 100;
     }
 
     public domain.models.inventory.Inventory getInventory() {
@@ -74,8 +78,11 @@ public class Hero extends Entity {
 
     @Override
     public int getMaxHp() {
-        int bonus = (equippedRing != null) ? equippedRing.getHpBonus() : 0;
-        return 17 + bonus;
+        return 17 + getRingHpBonus();
+    }
+
+    public int getMaxEnergy() {
+        return 100 + getRingEnergyBonus();
     }
 
     public void equipWeapon(domain.models.item.MapItem weapon) {
@@ -141,8 +148,7 @@ public class Hero extends Entity {
     }
 
     public int getStr() {
-        int bonus = (equippedRing != null) ? equippedRing.getStrBonus() : 0;
-        return this.str + bonus;
+        return this.str + getRingStrBonus();
     }
 
     public void setStr(int str) {
@@ -180,13 +186,100 @@ public class Hero extends Entity {
 
     public void equipRing(domain.models.item.MapItem ring) {
         this.equippedRing = ring;
+        if (ring != null) {
+            boolean alreadyHas = false;
+            for (GameObject item : inventory.getItems()) {
+                if (item.getClass().equals(ring.getClass())) {
+                    alreadyHas = true;
+                    break;
+                }
+            }
+            if (!alreadyHas) {
+                inventory.addItem(ring);
+            }
+        }
     }
 
     public void unequipRing() {
-        this.equippedRing = null;
-        if (this.hp > getMaxHp()) {
-            this.hp = getMaxHp();
+        if (this.equippedRing != null) {
+            GameObject toRemove = null;
+            for (GameObject item : inventory.getItems()) {
+                if (item.getClass().equals(this.equippedRing.getClass())) {
+                    toRemove = item;
+                    break;
+                }
+            }
+            if (toRemove != null) {
+                inventory.removeItem(toRemove);
+            }
+            this.equippedRing = null;
         }
+    }
+
+    public int getRingHpBonus() {
+        int total = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.RingItem) {
+                    total += ((domain.models.item.wearables.RingItem) item).getHpBonus();
+                }
+            }
+        }
+        return total;
+    }
+
+    public int getRingEnergyBonus() {
+        int total = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.RingItem) {
+                    total += ((domain.models.item.wearables.RingItem) item).getEnergyBonus();
+                }
+            }
+        }
+        return total;
+    }
+
+    public int getRingStrBonus() {
+        int total = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.RingItem) {
+                    total += ((domain.models.item.wearables.RingItem) item).getStrBonus();
+                }
+            }
+        }
+        return total;
+    }
+
+    public int getRingManaCostReduction() {
+        int total = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.RingItem) {
+                    total += ((domain.models.item.wearables.RingItem) item).getManaCostReduction();
+                }
+            }
+        }
+        return total;
+    }
+
+    public void onInventoryChanged() {
+        int newMaxHp = getMaxHp();
+        if (newMaxHp > lastMaxHp) {
+            this.hp = Math.min(newMaxHp, this.hp + (newMaxHp - lastMaxHp));
+        } else if (newMaxHp < lastMaxHp) {
+            this.hp = Math.min(this.hp, newMaxHp);
+        }
+        lastMaxHp = newMaxHp;
+
+        int newMaxEnergy = getMaxEnergy();
+        if (newMaxEnergy > lastMaxEnergy) {
+            this.energy = Math.min(newMaxEnergy, this.energy + (newMaxEnergy - lastMaxEnergy));
+        } else if (newMaxEnergy < lastMaxEnergy) {
+            this.energy = Math.min(this.energy, newMaxEnergy);
+        }
+        lastMaxEnergy = newMaxEnergy;
     }
 
     public GameObject getEquippedWeapon() {
@@ -372,7 +465,7 @@ public class Hero extends Entity {
     @Override
     public void update() {
         // Enerji yenilenmesi (Logic Loop her 120ms'de bir çağırdığında azar azar dolar)
-        if (this.energy < 100) {
+        if (this.energy < getMaxEnergy()) {
             this.energy += 1;
         }
     }

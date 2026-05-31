@@ -511,7 +511,7 @@ public class GameView extends JPanel {
         drawSingleBar(g, "HP", hero.getHp(), hero.getMaxHp(), hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
 
         // 2. Energy
-        drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap),
+        drawSingleBar(g, "ENG", hero.getEnergy(), hero.getMaxEnergy(), energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap),
                 y, barW, barH);
 
         // 3. Mana

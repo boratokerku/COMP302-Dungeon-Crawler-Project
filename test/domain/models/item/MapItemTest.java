@@ -90,9 +90,33 @@ public class MapItemTest {
     public void testGreenRingProperties() {
         RingItem item = new RingItem(new GreenRing("Ring of Might"), 1, 1, "images/items/ring/green_ring.png");
         assertEquals("Ring of Might", item.getName());
-        assertEquals(5, item.getStrBonus());
+        assertEquals(0, item.getStrBonus());
         assertEquals(0, item.getHpBonus());
+        assertEquals(10, item.getEnergyBonus());
         assertEquals(0, item.getManaCostReduction());
+    }
+
+    @Test
+    public void testHeroEquipGreenRing_MaxEnergyIncreasesTo110() {
+        Hero hero = new Hero(0, 0);
+        assertEquals(100, hero.getMaxEnergy());
+        assertEquals(100, hero.getEnergy());
+
+        RingItem greenRing = new RingItem(new GreenRing("Energy Ring"), 0, 0, "images/items/ring/green_ring.png");
+        hero.equipRing(greenRing);
+        assertEquals(110, hero.getMaxEnergy());
+        assertEquals(110, hero.getEnergy()); // Immediate effect
+
+        // Consume energy first
+        hero.setEnergy(90);
+        PotionItem energyPotion = new PotionItem(new EnergyPotion("Energy Potion", 30), 0, 0, "images/items/potion/green_potion.png");
+        energyPotion.getPotion().use(hero);
+        assertEquals(110, hero.getEnergy());
+
+        // Unequip ring subtracts Energy back to 100
+        hero.unequipRing();
+        assertEquals(100, hero.getMaxEnergy());
+        assertEquals(100, hero.getEnergy());
     }
 
     @Test
@@ -117,18 +141,53 @@ public class MapItemTest {
     public void testHeroEquipRedRing_MaxHealthIncreasesTo22() {
         Hero hero = new Hero(0, 0);
         assertEquals(17, hero.getMaxHp());
+        assertEquals(17, hero.getHp());
 
         RingItem redRing = new RingItem(new RedRing("Red Ring"), 0, 0, "images/items/ring/red_ring.png");
         hero.equipRing(redRing);
         assertEquals(22, hero.getMaxHp());
+        assertEquals(22, hero.getHp()); // Immediate effect
 
-        // Heal up to new max HP
-        hero.heal(10);
-        assertEquals(22, hero.getHp());
-
-        // Unequip ring clamps HP back to 17
+        // Unequip ring subtracts HP back to 17
         hero.unequipRing();
         assertEquals(17, hero.getMaxHp());
         assertEquals(17, hero.getHp());
+    }
+
+    @Test
+    public void testPassiveRingsInInventory() {
+        Hero hero = new Hero(0, 0);
+        assertEquals(17, hero.getMaxHp());
+        assertEquals(17, hero.getHp());
+        assertEquals(100, hero.getMaxEnergy());
+        assertEquals(100, hero.getEnergy());
+        assertEquals(0, hero.getRingManaCostReduction());
+
+        // Add Red Ring to inventory
+        RingItem redRing = new RingItem(new RedRing("Red Ring"), 0, 0, "images/items/ring/red_ring.png");
+        hero.getInventory().addItem(redRing);
+        assertEquals(22, hero.getMaxHp());
+        assertEquals(22, hero.getHp());
+
+        // Add Green Ring to inventory
+        RingItem greenRing = new RingItem(new GreenRing("Energy Ring"), 0, 0, "images/items/ring/green_ring.png");
+        hero.getInventory().addItem(greenRing);
+        assertEquals(110, hero.getMaxEnergy());
+        assertEquals(110, hero.getEnergy());
+
+        // Add Blue Ring to inventory
+        RingItem blueRing = new RingItem(new BlueRing("Blue Ring"), 0, 0, "images/items/ring/blue_ring.png");
+        hero.getInventory().addItem(blueRing);
+        assertEquals(1, hero.getRingManaCostReduction());
+
+        // Remove Red Ring from inventory
+        hero.getInventory().removeItem(redRing);
+        assertEquals(17, hero.getMaxHp());
+        assertEquals(17, hero.getHp());
+
+        // Remove Green Ring from inventory
+        hero.getInventory().removeItem(greenRing);
+        assertEquals(100, hero.getMaxEnergy());
+        assertEquals(100, hero.getEnergy());
     }
 }

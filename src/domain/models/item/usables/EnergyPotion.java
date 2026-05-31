@@ -13,7 +13,7 @@ public class EnergyPotion extends Item {
 
     @Override
     public void use(Hero hero) {
-        hero.setEnergy(Math.min(100, hero.getEnergy() + energyAmount));
+        hero.setEnergy(Math.min(hero.getMaxEnergy(), hero.getEnergy() + energyAmount));
         System.out.println(name + " consumed. Restored Energy: " + energyAmount);
     }
 }

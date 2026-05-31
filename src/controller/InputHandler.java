@@ -110,7 +110,7 @@ public class InputHandler implements KeyListener {
             if (hero.getEquippedWeapon() instanceof domain.models.item.MapItem) {
                 domain.models.item.MapItem weapon = (domain.models.item.MapItem) hero.getEquippedWeapon();
                 if (weapon.isRanged()) {
-                    int cost = Math.max(0, weapon.getManaCost() - (hero.getEquippedRing() != null ? hero.getEquippedRing().getManaCostReduction() : 0));
+                    int cost = Math.max(0, weapon.getManaCost() - hero.getRingManaCostReduction());
                     if (hero.getMana() < cost) {
                         System.out.println("Büyü atmak için yeterli mana yok!");
                         view.GameView.addFloatingText(hero.getX(), hero.getY(), "No Mana!", java.awt.Color.CYAN);

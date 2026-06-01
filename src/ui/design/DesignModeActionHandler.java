@@ -13,6 +13,7 @@ import ui.dialogs.ClearMapDialog;
 import ui.dialogs.DeleteConfirmDialog;
 import ui.dialogs.LoadMapDialog;
 import ui.dialogs.SaveMapDialog;
+import ui.dialogs.MapSavedDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -178,7 +179,8 @@ public class DesignModeActionHandler {
             try (FileWriter fw = new FileWriter("saves/maps/" + name + ".mapjson")) {
                 fw.write(json);
             }
-            JOptionPane.showMessageDialog(view, "Harita kaydedildi: saves/maps/" + name + ".mapjson", "Kayıt Başarılı", JOptionPane.INFORMATION_MESSAGE);
+            MapSavedDialog successDialog = new MapSavedDialog(parentFrame);
+            successDialog.setVisible(true);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(view, "Kayıt hatası: " + ex.getMessage(), "Hata", JOptionPane.ERROR_MESSAGE);
         }

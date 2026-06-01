@@ -6,6 +6,7 @@ import domain.models.entity.Entity;
 import domain.models.entity.Hero;
 import domain.models.map.GameMap;
 import ui.dialogs.SaveGameDialog;
+import ui.dialogs.GameSavedDialog;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -236,7 +237,8 @@ public class PauseMenu extends JPanel {
             // Sanitise save name to prevent file path injection issues
             saveName = saveName.trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
             SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner, levelManager.getCurrentLevel(), gameView.getElapsedSeconds());
-            JOptionPane.showMessageDialog(this, "Saved successfully: " + saveName, "Save Successful", JOptionPane.INFORMATION_MESSAGE);
+            GameSavedDialog successDialog = new GameSavedDialog(parentFrame);
+            successDialog.setVisible(true);
         }
     }
 

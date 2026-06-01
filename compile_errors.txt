@@ -1,0 +1,27 @@
+/Users/boratoker/Desktop/COMP302-Dungeon-Crawler-Project/src/controller/design/DesignModeInputHandler.java:23: error: cannot find symbol
+    private final PaletteManager paletteManager;
+                  ^
+  symbol:   class PaletteManager
+  location: class DesignModeInputHandler
+/Users/boratoker/Desktop/COMP302-Dungeon-Crawler-Project/src/controller/design/DesignModeInputHandler.java:29: error: cannot find symbol
+    public DesignModeInputHandler(DesignModeView view, GameMap map, PaletteManager paletteManager) {
+                                                                    ^
+  symbol:   class PaletteManager
+  location: class DesignModeInputHandler
+/Users/boratoker/Desktop/COMP302-Dungeon-Crawler-Project/src/domain/logic/SaveManager.java:4: error: package com.google.gson does not exist
+import com.google.gson.Gson;
+                      ^
+/Users/boratoker/Desktop/COMP302-Dungeon-Crawler-Project/src/domain/logic/SaveManager.java:5: error: package com.google.gson does not exist
+import com.google.gson.GsonBuilder;
+                      ^
+/Users/boratoker/Desktop/COMP302-Dungeon-Crawler-Project/src/domain/logic/SaveManager.java:20: error: cannot find symbol
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                         ^
+  symbol:   class Gson
+  location: class SaveManager
+/Users/boratoker/Desktop/COMP302-Dungeon-Crawler-Project/src/domain/logic/SaveManager.java:20: error: cannot find symbol
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                                         ^
+  symbol:   class GsonBuilder
+  location: class SaveManager
+6 errors

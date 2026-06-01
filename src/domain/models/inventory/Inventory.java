@@ -1,6 +1,6 @@
 package domain.models.inventory;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.models.entity.Hero;
 import java.util.ArrayList;
 import java.util.List;

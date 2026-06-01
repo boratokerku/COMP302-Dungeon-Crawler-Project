@@ -1,4 +1,6 @@
 package domain.models.entity;
+import domain.models.GameObject;
+import domain.models.Renderable;
 
 import java.awt.Point;
 import java.util.Random;
@@ -42,7 +44,7 @@ public class Knight extends Entity implements Renderable {
 
         // In Team Match, pick up weapon if standing on one
         if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
-            domain.models.entity.GameObject obj = map.getObjectAt(this.x, this.y);
+            domain.models.GameObject obj = map.getObjectAt(this.x, this.y);
             if (obj instanceof MapItem && ((MapItem) obj).isWeapon()) {
                 pickUpWeapon((MapItem) obj, map);
             }
@@ -157,7 +159,7 @@ public class Knight extends Entity implements Renderable {
         double minDist = Double.MAX_VALUE;
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                domain.models.GameObject obj = map.getObjectAt(x, y);
                 if (obj instanceof MapItem) {
                     MapItem item = (MapItem) obj;
                     if (item.isWeapon()) {

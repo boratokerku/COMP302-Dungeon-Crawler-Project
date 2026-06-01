@@ -1,6 +1,6 @@
 package domain.models.item;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.models.item.usables.PotionItem;
 import domain.models.item.wearables.ArmorItem;
 import domain.models.item.wearables.AxeItem;

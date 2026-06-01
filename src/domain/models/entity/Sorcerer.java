@@ -1,5 +1,6 @@
 package domain.models.entity;
 
+import domain.models.Renderable;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;

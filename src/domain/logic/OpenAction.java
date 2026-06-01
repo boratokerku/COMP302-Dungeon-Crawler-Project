@@ -1,7 +1,7 @@
 package domain.logic;
 
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -34,14 +34,14 @@ public class OpenAction implements Action {
             domain.models.map.GameMap map = target.getMap();
             
             boolean wasLocked = false;
-            if (target instanceof domain.models.entity.Chest) {
-                domain.models.entity.Chest chest = (domain.models.entity.Chest) target;
+            if (target instanceof domain.models.staticObjects.Chest) {
+                domain.models.staticObjects.Chest chest = (domain.models.staticObjects.Chest) target;
                 if (chest.isLocked()) {
                     wasLocked = true;
-                    domain.models.staticObjects.KeyItem keyToUse = null;
+                    domain.models.item.KeyItem keyToUse = null;
                     for (GameObject item : hero.getInventory().getItems()) {
-                        if (item instanceof domain.models.staticObjects.KeyItem) {
-                            domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) item;
+                        if (item instanceof domain.models.item.KeyItem) {
+                            domain.models.item.KeyItem key = (domain.models.item.KeyItem) item;
                             if (canKeyOpenChest(key, chest)) {
                                 keyToUse = key;
                                 break;
@@ -100,7 +100,7 @@ public class OpenAction implements Action {
         }
     }
 
-    private boolean canKeyOpenChest(domain.models.staticObjects.KeyItem key, domain.models.entity.Chest chest) {
+    private boolean canKeyOpenChest(domain.models.item.KeyItem key, domain.models.staticObjects.Chest chest) {
         // Since all keys have been unified into a single key type, any key can open any locked chest.
         return true;
     }

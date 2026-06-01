@@ -1,9 +1,9 @@
 package domain.logic;
 
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.models.staticObjects.LevelDoor;
-import domain.models.staticObjects.LevelKey;
+import domain.models.item.LevelKey;
 
 public class UnlockLevelGateAction implements Action {
     @Override

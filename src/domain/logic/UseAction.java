@@ -3,7 +3,7 @@ package domain.logic;
 import domain.logic.event.GameEventBus;
 import domain.logic.event.SoundEvent;
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class UseAction implements Action {
 
@@ -50,8 +50,8 @@ public class UseAction implements Action {
             }
 
             hero.getInventory().removeItem(target);
-        } else if (target instanceof domain.models.staticObjects.KeyItem) {
-            domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) target;
+        } else if (target instanceof domain.models.item.KeyItem) {
+            domain.models.item.KeyItem key = (domain.models.item.KeyItem) target;
             domain.models.map.GameMap map = hero.getCurrentMap();
             boolean unlockedAny = false;
 
@@ -61,7 +61,7 @@ public class UseAction implements Action {
                         int nx = hero.getX() + dx;
                         int ny = hero.getY() + dy;
                         if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
-                            domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
+                            domain.models.GameObject obj = map.getObjectAt(nx, ny);
                             if (obj instanceof domain.models.staticObjects.Door) {
                                 domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
                                 if (door.isLocked()) {

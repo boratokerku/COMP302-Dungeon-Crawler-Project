@@ -1,15 +1,15 @@
 package domain.logic;
 
-import domain.models.entity.Chest;
-import domain.models.entity.Column;
-import domain.models.entity.Crate;
-import domain.models.entity.GameObject;
-import domain.models.entity.SearchableObject;
+import domain.models.staticObjects.Chest;
+import domain.models.staticObjects.Column;
+import domain.models.staticObjects.Crate;
+import domain.models.GameObject;
+import domain.models.staticObjects.SearchableObject;
 import domain.models.item.MapItem;
 import domain.models.item.usables.PotionItem;
 import domain.models.map.GameMap;
 import domain.models.staticObjects.Decoration;
-import domain.models.staticObjects.KeyItem;
+import domain.models.item.KeyItem;
 import domain.models.staticObjects.LevelDoor;
 import domain.models.staticObjects.WallObject;
 import domain.models.tile.FloorTile;

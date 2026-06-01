@@ -1,6 +1,6 @@
 package domain.models.tile;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public abstract class Tile extends GameObject {
     protected String symbol; 

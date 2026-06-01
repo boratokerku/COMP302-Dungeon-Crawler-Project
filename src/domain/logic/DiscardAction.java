@@ -1,7 +1,7 @@
 package domain.logic;
 
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class DiscardAction implements Action {
 

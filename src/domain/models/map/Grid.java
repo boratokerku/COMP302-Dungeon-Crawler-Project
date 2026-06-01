@@ -1,6 +1,6 @@
 package domain.models.map;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 /**
  * Overview: Grid represents a 2D rectangular map of cells, where each cell

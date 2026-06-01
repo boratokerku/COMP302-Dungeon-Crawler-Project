@@ -1,4 +1,5 @@
 package domain.models.entity;
+import domain.models.GameObject;
 
 import java.util.Random;
 
@@ -369,7 +370,7 @@ public class Hero extends Entity {
         } else if (!occupied) {
             System.out.println("Hero blocked at (" + nextX + ", " + nextY + ")");
             if (map != null) {
-                domain.models.entity.GameObject obj = map.getObjectAt(nextX, nextY);
+                domain.models.GameObject obj = map.getObjectAt(nextX, nextY);
                 if (obj instanceof domain.models.staticObjects.LevelDoor && ((domain.models.staticObjects.LevelDoor) obj).isLocked()) {
                     GameEventBus.fireFloatingText(nextX, nextY, "Locked", java.awt.Color.RED);
                 }
@@ -402,7 +403,7 @@ public class Hero extends Entity {
 
                 if (!target.isAlive() && map != null) {
                     System.out.println("Enemy defeated!");
-                    domain.models.entity.GameObject loot = null;
+                    domain.models.GameObject loot = null;
                     if (target instanceof domain.models.entity.FinalBoss) {
                         loot = new domain.models.item.VictoryCoin(target.getX(), target.getY());
                     } else {
@@ -417,7 +418,7 @@ public class Hero extends Entity {
                             int locked = countLockedChests(map);
                             int keys = countKeys(map, this);
                             if (keys < locked) {
-                                loot = new domain.models.staticObjects.KeyItem(target.getX(), target.getY());
+                                loot = new domain.models.item.KeyItem(target.getX(), target.getY());
                             } else {
                                 loot = rand.nextBoolean()
                                         ? domain.models.item.MapItem.createRandomItem(target.getX(), target.getY())
@@ -448,8 +449,8 @@ public class Hero extends Entity {
         int count = 0;
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.entity.Chest && ((domain.models.entity.Chest) obj).isLocked()) {
+                domain.models.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.staticObjects.Chest && ((domain.models.staticObjects.Chest) obj).isLocked()) {
                     count++;
                 }
             }
@@ -461,15 +462,15 @@ public class Hero extends Entity {
         int count = 0;
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.staticObjects.KeyItem) {
+                domain.models.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.item.KeyItem) {
                     count++;
                 }
             }
         }
         if (hero != null && hero.getInventory() != null) {
-            for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                if (item instanceof domain.models.staticObjects.KeyItem) {
+            for (domain.models.GameObject item : hero.getInventory().getItems()) {
+                if (item instanceof domain.models.item.KeyItem) {
                     count++;
                 }
             }

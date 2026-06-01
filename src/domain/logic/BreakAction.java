@@ -3,7 +3,7 @@ package domain.logic;
 import domain.logic.event.GameEventBus;
 import domain.logic.event.SoundEvent;
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class BreakAction implements Action {
     @Override
@@ -13,7 +13,7 @@ public class BreakAction implements Action {
 
     @Override
     public boolean isAvailable(Hero hero, GameObject target) {
-        if (target instanceof domain.models.entity.Chest) {
+        if (target instanceof domain.models.staticObjects.Chest) {
             return false;
         }
         return true;
@@ -21,7 +21,7 @@ public class BreakAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        if (target instanceof domain.models.entity.Chest) {
+        if (target instanceof domain.models.staticObjects.Chest) {
             return;
         }
         hero.setEnergy(Math.max(0, hero.getEnergy() - 10));
@@ -36,7 +36,7 @@ public class BreakAction implements Action {
                 domain.models.map.GameMap map = target.getMap();
                 
                 String containerType = "Box/Crate";
-                if (target instanceof domain.models.entity.Chest) {
+                if (target instanceof domain.models.staticObjects.Chest) {
                     containerType = "Locked Chest";
                 }
                 
@@ -44,11 +44,11 @@ public class BreakAction implements Action {
                 map.removeObject(target);
                 
                 GameObject loot = null;
-                if (target instanceof domain.models.entity.Crate) {
-                    loot = ((domain.models.entity.Crate) target).getHiddenItem();
+                if (target instanceof domain.models.staticObjects.Crate) {
+                    loot = ((domain.models.staticObjects.Crate) target).getHiddenItem();
                 }
                 
-                boolean isLevelKey = (loot instanceof domain.models.staticObjects.LevelKey);
+                boolean isLevelKey = (loot instanceof domain.models.item.LevelKey);
                 
                 if (loot == null) {
                     loot = domain.models.item.MapItem.createRandomItem(tx, ty);
@@ -74,7 +74,7 @@ public class BreakAction implements Action {
                 GameEventBus.fireSound(SoundEvent.SoundType.WALK);
                 GameEventBus.fireFloatingText(target.getX(), target.getY(), "FAILED!", java.awt.Color.RED);
             }
-            String containerType = (target instanceof domain.models.entity.Chest) ? "Locked Chest" : "Box/Crate";
+            String containerType = (target instanceof domain.models.staticObjects.Chest) ? "Locked Chest" : "Box/Crate";
             System.out.println("Failed to break " + containerType + "! (Need more STR)");
         }
     }

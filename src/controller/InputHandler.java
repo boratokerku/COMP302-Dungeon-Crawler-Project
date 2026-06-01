@@ -1,4 +1,5 @@
 package controller;
+import domain.models.GameObject;
 
 import domain.models.AnimationState;
 import domain.models.Direction;
@@ -65,10 +66,10 @@ public class InputHandler implements KeyListener {
                 gameView.setHotbarSlot(hotbarSlot);
             }
             if (hero != null && hero.getInventory() != null) {
-                java.util.List<domain.models.entity.GameObject> items = hero.getInventory().getItems();
+                java.util.List<domain.models.GameObject> items = hero.getInventory().getItems();
                 int itemIndex = hotbarSlot - 1;
                 if (itemIndex >= 0 && itemIndex < items.size()) {
-                    domain.models.entity.GameObject item = items.get(itemIndex);
+                    domain.models.GameObject item = items.get(itemIndex);
                     if (item != null) {
                         for (domain.logic.Action action : item.getActions()) {
                             String name = action.getName();
@@ -113,10 +114,10 @@ public class InputHandler implements KeyListener {
         } else if (code == KeyEvent.VK_Q) {
             if (hero != null && hero.getInventory() != null && gameView != null) {
                 int selectedSlot = gameView.getSelectedSlot();
-                java.util.List<domain.models.entity.GameObject> items = hero.getInventory().getItems();
+                java.util.List<domain.models.GameObject> items = hero.getInventory().getItems();
                 int itemIndex = selectedSlot - 1;
                 if (itemIndex >= 0 && itemIndex < items.size()) {
-                    domain.models.entity.GameObject item = items.get(itemIndex);
+                    domain.models.GameObject item = items.get(itemIndex);
                     if (item != null) {
                         for (domain.logic.Action action : item.getActions()) {
                             if (action.getName().equals("Discard")) {
@@ -272,7 +273,7 @@ public class InputHandler implements KeyListener {
         }
     }
 
-    private boolean canKeyOpenChest(domain.models.staticObjects.KeyItem key, domain.models.entity.Chest chest) {
+    private boolean canKeyOpenChest(domain.models.item.KeyItem key, domain.models.staticObjects.Chest chest) {
         return true;
     }
 }

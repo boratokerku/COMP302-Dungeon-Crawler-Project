@@ -1,5 +1,6 @@
 
 package view;
+import domain.models.GameObject;
 
 import domain.models.Direction;
 import domain.models.entity.Hero;
@@ -583,7 +584,7 @@ public class GameView extends JPanel {
     }
 
     /** Returns the hotbar item clicked at the given screen position. */
-    public domain.models.entity.GameObject getClickedInventoryItem(int screenX, int screenY) {
+    public domain.models.GameObject getClickedInventoryItem(int screenX, int screenY) {
         return inventoryView.getClickedItem(screenX, screenY);
     }
 
@@ -642,7 +643,7 @@ public class GameView extends JPanel {
 
     private String lastLoggedWeapon = null;
 
-    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh, domain.models.entity.GameObject equipped) {
+    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh, domain.models.GameObject equipped) {
         if (!(equipped instanceof domain.models.item.MapItem)) {
             if (lastLoggedWeapon != null) {
                 System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL or not MapItem");
@@ -1211,7 +1212,7 @@ public class GameView extends JPanel {
     private boolean isSameWall(domain.models.map.GameMap map, int x, int y, String imgName) {
         if (x < 0 || x >= map.getWidth() || y < 0 || y >= map.getHeight())
             return false;
-        domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+        domain.models.GameObject obj = map.getObjectAt(x, y);
         return obj instanceof domain.models.tile.WallTile && imgName != null && imgName.equals(obj.getImageName());
     }
 
@@ -1221,18 +1222,18 @@ public class GameView extends JPanel {
 
         for (int x = 0; x < gameMap.getWidth(); x++) {
             for (int y = 0; y < gameMap.getHeight(); y++) {
-                domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
+                domain.models.GameObject obj = gameMap.getObjectAt(x, y);
                 if (obj != null) {
                     if (obj instanceof domain.models.item.MapItem ||
-                            obj instanceof domain.models.entity.Column ||
-                            obj instanceof domain.models.entity.Chest ||
-                            obj instanceof domain.models.entity.Crate ||
+                            obj instanceof domain.models.staticObjects.Column ||
+                            obj instanceof domain.models.staticObjects.Chest ||
+                            obj instanceof domain.models.staticObjects.Crate ||
                             (obj instanceof domain.models.staticObjects.Door
                                     && !(obj instanceof domain.models.staticObjects.LevelDoor))
                             ||
                             obj instanceof domain.models.staticObjects.Decoration ||
-                            obj instanceof domain.models.entity.SearchableObject ||
-                            obj instanceof domain.models.entity.Sign ||
+                            obj instanceof domain.models.staticObjects.SearchableObject ||
+                            obj instanceof domain.models.staticObjects.Sign ||
                             obj instanceof domain.models.tile.FloorTile) {
                         // Eğer hücrede bir eşya, statik obje veya zemin varsa zemin (FloorTile)
                         // çiziyoruz
@@ -1253,7 +1254,7 @@ public class GameView extends JPanel {
 
         // PASS 1: Draw all base walls for the current row (yVal)
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
+            domain.models.GameObject obj = gameMap.getObjectAt(x, yVal);
             if (obj instanceof domain.models.tile.WallTile) {
                 if ("wall/wall_side".equals(obj.getImageName())) {
                     // Yan duvarlar: ince çiz (tile genişliğinin 1/3'ü)
@@ -1274,7 +1275,7 @@ public class GameView extends JPanel {
 
                     domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
                     if (wall.getDecoration() != null) {
-                        domain.models.entity.GameObject deco = wall.getDecoration();
+                        domain.models.GameObject deco = wall.getDecoration();
                         String imgName = deco.getImageName();
                         if (imgName != null && imgName.contains("WallDecoration/torch")) {
                             long now = System.currentTimeMillis();
@@ -1289,14 +1290,14 @@ public class GameView extends JPanel {
                             if (deco instanceof domain.models.staticObjects.Decoration) {
                                 dw = (int) (tileSize * 0.4);
                             } else if (deco instanceof domain.models.staticObjects.WallObject
-                                    || deco instanceof domain.models.entity.SearchableObject) {
+                                    || deco instanceof domain.models.staticObjects.SearchableObject) {
                                 dw = Math.max(tileSize - 6, 4);
                             }
                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                             int drawY;
                             if (deco instanceof domain.models.staticObjects.WallObject
-                                    || deco instanceof domain.models.entity.SearchableObject) {
+                                    || deco instanceof domain.models.staticObjects.SearchableObject) {
                                 drawY = offsetY + (yVal * tileSize) - 3 + (tileSize - dh) / 2; // wallOffset=6
                             } else {
                                 drawY = offsetY + (yVal * tileSize) + tileSize - dh;
@@ -1346,11 +1347,11 @@ public class GameView extends JPanel {
         // PASS 2: Draw all wall-mounted decorations on top of all base walls and floor
         // tiles for this row (yVal)
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
+            domain.models.GameObject obj = gameMap.getObjectAt(x, yVal);
             if (obj instanceof domain.models.tile.WallTile) {
                 domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
                 if (wall.getDecoration() != null) {
-                    domain.models.entity.GameObject deco = wall.getDecoration();
+                    domain.models.GameObject deco = wall.getDecoration();
                     String imgName = deco.getImageName();
                     if (imgName != null && imgName.contains("WallDecoration/torch")) {
                         long now = System.currentTimeMillis();
@@ -1369,7 +1370,7 @@ public class GameView extends JPanel {
                         int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                         int drawY;
                         if (deco instanceof domain.models.staticObjects.WallObject
-                                || deco instanceof domain.models.entity.SearchableObject) {
+                                || deco instanceof domain.models.staticObjects.SearchableObject) {
                             int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
                             drawY = offsetY + (yVal * tileSize) - wallOffset / 2 + (tileSize - dh) / 2;
                         } else {
@@ -1397,7 +1398,7 @@ public class GameView extends JPanel {
                         && Math.abs(y - heroGridY) <= 1;
 
                 if (inZone) { // dim tiles INSIDE the zone
-                    domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
+                    domain.models.GameObject obj = gameMap.getObjectAt(x, y);
                     // Eğer hücredeki obje 'wall' ise (geçilemezse) üzerine karanlık efekti çizme
                     if (obj != null && obj.isPassable()) {
                         g2d.setColor(new Color(0, 0, 0, 60));
@@ -1413,7 +1414,7 @@ public class GameView extends JPanel {
             return;
 
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
+            domain.models.GameObject obj = gameMap.getObjectAt(x, yVal);
             if (obj instanceof domain.models.item.MapItem) {
                 domain.models.item.MapItem item = (domain.models.item.MapItem) obj;
 
@@ -1465,14 +1466,14 @@ public class GameView extends JPanel {
             return;
 
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
-            if (obj instanceof domain.models.entity.Column ||
-                    obj instanceof domain.models.entity.Chest ||
-                    obj instanceof domain.models.entity.Crate ||
+            domain.models.GameObject obj = gameMap.getObjectAt(x, yVal);
+            if (obj instanceof domain.models.staticObjects.Column ||
+                    obj instanceof domain.models.staticObjects.Chest ||
+                    obj instanceof domain.models.staticObjects.Crate ||
                     obj instanceof domain.models.staticObjects.Door ||
                     obj instanceof domain.models.staticObjects.Decoration ||
-                    obj instanceof domain.models.entity.SearchableObject ||
-                    obj instanceof domain.models.entity.Sign) {
+                    obj instanceof domain.models.staticObjects.SearchableObject ||
+                    obj instanceof domain.models.staticObjects.Sign) {
 
                 if (obj instanceof domain.models.staticObjects.LevelDoor) {
                     int tx = offsetX + (x * tileSize);
@@ -1539,15 +1540,15 @@ public class GameView extends JPanel {
                     int drawX = offsetX + (x * tileSize);
                     int drawY = offsetY + (yVal * tileSize);
                     Color color = Color.MAGENTA;
-                    if (obj instanceof domain.models.entity.Column)
+                    if (obj instanceof domain.models.staticObjects.Column)
                         color = Color.GRAY;
-                    else if (obj instanceof domain.models.entity.Chest)
+                    else if (obj instanceof domain.models.staticObjects.Chest)
                         color = new Color(139, 69, 19);
-                    else if (obj instanceof domain.models.entity.Crate)
+                    else if (obj instanceof domain.models.staticObjects.Crate)
                         color = new Color(101, 67, 33);
-                    else if (obj instanceof domain.models.entity.SearchableObject)
+                    else if (obj instanceof domain.models.staticObjects.SearchableObject)
                         color = Color.DARK_GRAY;
-                    else if (obj instanceof domain.models.entity.Sign)
+                    else if (obj instanceof domain.models.staticObjects.Sign)
                         color = new Color(180, 115, 60);
 
                     g2d.setColor(color);

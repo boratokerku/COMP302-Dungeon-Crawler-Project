@@ -1,4 +1,5 @@
 package domain.logic;
+import domain.models.GameObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -65,33 +66,33 @@ public class SaveManager {
                             obj.getClass().getSimpleName(), obj.getName(), x, y
                     );
                     rec.imageName = obj.getImageName();
-                } else if (obj instanceof domain.models.entity.Chest) {
-                    domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+                } else if (obj instanceof domain.models.staticObjects.Chest) {
+                    domain.models.staticObjects.Chest chest = (domain.models.staticObjects.Chest) obj;
                     rec = new GameState.ItemRecord(
                             "Chest", chest.getName(), x, y, chest.isLocked()
                     );
                     rec.imageName = chest.getImageName();
                 } else if (obj instanceof domain.models.tile.WallTile) {
-                    domain.models.entity.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
-                    if (deco instanceof domain.models.entity.SearchableObject) {
-                        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) deco;
+                    domain.models.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
+                    if (deco instanceof domain.models.staticObjects.SearchableObject) {
+                        domain.models.staticObjects.SearchableObject so = (domain.models.staticObjects.SearchableObject) deco;
                         String hiddenItemType = so.getHiddenItem() != null ? so.getHiddenItem().getClass().getSimpleName() : null;
                         rec = new GameState.ItemRecord(
                                 "SearchableObject", so.getName(), x, y, so.isSearched(), hiddenItemType
                         );
                         rec.imageName = so.getImageName();
                     }
-                } else if (obj instanceof domain.models.entity.Crate) {
-                    domain.models.entity.Crate crate = (domain.models.entity.Crate) obj;
+                } else if (obj instanceof domain.models.staticObjects.Crate) {
+                    domain.models.staticObjects.Crate crate = (domain.models.staticObjects.Crate) obj;
                     String hiddenItemType = crate.getHiddenItem() != null ? crate.getHiddenItem().getClass().getSimpleName() : null;
                     rec = new GameState.ItemRecord(
                             "Crate", crate.getName(), x, y, false, hiddenItemType
                     );
                     rec.imageName = crate.getImageName();
-                } else if (obj instanceof domain.models.entity.Column
-                        || obj instanceof domain.models.entity.SearchableObject
+                } else if (obj instanceof domain.models.staticObjects.Column
+                        || obj instanceof domain.models.staticObjects.SearchableObject
                         || obj instanceof domain.models.staticObjects.Decoration
-                        || obj instanceof domain.models.entity.Sign) {
+                        || obj instanceof domain.models.staticObjects.Sign) {
                     rec = new GameState.ItemRecord(
                             obj.getClass().getSimpleName(), obj.getName(), x, y
                     );

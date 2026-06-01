@@ -1,7 +1,7 @@
 package domain.logic;
 
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.models.item.MapItem;
 
 public class WearAction implements Action {

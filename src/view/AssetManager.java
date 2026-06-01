@@ -1,5 +1,6 @@
 package view;
 
+import domain.models.Renderable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;

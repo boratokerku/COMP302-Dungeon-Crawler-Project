@@ -1,4 +1,5 @@
 package app;
+import view.DesignModeView;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;

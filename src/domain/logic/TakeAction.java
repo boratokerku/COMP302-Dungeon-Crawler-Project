@@ -1,7 +1,7 @@
 package domain.logic;
 
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class TakeAction implements Action {
 
@@ -41,7 +41,7 @@ public class TakeAction implements Action {
                 }
             }
             
-            if (target instanceof domain.models.staticObjects.LevelKey) {
+            if (target instanceof domain.models.item.LevelKey) {
                 for (int x = 0; x < map.getWidth(); x++) {
                     for (int y = 0; y < map.getHeight(); y++) {
                         GameObject obj = map.getObjectAt(x, y);

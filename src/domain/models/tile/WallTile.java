@@ -1,6 +1,6 @@
 package domain.models.tile;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class WallTile extends Tile {
     private GameObject decoration;

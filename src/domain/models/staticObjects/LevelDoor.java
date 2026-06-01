@@ -1,6 +1,7 @@
 package domain.models.staticObjects;
+import domain.models.item.LevelKey;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 /**
  * A special door that transitions between dungeon levels.

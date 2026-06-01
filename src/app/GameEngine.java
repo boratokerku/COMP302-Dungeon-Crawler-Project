@@ -1,4 +1,10 @@
 package app;
+import domain.models.entity.Hero;
+import domain.models.staticObjects.Column;
+import domain.models.staticObjects.Chest;
+import domain.models.staticObjects.Crate;
+import domain.models.staticObjects.SearchableObject;
+import domain.models.GameObject;
 
 import domain.logic.EnemySpawner;
 import domain.logic.GameObjectFactory;
@@ -25,7 +31,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import ui.DesignModeView;
+import view.DesignModeView;
 import view.AssetManager;
 import view.GameView;
 import view.TileManager;
@@ -44,30 +50,30 @@ public class GameEngine {
 
         for (int x = 0; x < w; x++) {
             for (int y = 0; y < h; y++) {
-                domain.models.entity.GameObject obj = original.getObjectAt(x, y);
+                domain.models.GameObject obj = original.getObjectAt(x, y);
                 if (obj == null)
                     continue;
 
                 // Prototype Pattern in action!
-                domain.models.entity.GameObject clonedObj = obj.clone();
+                domain.models.GameObject clonedObj = obj.clone();
                 clonedObj.setMap(copy); // Ensure map reference points to new map
 
                 // If it's a restart, we might need to reset certain states like searchable traps
-                if (isRestart && clonedObj instanceof domain.models.entity.SearchableObject) {
-                    domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) clonedObj;
+                if (isRestart && clonedObj instanceof domain.models.staticObjects.SearchableObject) {
+                    domain.models.staticObjects.SearchableObject so = (domain.models.staticObjects.SearchableObject) clonedObj;
                     so.setSearched(false);
                     so.setTrapTriggered(false);
                     so.setHiddenItem(null);
-                } else if (isRestart && clonedObj instanceof domain.models.entity.Crate) {
-                    domain.models.entity.Crate crate = (domain.models.entity.Crate) clonedObj;
+                } else if (isRestart && clonedObj instanceof domain.models.staticObjects.Crate) {
+                    domain.models.staticObjects.Crate crate = (domain.models.staticObjects.Crate) clonedObj;
                     crate.setHiddenItem(null);
                 }
                 
                 // For WallTiles with SearchableObject decorations, also reset
                 if (isRestart && clonedObj instanceof domain.models.tile.WallTile) {
                     domain.models.tile.WallTile wall = (domain.models.tile.WallTile) clonedObj;
-                    if (wall.getDecoration() instanceof domain.models.entity.SearchableObject) {
-                        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) wall.getDecoration();
+                    if (wall.getDecoration() instanceof domain.models.staticObjects.SearchableObject) {
+                        domain.models.staticObjects.SearchableObject so = (domain.models.staticObjects.SearchableObject) wall.getDecoration();
                         so.setSearched(false);
                         so.setTrapTriggered(false);
                         so.setHiddenItem(null);
@@ -266,28 +272,28 @@ public class GameEngine {
         Sorcerer sorcerer = new Sorcerer(18, 5);
 
         // Kasalar (Crates) odaların/koridorların köşelerinde
-        map.placeObject(new domain.models.entity.Crate("Crate", 2, 2), 2, 2);
-        map.placeObject(new domain.models.entity.Crate("Crate", 3, 2), 3, 2);
-        map.placeObject(new domain.models.entity.Crate("Crate", 19, 13), 19, 13);
-        map.placeObject(new domain.models.entity.Crate("Crate", 2, 13), 2, 13);
+        map.placeObject(new domain.models.staticObjects.Crate("Crate", 2, 2), 2, 2);
+        map.placeObject(new domain.models.staticObjects.Crate("Crate", 3, 2), 3, 2);
+        map.placeObject(new domain.models.staticObjects.Crate("Crate", 19, 13), 19, 13);
+        map.placeObject(new domain.models.staticObjects.Crate("Crate", 2, 13), 2, 13);
 
         // Sandıklar (Chests) uzak köşelerde
-        map.placeObject(new domain.models.entity.Chest("Main Chest", 19, 2, true), 19, 2);
-        map.placeObject(new domain.models.entity.Chest("Hidden Chest", 2, 12, true), 2, 12);
+        map.placeObject(new domain.models.staticObjects.Chest("Main Chest", 19, 2, true), 19, 2);
+        map.placeObject(new domain.models.staticObjects.Chest("Hidden Chest", 2, 12, true), 2, 12);
 
         // Sütunlar (Columns) geniş alanın ortasında bir ana salon oluşturacak şekilde
-        map.placeObject(new domain.models.entity.Column("Column", 8, 5, "colon/gray_colon_whole"), 8, 5);
-        map.placeObject(new domain.models.entity.Column("Column", 14, 5, "colon/gray_colon_whole"), 14, 5);
-        map.placeObject(new domain.models.entity.Column("Column", 8, 10, "colon/gray_colon_whole"), 8, 10);
-        map.placeObject(new domain.models.entity.Column("Column", 14, 10, "colon/gray_colon_whole"), 14, 10);
+        map.placeObject(new domain.models.staticObjects.Column("Column", 8, 5, "colon/gray_colon_whole"), 8, 5);
+        map.placeObject(new domain.models.staticObjects.Column("Column", 14, 5, "colon/gray_colon_whole"), 14, 5);
+        map.placeObject(new domain.models.staticObjects.Column("Column", 8, 10, "colon/gray_colon_whole"), 8, 10);
+        map.placeObject(new domain.models.staticObjects.Column("Column", 14, 10, "colon/gray_colon_whole"), 14, 10);
 
         // Eşyalar
         map.placeObject(
                 new PotionItem(new HealthPotion("Red Potion", 5),
                         9, 5, "images/items/potion/red_potion.png"),
                 9, 5);
-        map.placeObject(new domain.models.staticObjects.KeyItem(10, 8), 10, 8);
-        map.placeObject(new domain.models.staticObjects.KeyItem(10, 9), 10, 9);
+        map.placeObject(new domain.models.item.KeyItem(10, 8), 10, 8);
+        map.placeObject(new domain.models.item.KeyItem(10, 9), 10, 9);
         map.placeObject(new SwordItem(12, 8), 12, 8);
 
         // =====================================================================
@@ -361,21 +367,21 @@ public class GameEngine {
 
         // Kılıcı veya kuşanılmış silahı takılıysa ayarla
         if (state.hero.equippedWeaponType != null && !state.hero.equippedWeaponType.isEmpty()) {
-            domain.models.entity.GameObject weapon = GameObjectFactory.create(state.hero.equippedWeaponType, null, 0, 0);
+            domain.models.GameObject weapon = GameObjectFactory.create(state.hero.equippedWeaponType, null, 0, 0);
             if (weapon instanceof MapItem) {
                 hero.equipWeapon((MapItem) weapon);
             }
         }
         // Kuşanılmış zırhı takılıysa ayarla
         if (state.hero.equippedArmorType != null && !state.hero.equippedArmorType.isEmpty()) {
-            domain.models.entity.GameObject armor = GameObjectFactory.create(state.hero.equippedArmorType, null, 0, 0);
+            domain.models.GameObject armor = GameObjectFactory.create(state.hero.equippedArmorType, null, 0, 0);
             if (armor instanceof MapItem) {
                 hero.equipArmor((MapItem) armor);
             }
         }
         // Kuşanılmış yüzüğü takılıysa ayarla
         if (state.hero.equippedRingType != null && !state.hero.equippedRingType.isEmpty()) {
-            domain.models.entity.GameObject ring = GameObjectFactory.create(state.hero.equippedRingType, null, 0, 0);
+            domain.models.GameObject ring = GameObjectFactory.create(state.hero.equippedRingType, null, 0, 0);
             if (ring instanceof MapItem) {
                 hero.equipRing((MapItem) ring);
             }
@@ -451,32 +457,32 @@ public class GameEngine {
                 // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
                 scrollItems.add(rec);
             } else if ("SearchableObject".equals(rec.type)) {
-                domain.models.entity.GameObject item = GameObjectFactory.create(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
-                if (item instanceof domain.models.entity.SearchableObject) {
-                    domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) item;
+                domain.models.GameObject item = GameObjectFactory.create(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
+                if (item instanceof domain.models.staticObjects.SearchableObject) {
+                    domain.models.staticObjects.SearchableObject so = (domain.models.staticObjects.SearchableObject) item;
                     so.setSearched(rec.searched);
                     if (rec.hiddenItemType != null) {
                         if (rec.hiddenItemType.equals("LevelKey"))
-                            so.setHiddenItem(new domain.models.staticObjects.LevelKey(rec.x, rec.y));
+                            so.setHiddenItem(new domain.models.item.LevelKey(rec.x, rec.y));
                         else if (rec.hiddenItemType.equals("KeyItem"))
-                            so.setHiddenItem(new domain.models.staticObjects.KeyItem(rec.x, rec.y));
+                            so.setHiddenItem(new domain.models.item.KeyItem(rec.x, rec.y));
                     }
                 }
-                domain.models.entity.GameObject existing = map.getObjectAt(rec.x, rec.y);
+                domain.models.GameObject existing = map.getObjectAt(rec.x, rec.y);
                 if (existing instanceof domain.models.tile.WallTile) {
                     ((domain.models.tile.WallTile) existing).setDecoration(item);
                 } else {
                     map.placeObject(item, rec.x, rec.y);
                 }
             } else {
-                domain.models.entity.GameObject item = GameObjectFactory.create(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
-                if (item instanceof domain.models.entity.Crate) {
-                    domain.models.entity.Crate crate = (domain.models.entity.Crate) item;
+                domain.models.GameObject item = GameObjectFactory.create(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
+                if (item instanceof domain.models.staticObjects.Crate) {
+                    domain.models.staticObjects.Crate crate = (domain.models.staticObjects.Crate) item;
                     if (rec.hiddenItemType != null) {
                         if (rec.hiddenItemType.equals("LevelKey"))
-                            crate.setHiddenItem(new domain.models.staticObjects.LevelKey(rec.x, rec.y));
+                            crate.setHiddenItem(new domain.models.item.LevelKey(rec.x, rec.y));
                         else if (rec.hiddenItemType.equals("KeyItem"))
-                            crate.setHiddenItem(new domain.models.staticObjects.KeyItem(rec.x, rec.y));
+                            crate.setHiddenItem(new domain.models.item.KeyItem(rec.x, rec.y));
                     }
                 }
                 if (item != null)
@@ -492,7 +498,7 @@ public class GameEngine {
                 // Scroll inputHandler gerektirir — setupGameView'da oluşturulacak
                 inventoryScrollTypes.add(type);
             } else {
-                domain.models.entity.GameObject item = GameObjectFactory.create(type, rec.name, 0, 0, rec.isLocked, rec.imageName);
+                domain.models.GameObject item = GameObjectFactory.create(type, rec.name, 0, 0, rec.isLocked, rec.imageName);
                 if (item != null)
                     hero.getInventory().addItem(item);
             }
@@ -609,7 +615,7 @@ public class GameEngine {
         // ShadowCloneScroll'a dönüştür
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+                domain.models.GameObject obj = map.getObjectAt(x, y);
                 if (obj instanceof domain.models.item.usables.PotionItem
                         && "Shadow Clone".equals(obj.getName())) {
                     ShadowCloneScroll scroll = new ShadowCloneScroll(x, y, entities, map, inputHandler);

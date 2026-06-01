@@ -2,7 +2,7 @@ package controller;
 
 import domain.models.map.GameMap;
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import view.ActionMenu;
 
 import java.awt.Frame;
@@ -21,7 +21,7 @@ public class MouseHandler extends MouseAdapter {
 
     private javax.swing.Timer[] logicTimerRef;
     private javax.swing.Timer[] renderTimerRef;
-    private ui.dialogs.SearchPopupDialog activeDialog = null;
+    private view.dialogs.SearchPopupDialog activeDialog = null;
 
     public MouseHandler(Hero hero, domain.models.map.GameMap gameMap, view.GameView gameView, ActionMenu actionMenu) {
         this.hero = hero;
@@ -109,7 +109,7 @@ public class MouseHandler extends MouseAdapter {
             domain.models.tile.WallTile wt = (domain.models.tile.WallTile) obj;
             GameObject deco = wt.getDecoration();
             if (deco != null) {
-                if (deco instanceof domain.models.entity.SearchableObject) {
+                if (deco instanceof domain.models.staticObjects.SearchableObject) {
                     obj = deco;
                 } else {
                     // Non-searchable item: only display its clean name and close menus
@@ -132,7 +132,7 @@ public class MouseHandler extends MouseAdapter {
             return;
         }
 
-        if (obj instanceof domain.models.entity.Chest) {
+        if (obj instanceof domain.models.staticObjects.Chest) {
             java.util.List<domain.logic.Action> actions = obj.getActions();
             if (actions != null && !actions.isEmpty()) {
                 actions.get(0).execute(hero, obj);
@@ -142,7 +142,7 @@ public class MouseHandler extends MouseAdapter {
             return;
         }
 
-        if (obj instanceof domain.models.entity.SearchableObject) {
+        if (obj instanceof domain.models.staticObjects.SearchableObject) {
             // Dismiss any active search dialog to prevent duplicates
             if (activeDialog != null) {
                 activeDialog.dispose();
@@ -170,7 +170,7 @@ public class MouseHandler extends MouseAdapter {
             int targetY = screenLoc.y + objScreenY + (gameView.getTileSize() - height) / 2;
 
             final GameObject targetObj = obj;
-            activeDialog = new ui.dialogs.SearchPopupDialog(parentFrame, obj.getName(), () -> {
+            activeDialog = new view.dialogs.SearchPopupDialog(parentFrame, obj.getName(), () -> {
                 domain.logic.SearchAction sa = new domain.logic.SearchAction(null);
                 sa.execute(hero, targetObj);
                 gameView.repaint();

@@ -3,7 +3,7 @@ package domain.logic;
 import domain.logic.event.GameEventBus;
 import domain.logic.event.TrapFlashEvent;
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class SearchAction implements Action {
     private GameObject hiddenItem;
@@ -24,11 +24,11 @@ public class SearchAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        if (!(target instanceof domain.models.entity.SearchableObject)) {
+        if (!(target instanceof domain.models.staticObjects.SearchableObject)) {
             return;
         }
 
-        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) target;
+        domain.models.staticObjects.SearchableObject so = (domain.models.staticObjects.SearchableObject) target;
 
         if (so.isSearched()) {
             System.out.println("Already searched.");
@@ -50,7 +50,7 @@ public class SearchAction implements Action {
             hidden.setPosition(so.getX(), dropY);
             map.placeObject(hidden, so.getX(), dropY);
 
-            if (hidden instanceof domain.models.staticObjects.LevelKey) {
+            if (hidden instanceof domain.models.item.LevelKey) {
                 GameEventBus.fireFloatingText(so.getX(), so.getY(), "Level key found!", new java.awt.Color(255, 215, 0));
                 domain.logic.LevelManager.clearAllOtherSkullKeys(map, so.getX(), dropY);
             } else {
@@ -102,7 +102,7 @@ public class SearchAction implements Action {
 
         } else if (roll < 95) {
             // 20% key item
-            domain.models.staticObjects.KeyItem key = new domain.models.staticObjects.KeyItem(so.getX(), so.getY());
+            domain.models.item.KeyItem key = new domain.models.item.KeyItem(so.getX(), so.getY());
 
             domain.models.map.GameMap map = so.getMap();
             GameObject existingWall = map.getObjectAt(so.getX(), so.getY());

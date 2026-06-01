@@ -1,7 +1,13 @@
 package domain.logic;
+import domain.models.staticObjects.SearchableObject;
+import domain.models.item.LevelKey;
+import domain.models.item.KeyItem;
+import domain.models.staticObjects.Column;
+import domain.models.staticObjects.Chest;
+import domain.models.GameObject;
 
 import domain.models.entity.*;
-import domain.models.entity.Crate;
+import domain.models.staticObjects.Crate;
 import domain.models.map.GameMap;
 import domain.models.staticObjects.*;
 import domain.models.item.*;
@@ -325,29 +331,29 @@ public class LevelManager {
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.staticObjects.LevelKey) {
+                if (obj instanceof domain.models.item.LevelKey) {
                     map.removeObject(obj);
                 }
             }
         }
 
         // 2. Gather candidates
-        List<domain.models.entity.Crate> crateCandidates = new ArrayList<>();
-        List<domain.models.entity.SearchableObject> searchableCandidates = new ArrayList<>();
+        List<domain.models.staticObjects.Crate> crateCandidates = new ArrayList<>();
+        List<domain.models.staticObjects.SearchableObject> searchableCandidates = new ArrayList<>();
         List<domain.models.tile.WallTile> bannerCandidates = new ArrayList<>();
 
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.entity.Crate) {
-                    crateCandidates.add((domain.models.entity.Crate) obj);
-                } else if (obj instanceof domain.models.entity.SearchableObject) {
-                    searchableCandidates.add((domain.models.entity.SearchableObject) obj);
+                if (obj instanceof domain.models.staticObjects.Crate) {
+                    crateCandidates.add((domain.models.staticObjects.Crate) obj);
+                } else if (obj instanceof domain.models.staticObjects.SearchableObject) {
+                    searchableCandidates.add((domain.models.staticObjects.SearchableObject) obj);
                 } else if (obj instanceof domain.models.tile.WallTile) {
                     domain.models.tile.WallTile wt = (domain.models.tile.WallTile) obj;
                     GameObject deco = wt.getDecoration();
-                    if (deco instanceof domain.models.entity.SearchableObject) {
-                        searchableCandidates.add((domain.models.entity.SearchableObject) deco);
+                    if (deco instanceof domain.models.staticObjects.SearchableObject) {
+                        searchableCandidates.add((domain.models.staticObjects.SearchableObject) deco);
                     } else if (deco instanceof domain.models.staticObjects.WallObject) {
                         String img = deco.getImageName();
                         if (img != null && (img.toLowerCase().contains("flag") || img.toLowerCase().contains("banner"))) {
@@ -364,13 +370,13 @@ public class LevelManager {
         if (total > 0) {
             int choice = rand.nextInt(total);
             if (choice < crateCandidates.size()) {
-                domain.models.entity.Crate crate = crateCandidates.get(choice);
-                crate.setHiddenItem(new domain.models.staticObjects.LevelKey(crate.getX(), crate.getY()));
+                domain.models.staticObjects.Crate crate = crateCandidates.get(choice);
+                crate.setHiddenItem(new domain.models.item.LevelKey(crate.getX(), crate.getY()));
                 System.out.println("Hid LevelKey inside Crate at (" + crate.getX() + ", " + crate.getY() + ")");
             } else if (choice < crateCandidates.size() + searchableCandidates.size()) {
                 int idx = choice - crateCandidates.size();
-                domain.models.entity.SearchableObject so = searchableCandidates.get(idx);
-                so.setHiddenItem(new domain.models.staticObjects.LevelKey(so.getX(), so.getY()));
+                domain.models.staticObjects.SearchableObject so = searchableCandidates.get(idx);
+                so.setHiddenItem(new domain.models.item.LevelKey(so.getX(), so.getY()));
                 System.out.println("Hid LevelKey inside SearchableObject at (" + so.getX() + ", " + so.getY() + ")");
             } else {
                 int idx = choice - crateCandidates.size() - searchableCandidates.size();
@@ -379,15 +385,15 @@ public class LevelManager {
                 String img = banner.getImageName();
                 int bx = wt.getX();
                 int by = wt.getY();
-                domain.models.entity.SearchableObject searchable = new domain.models.entity.SearchableObject("WallSearchable", bx, by, img, img);
-                searchable.setHiddenItem(new domain.models.staticObjects.LevelKey(bx, by));
+                domain.models.staticObjects.SearchableObject searchable = new domain.models.staticObjects.SearchableObject("WallSearchable", bx, by, img, img);
+                searchable.setHiddenItem(new domain.models.item.LevelKey(bx, by));
                 wt.setDecoration(searchable);
                 searchable.setMap(map);
                 System.out.println("Converted banner to SearchableObject and hid LevelKey at (" + bx + ", " + by + ")");
             }
         } else {
             // Fallback: Place on floor at 2, 3 if possible
-            map.placeObject(new domain.models.staticObjects.LevelKey(2, 3), 2, 3);
+            map.placeObject(new domain.models.item.LevelKey(2, 3), 2, 3);
             System.out.println("No hidden candidates found. Placed LevelKey on floor at (2, 3)");
         }
     }
@@ -398,31 +404,31 @@ public class LevelManager {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
                 // 1. Remove from floor
-                if (obj instanceof domain.models.staticObjects.LevelKey) {
+                if (obj instanceof domain.models.item.LevelKey) {
                     if (x != excludeX || y != excludeY) {
                         map.removeObject(obj);
                     }
                 }
                 // 2. Remove hidden items from Crates
-                if (obj instanceof domain.models.entity.Crate) {
-                    domain.models.entity.Crate crate = (domain.models.entity.Crate) obj;
-                    if (crate.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                if (obj instanceof domain.models.staticObjects.Crate) {
+                    domain.models.staticObjects.Crate crate = (domain.models.staticObjects.Crate) obj;
+                    if (crate.getHiddenItem() instanceof domain.models.item.LevelKey) {
                         crate.setHiddenItem(null);
                     }
                 }
                 // 3. Remove hidden items from SearchableObjects (on floor or walls)
-                if (obj instanceof domain.models.entity.SearchableObject) {
-                    domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
-                    if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                if (obj instanceof domain.models.staticObjects.SearchableObject) {
+                    domain.models.staticObjects.SearchableObject so = (domain.models.staticObjects.SearchableObject) obj;
+                    if (so.getHiddenItem() instanceof domain.models.item.LevelKey) {
                         so.setHiddenItem(null);
                     }
                 }
                 if (obj instanceof domain.models.tile.WallTile) {
                     domain.models.tile.WallTile wt = (domain.models.tile.WallTile) obj;
                     GameObject deco = wt.getDecoration();
-                    if (deco instanceof domain.models.entity.SearchableObject) {
-                        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) deco;
-                        if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
+                    if (deco instanceof domain.models.staticObjects.SearchableObject) {
+                        domain.models.staticObjects.SearchableObject so = (domain.models.staticObjects.SearchableObject) deco;
+                        if (so.getHiddenItem() instanceof domain.models.item.LevelKey) {
                             so.setHiddenItem(null);
                         }
                     }

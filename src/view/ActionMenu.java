@@ -1,6 +1,6 @@
 package view;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.logic.Action;
 import domain.models.entity.Hero;
 

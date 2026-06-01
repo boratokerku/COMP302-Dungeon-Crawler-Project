@@ -1,4 +1,8 @@
 package domain.logic;
+import domain.models.staticObjects.SearchableObject;
+import domain.models.item.LevelKey;
+import domain.models.item.KeyItem;
+import domain.models.GameObject;
 
 import domain.models.entity.*;
 import domain.models.item.usables.PotionItem;
@@ -124,9 +128,9 @@ public class MapFileManager {
             return "KeyItem";
         if (obj instanceof Chest)
             return "Chest";
-        if (obj instanceof domain.models.entity.DoubleCrate)
+        if (obj instanceof domain.models.staticObjects.DoubleCrate)
             return "DoubleCrate";
-        if (obj instanceof domain.models.entity.Crate)
+        if (obj instanceof domain.models.staticObjects.Crate)
             return "Crate";
         if (obj instanceof Column)
             return "Column";

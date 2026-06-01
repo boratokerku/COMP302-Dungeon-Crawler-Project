@@ -1,9 +1,9 @@
 package domain.logic;
 
-import domain.models.entity.Chest;
-import domain.models.entity.GameObject;
+import domain.models.staticObjects.Chest;
+import domain.models.GameObject;
 import domain.models.map.GameMap;
-import domain.models.staticObjects.KeyItem;
+import domain.models.item.KeyItem;
 
 public class MapValidator {
     public static boolean validate(GameMap map) {

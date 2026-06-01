@@ -1,6 +1,6 @@
 package domain.logic;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.models.entity.Hero;
 import domain.models.entity.Knight;
 import domain.models.entity.Sorcerer;
@@ -38,7 +38,7 @@ public class RandomItemSpawner {
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.entity.Chest && ((domain.models.entity.Chest) obj).isLocked()) {
+                if (obj instanceof domain.models.staticObjects.Chest && ((domain.models.staticObjects.Chest) obj).isLocked()) {
                     count++;
                 }
             }
@@ -51,14 +51,14 @@ public class RandomItemSpawner {
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.staticObjects.KeyItem) {
+                if (obj instanceof domain.models.item.KeyItem) {
                     count++;
                 }
             }
         }
         if (hero != null && hero.getInventory() != null) {
             for (GameObject item : hero.getInventory().getItems()) {
-                if (item instanceof domain.models.staticObjects.KeyItem) {
+                if (item instanceof domain.models.item.KeyItem) {
                     count++;
                 }
             }

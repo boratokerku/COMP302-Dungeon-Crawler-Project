@@ -1,6 +1,6 @@
 package domain.models.inventory;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class InventoryHotbar {
     public static final int SLOT_COUNT = 8;

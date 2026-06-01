@@ -1,7 +1,7 @@
 package domain.logic;
 
 import domain.models.GameState;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.models.item.*;
 import domain.models.item.usables.*;
 import domain.models.item.wearables.*;
@@ -83,30 +83,30 @@ public final class GameObjectFactory {
 
             // ── Keys ───────────────────────────────────────────────────────────
             case "KeyItem":
-                return new domain.models.staticObjects.KeyItem(displayName, x, y,
+                return new domain.models.item.KeyItem(displayName, x, y,
                         resolveImage(imgName, "images/items/key/golden_key_1.png"));
             case "LevelKey":
-                return new domain.models.staticObjects.LevelKey(displayName, x, y,
+                return new domain.models.item.LevelKey(displayName, x, y,
                         resolveImage(imgName, "images/items/key/skull_key.png"));
 
             // ── Containers ─────────────────────────────────────────────────────
             case "Column":
-                return new domain.models.entity.Column(displayName, x, y, imgName);
+                return new domain.models.staticObjects.Column(displayName, x, y, imgName);
             case "Sign":
-                return new domain.models.entity.Sign(displayName, x, y,
+                return new domain.models.staticObjects.Sign(displayName, x, y,
                         imgName != null ? imgName : "sign/sign_brown");
             case "DoubleCrate":
-                return new domain.models.entity.DoubleCrate(displayName, x, y);
+                return new domain.models.staticObjects.DoubleCrate(displayName, x, y);
             case "Crate":
-                return new domain.models.entity.Crate(displayName, x, y);
+                return new domain.models.staticObjects.Crate(displayName, x, y);
             case "Chest":
                 return (imgName != null && !imgName.isEmpty())
-                        ? new domain.models.entity.Chest(displayName, x, y, isLocked, imgName)
-                        : new domain.models.entity.Chest(displayName, x, y, isLocked);
+                        ? new domain.models.staticObjects.Chest(displayName, x, y, isLocked, imgName)
+                        : new domain.models.staticObjects.Chest(displayName, x, y, isLocked);
 
             // ── Static / Decoration ────────────────────────────────────────────
             case "SearchableObject":
-                return new domain.models.entity.SearchableObject(displayName, x, y, imgName);
+                return new domain.models.staticObjects.SearchableObject(displayName, x, y, imgName);
             case "Decoration":
                 return new domain.models.staticObjects.Decoration(displayName, x, y, imgName);
             case "WallObject":

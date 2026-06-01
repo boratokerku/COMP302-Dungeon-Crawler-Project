@@ -1,4 +1,6 @@
 package controller;
+import domain.models.item.LevelKey;
+import domain.models.item.KeyItem;
 
 import domain.logic.Action;
 import domain.logic.BreakAction;
@@ -7,7 +9,7 @@ import domain.logic.SearchAction;
 import domain.logic.event.GameEventBus;
 import domain.logic.event.SoundEvent;
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.models.map.GameMap;
 
 import java.util.ArrayList;
@@ -81,13 +83,13 @@ public class InteractionHandler {
                 // Check wall decorations
                 if (obj instanceof domain.models.tile.WallTile) {
                     GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
-                    if (deco instanceof domain.models.entity.SearchableObject) {
+                    if (deco instanceof domain.models.staticObjects.SearchableObject) {
                         obj = deco;
                     }
                 }
 
                 if (obj == null) continue;
-                if (obj instanceof domain.models.entity.Chest) continue; // Chests handled separately
+                if (obj instanceof domain.models.staticObjects.Chest) continue; // Chests handled separately
 
                 List<Action> objActions = obj.getActions();
                 boolean hasAvailable = false;
@@ -103,7 +105,7 @@ public class InteractionHandler {
 
                 if (!hasAvailable
                         && !(obj instanceof domain.models.staticObjects.Door)
-                        && !(obj instanceof domain.models.entity.SearchableObject)) {
+                        && !(obj instanceof domain.models.staticObjects.SearchableObject)) {
                     continue;
                 }
 
@@ -130,7 +132,7 @@ public class InteractionHandler {
 
     private void handleObjectInteraction(GameObject obj, int nx, int ny) {
         // SearchableObject — show mini search popup
-        if (obj instanceof domain.models.entity.SearchableObject) {
+        if (obj instanceof domain.models.staticObjects.SearchableObject) {
             showSearchPopup(obj);
             return;
         }
@@ -149,8 +151,8 @@ public class InteractionHandler {
         if (available.isEmpty()) return;
 
         if (available.size() == 1
-                && !(obj instanceof domain.models.entity.Crate)
-                && !(obj instanceof domain.models.entity.Chest)) {
+                && !(obj instanceof domain.models.staticObjects.Crate)
+                && !(obj instanceof domain.models.staticObjects.Chest)) {
             available.get(0).execute(hero, obj);
             System.out.println(available.get(0).getName() + " executed on " + obj.getName() + " via E key");
             if (gameView != null) gameView.repaint();
@@ -188,7 +190,7 @@ public class InteractionHandler {
                     null, options, options[0]);
 
             if (choice == 0) {
-                domain.models.staticObjects.KeyItem keyToUse = findKeyInInventory();
+                domain.models.item.KeyItem keyToUse = findKeyInInventory();
                 if (keyToUse != null) {
                     if (keyToUse.isSingleUse()) {
                         hero.getInventory().removeItem(keyToUse);
@@ -231,7 +233,7 @@ public class InteractionHandler {
         int targetY = screenLoc.y + objScreenY + (gameView.getTileSize() - height) / 2;
 
         final GameObject targetObj = obj;
-        ui.dialogs.SearchPopupDialog dialog = new ui.dialogs.SearchPopupDialog(parentFrame, obj.getName(), () -> {
+        view.dialogs.SearchPopupDialog dialog = new view.dialogs.SearchPopupDialog(parentFrame, obj.getName(), () -> {
             SearchAction sa = new SearchAction(null);
             sa.execute(hero, targetObj);
             if (gameView != null) gameView.repaint();
@@ -246,10 +248,10 @@ public class InteractionHandler {
         boolean hasKey = hasRegularKeyInInventory(obj);
 
         String[] options;
-        if (obj instanceof domain.models.entity.Crate) {
+        if (obj instanceof domain.models.staticObjects.Crate) {
             options = new String[]{"Break (-10 Energy)", "Cancel"};
-        } else if (obj instanceof domain.models.entity.Chest) {
-            domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+        } else if (obj instanceof domain.models.staticObjects.Chest) {
+            domain.models.staticObjects.Chest chest = (domain.models.staticObjects.Chest) obj;
             if (chest.isLocked()) {
                 options = new String[available.size() + 1];
                 for (int i = 0; i < available.size(); i++) {
@@ -281,13 +283,13 @@ public class InteractionHandler {
                 javax.swing.JOptionPane.QUESTION_MESSAGE,
                 null, options, options[0]);
 
-        if (obj instanceof domain.models.entity.Crate) {
+        if (obj instanceof domain.models.staticObjects.Crate) {
             if (choice == 0) {
                 available.get(0).execute(hero, obj);
                 if (gameView != null) gameView.repaint();
             }
-        } else if (obj instanceof domain.models.entity.Chest) {
-            domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+        } else if (obj instanceof domain.models.staticObjects.Chest) {
+            domain.models.staticObjects.Chest chest = (domain.models.staticObjects.Chest) obj;
             if (chest.isLocked()) {
                 if (choice >= 0 && choice < available.size()) {
                     available.get(choice).execute(hero, obj);
@@ -336,17 +338,17 @@ public class InteractionHandler {
     private boolean hasKeyForDoor(domain.models.staticObjects.Door door, boolean isLevelDoor) {
         if (hero.getInventory() == null) return false;
         for (GameObject item : hero.getInventory().getItems()) {
-            if (isLevelDoor && item instanceof domain.models.staticObjects.LevelKey) return true;
-            if (!isLevelDoor && item instanceof domain.models.staticObjects.KeyItem) return true;
+            if (isLevelDoor && item instanceof domain.models.item.LevelKey) return true;
+            if (!isLevelDoor && item instanceof domain.models.item.KeyItem) return true;
         }
         return false;
     }
 
-    private domain.models.staticObjects.KeyItem findKeyInInventory() {
+    private domain.models.item.KeyItem findKeyInInventory() {
         if (hero.getInventory() == null) return null;
         for (GameObject item : hero.getInventory().getItems()) {
-            if (item instanceof domain.models.staticObjects.KeyItem) {
-                return (domain.models.staticObjects.KeyItem) item;
+            if (item instanceof domain.models.item.KeyItem) {
+                return (domain.models.item.KeyItem) item;
             }
         }
         return null;
@@ -354,15 +356,15 @@ public class InteractionHandler {
 
     private boolean hasRegularKeyInInventory(GameObject obj) {
         if (hero.getInventory() == null) return false;
-        if (obj instanceof domain.models.entity.Chest) {
-            domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
+        if (obj instanceof domain.models.staticObjects.Chest) {
+            domain.models.staticObjects.Chest chest = (domain.models.staticObjects.Chest) obj;
             for (GameObject item : hero.getInventory().getItems()) {
-                if (item instanceof domain.models.staticObjects.KeyItem) return true;
+                if (item instanceof domain.models.item.KeyItem) return true;
             }
             return false;
         }
         for (GameObject item : hero.getInventory().getItems()) {
-            if (item instanceof domain.models.staticObjects.KeyItem) return true;
+            if (item instanceof domain.models.item.KeyItem) return true;
         }
         return false;
     }

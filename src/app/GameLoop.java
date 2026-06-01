@@ -1,4 +1,5 @@
 package app;
+import domain.models.GameObject;
 
 import domain.logic.EnemySpawner;
 import domain.logic.LevelManager;
@@ -12,7 +13,7 @@ import domain.models.item.usables.PotionItem;
 import domain.models.item.VictoryCoin;
 import domain.models.map.GameMap;
 import domain.models.staticObjects.Door;
-import domain.models.staticObjects.KeyItem;
+import domain.models.item.KeyItem;
 import domain.models.staticObjects.LevelDoor;
 import view.GameOverMenu;
 import view.GameView;

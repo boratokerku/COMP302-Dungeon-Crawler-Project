@@ -1,6 +1,6 @@
 package domain.models.map;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 /**
  * OVERVIEW: GameMap represents a 2D spatial grid layout of the game world, 
@@ -108,7 +108,7 @@ public class GameMap extends Grid {
             // Rule: Only WallObjects, Decorations and SearchableObjects can be placed on wall tiles as decoration
             if (obj instanceof domain.models.staticObjects.WallObject ||
                 obj instanceof domain.models.staticObjects.Decoration ||
-                obj instanceof domain.models.entity.SearchableObject) {
+                obj instanceof domain.models.staticObjects.SearchableObject) {
                 ((domain.models.tile.WallTile) existing).setDecoration(obj);
                 obj.setPosition(x, y);
                 obj.setMap(this);

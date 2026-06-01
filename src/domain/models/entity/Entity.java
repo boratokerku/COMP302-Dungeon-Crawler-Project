@@ -1,4 +1,5 @@
 package domain.models.entity;
+import domain.models.GameObject;
 
 import java.awt.Point;
 

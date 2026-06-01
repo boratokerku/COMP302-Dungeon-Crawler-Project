@@ -1,6 +1,7 @@
 package domain.models.staticObjects;
+import domain.models.item.KeyItem;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class Door extends GameObject {
     private boolean isLocked;

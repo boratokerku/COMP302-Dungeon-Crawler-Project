@@ -368,6 +368,12 @@ public class Hero extends Entity {
             return true;
         } else if (!occupied) {
             System.out.println("Hero blocked at (" + nextX + ", " + nextY + ")");
+            if (map != null) {
+                domain.models.entity.GameObject obj = map.getObjectAt(nextX, nextY);
+                if (obj instanceof domain.models.staticObjects.LevelDoor && ((domain.models.staticObjects.LevelDoor) obj).isLocked()) {
+                    GameEventBus.fireFloatingText(nextX, nextY, "Locked", java.awt.Color.RED);
+                }
+            }
             return false;
         }
         return true; // Occupied covers attack, which is an action

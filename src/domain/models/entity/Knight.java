@@ -119,7 +119,12 @@ public class Knight extends Entity implements Renderable {
 
     // Design doc §2.5.1: "4HP damage, some absorbed by DEF stat of hero"
     private void attackTarget(Entity target) {
-        int baseDamage = (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) ? this.weaponAtk : 4;
+        int baseDamage = 4;
+        if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
+            if (this.equippedWeapon != null) {
+                baseDamage = 6; // Base 4 + 50% bonus = 6
+            }
+        }
         int def = 0;
         if (target instanceof Hero) {
             def = ((Hero) target).getDef();

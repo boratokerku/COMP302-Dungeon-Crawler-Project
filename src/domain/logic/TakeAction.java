@@ -40,6 +40,20 @@ public class TakeAction implements Action {
                     }
                 }
             }
+            
+            if (target instanceof domain.models.staticObjects.LevelKey) {
+                for (int x = 0; x < map.getWidth(); x++) {
+                    for (int y = 0; y < map.getHeight(); y++) {
+                        GameObject obj = map.getObjectAt(x, y);
+                        if (obj instanceof domain.models.staticObjects.LevelDoor) {
+                            ((domain.models.staticObjects.LevelDoor) obj).unlock();
+                            ((domain.models.staticObjects.LevelDoor) obj).open();
+                            domain.logic.event.GameEventBus.fireFloatingText(x, y, "DOOR OPENED", java.awt.Color.GREEN);
+                        }
+                    }
+                }
+                util.helpers.SoundManager.playUnlock();
+            }
         }
     }
 }

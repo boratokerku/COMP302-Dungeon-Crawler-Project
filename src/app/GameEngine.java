@@ -683,60 +683,31 @@ public class GameEngine {
                 if (renderRef[0] != null)
                     renderRef[0].stop();
 
-                // Show confirmation popup on Event Dispatch Thread
-                int choice = javax.swing.JOptionPane.showConfirmDialog(
-                        frame,
-                        "Would you like to move on to the next level?",
-                        "Next Level Transition",
-                        javax.swing.JOptionPane.YES_NO_OPTION,
-                        javax.swing.JOptionPane.QUESTION_MESSAGE);
+                GameMap newMap = levelManager.advanceLevel();
+                if (newMap != null) {
+                    mapRef[0] = newMap;
+                    hero.setCurrentMap(newMap);
 
-                if (choice == javax.swing.JOptionPane.YES_OPTION) {
-                    GameMap newMap = levelManager.advanceLevel();
-                    if (newMap != null) {
-                        mapRef[0] = newMap;
-                        hero.setCurrentMap(newMap);
+                    hero.setPosition(2, 2);
+                    newMap.placeObject(hero, 2, 2);
 
-                        hero.setPosition(2, 2);
-                        newMap.placeObject(hero, 2, 2);
+                    gameView.setGameMap(newMap);
+                    inputHandler.setGameMap(newMap);
+                    mouseHandler.setGameMap(newMap);
+                    spawner.setGameMap(newMap);
+                    scrollSpawner.setGameMap(newMap);
 
-                        gameView.setGameMap(newMap);
-                        inputHandler.setGameMap(newMap);
-                        mouseHandler.setGameMap(newMap);
-                        spawner.setGameMap(newMap);
-                        scrollSpawner.setGameMap(newMap);
+                    entities.clear();
+                    entities.add(hero);
 
-                        entities.clear();
-                        entities.add(hero);
+                    levelManager.populateEnemies(levelManager.getCurrentLevel(), newMap, entities, hero);
+                    spawner.clearSpawnedEnemies();
+                    inputHandler.setShadowClone(null);
 
-                        levelManager.populateEnemies(levelManager.getCurrentLevel(), newMap, entities, hero);
-                        spawner.clearSpawnedEnemies();
-                        inputHandler.setShadowClone(null);
-
-                        view.GameView.addFloatingText(2, 2, "Level " + levelManager.getCurrentLevel(),
-                                java.awt.Color.CYAN);
-                        System.out.println("Transitioned to Level " + levelManager.getCurrentLevel());
-                        gameView.repaint();
-                    }
-                } else {
-                    // Push hero back if they are standing on the LevelDoor
-                    domain.models.entity.GameObject standingOn = mapRef[0].getObjectAt(hero.getX(), hero.getY());
-                    if (standingOn instanceof domain.models.staticObjects.LevelDoor) {
-                        switch (hero.getDirection()) {
-                            case UP:
-                                hero.setPosition(hero.getX(), hero.getY() + 1);
-                                break;
-                            case DOWN:
-                                hero.setPosition(hero.getX(), hero.getY() - 1);
-                                break;
-                            case LEFT:
-                                hero.setPosition(hero.getX() + 1, hero.getY());
-                                break;
-                            case RIGHT:
-                                hero.setPosition(hero.getX() - 1, hero.getY());
-                                break;
-                        }
-                    }
+                    view.GameView.addFloatingText(2, 2, "Level " + levelManager.getCurrentLevel(),
+                            java.awt.Color.CYAN);
+                    System.out.println("Transitioned to Level " + levelManager.getCurrentLevel());
+                    gameView.repaint();
                 }
 
                 // Resume the timers

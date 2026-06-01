@@ -1,3 +1,5 @@
+package app;
+
 import domain.logic.EnemySpawner;
 import domain.logic.GameObjectFactory;
 import domain.logic.LevelManager;
@@ -87,59 +89,8 @@ public class GameEngine {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("COMP302 Dungeon Crawler");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-            // Set window icon
-            try {
-                java.io.File iconFile = new java.io.File("resources/images/icon.png");
-                if (iconFile.exists()) {
-                    java.awt.image.BufferedImage rawIcon = javax.imageio.ImageIO.read(iconFile);
-                    java.awt.image.BufferedImage processedIcon = processIcon(rawIcon);
-                    frame.setIconImage(processedIcon);
-
-                    // Set macOS Dock icon if supported
-                    try {
-                        if (java.awt.Taskbar.isTaskbarSupported()) {
-                            java.awt.Taskbar taskbar = java.awt.Taskbar.getTaskbar();
-                            if (taskbar.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) {
-                                taskbar.setIconImage(processedIcon);
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Ignore if Taskbar is not supported or throws exceptions in some environments
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("Icon could not be loaded: " + e.getMessage());
-            }
-
-            CardLayout cardLayout = new CardLayout();
-            JPanel mainPanel = new JPanel(cardLayout);
-
-            view.MainMenuView menuView = new view.MainMenuView(
-                    () -> startDesignMode(frame, mainPanel, cardLayout),
-                    (state) -> loadGame(frame, mainPanel, cardLayout, state));
-            menuView.setPreferredSize(new java.awt.Dimension(1250, 1000));
-
-            mainPanel.setBackground(Color.BLACK);
-            mainPanel.add(menuView, "Menu");
-            cardLayout.show(mainPanel, "Menu");
-            frame.add(mainPanel);
-
-            frame.setSize(1250, 800);
-            frame.pack();
-            frame.revalidate();
-            frame.repaint();
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
-        });
-    }
-
     // ── Design Mode ──────────────────────────────────────────────────────────
-    private static void startDesignMode(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
+    public static void startDesignMode(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         GameMap map = new GameMap(30, 20);
 
         // Kapının yeri oyunda build mode açıldığı anda direkt atanmış olarak gelsin
@@ -187,7 +138,7 @@ public class GameEngine {
     }
 
     /** Tasarımlanan map ile hero + enemies ekleyerek oyunu başlatır */
-    private static void startGameWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map,
+    public static void startGameWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map,
             domain.models.GameMode mode) {
         activeGameMode = mode;
 
@@ -305,7 +256,7 @@ public class GameEngine {
     }
 
     // Yeni oyun — tüm nesneler rastgele oluşturulur
-    private static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
+    public static void startGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout) {
         initialDesignedMap = null;
         activeGameMode = domain.models.GameMode.ADVENTURE;
         GameMap map = new GameMap(22, 16);
@@ -389,7 +340,7 @@ public class GameEngine {
     }
 
     // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
-    private static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
+    public static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
         initialDesignedMap = null;
         activeGameMode = domain.models.GameMode.ADVENTURE;
 
@@ -556,7 +507,7 @@ public class GameEngine {
     // startGame ve loadGame tarafından ortak kullanılan view/timer/input kurulum
     // scrollItems: haritaya yerleştirilecek scroll kayıtları — inputHandler
     // gerektirdiği için burada oluşturulur
-    private static void setupGameView(JFrame frame, JPanel mainPanel, CardLayout cardLayout,
+    public static void setupGameView(JFrame frame, JPanel mainPanel, CardLayout cardLayout,
             Hero hero, List<Entity> entities, GameMap map,
             Knight knight, Sorcerer sorcerer,
             List<GameState.ItemRecord> scrollItems,
@@ -1113,8 +1064,8 @@ public class GameEngine {
                                                     loot = PotionItem.createRandomPotionItem(enemy.getX(),
                                                             enemy.getY());
                                                 } else {
-                                                    int locked = countLockedChests(mapRef[0]);
-                                                    int keys = countKeys(mapRef[0], hero);
+                                                    int locked = domain.logic.RandomItemSpawner.countLockedChests(mapRef[0]);
+                                                    int keys = domain.logic.RandomItemSpawner.countKeys(mapRef[0], hero);
                                                     if (keys < locked) {
                                                         loot = new domain.models.staticObjects.KeyItem(enemy.getX(),
                                                                 enemy.getY());
@@ -1174,151 +1125,5 @@ public class GameEngine {
         renderRef[0].start();
     }
 
-    private static void placeRandomItem(domain.models.map.GameMap map, domain.models.entity.GameObject item,
-            domain.models.entity.Hero hero, domain.models.entity.Knight knight,
-            domain.models.entity.Sorcerer sorcerer, java.util.Random rand) {
-        boolean placed = false;
-        while (!placed) {
-            int x = rand.nextInt(map.getWidth());
-            int y = rand.nextInt(map.getHeight());
 
-            if ((x == hero.getX() && y == hero.getY()) ||
-                    (x == knight.getX() && y == knight.getY()) ||
-                    (x == sorcerer.getX() && y == sorcerer.getY())) {
-                continue;
-            }
-
-            domain.models.entity.GameObject existingObj = map.getObjectAt(x, y);
-            if (existingObj != null && existingObj.getImageName().equals("floor")
-                    && !(existingObj instanceof MapItem)) {
-                item.setPosition(x, y);
-                map.placeObject(item, x, y);
-                placed = true;
-            }
-        }
-    }
-
-    private static java.awt.image.BufferedImage processIcon(java.awt.image.BufferedImage img) {
-        int w = img.getWidth(), h = img.getHeight();
-        int top = 0, bottom = h - 1, left = 0, right = w - 1;
-        try {
-            // Top border
-            outer: for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
-                    int rgb = img.getRGB(x, y);
-                    int alpha = (rgb >> 24) & 0xff;
-                    int r = (rgb >> 16) & 0xff;
-                    int g = (rgb >> 8) & 0xff;
-                    int b = rgb & 0xff;
-                    if (alpha > 10 && !(r > 240 && g > 240 && b > 240)) {
-                        top = y;
-                        break outer;
-                    }
-                }
-            }
-            // Bottom border
-            outer: for (int y = h - 1; y >= 0; y--) {
-                for (int x = 0; x < w; x++) {
-                    int rgb = img.getRGB(x, y);
-                    int alpha = (rgb >> 24) & 0xff;
-                    int r = (rgb >> 16) & 0xff;
-                    int g = (rgb >> 8) & 0xff;
-                    int b = rgb & 0xff;
-                    if (alpha > 10 && !(r > 240 && g > 240 && b > 240)) {
-                        bottom = y;
-                        break outer;
-                    }
-                }
-            }
-            // Left border
-            outer: for (int x = 0; x < w; x++) {
-                for (int y = 0; y < h; y++) {
-                    int rgb = img.getRGB(x, y);
-                    int alpha = (rgb >> 24) & 0xff;
-                    int r = (rgb >> 16) & 0xff;
-                    int g = (rgb >> 8) & 0xff;
-                    int b = rgb & 0xff;
-                    if (alpha > 10 && !(r > 240 && g > 240 && b > 240)) {
-                        left = x;
-                        break outer;
-                    }
-                }
-            }
-            // Right border
-            outer: for (int x = w - 1; x >= 0; x--) {
-                for (int y = 0; y < h; y++) {
-                    int rgb = img.getRGB(x, y);
-                    int alpha = (rgb >> 24) & 0xff;
-                    int r = (rgb >> 16) & 0xff;
-                    int g = (rgb >> 8) & 0xff;
-                    int b = rgb & 0xff;
-                    if (alpha > 10 && !(r > 240 && g > 240 && b > 240)) {
-                        right = x;
-                        break outer;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            return img;
-        }
-
-        if (right <= left || bottom <= top)
-            return img;
-
-        // Extract the subimage and make white background transparent
-        int subW = right - left + 1;
-        int subH = bottom - top + 1;
-        java.awt.image.BufferedImage processed = new java.awt.image.BufferedImage(subW, subH,
-                java.awt.image.BufferedImage.TYPE_INT_ARGB);
-
-        for (int y = 0; y < subH; y++) {
-            for (int x = 0; x < subW; x++) {
-                int rgb = img.getRGB(left + x, top + y);
-                int alpha = (rgb >> 24) & 0xff;
-                int r = (rgb >> 16) & 0xff;
-                int g = (rgb >> 8) & 0xff;
-                int b = rgb & 0xff;
-
-                if (alpha < 10 || (r > 240 && g > 240 && b > 240)) {
-                    processed.setRGB(x, y, 0x00000000);
-                } else {
-                    processed.setRGB(x, y, rgb);
-                }
-            }
-        }
-        return processed;
-    }
-
-    private static int countLockedChests(domain.models.map.GameMap map) {
-        int count = 0;
-        for (int x = 0; x < map.getWidth(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.entity.Chest && ((domain.models.entity.Chest) obj).isLocked()) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-
-    private static int countKeys(domain.models.map.GameMap map, domain.models.entity.Hero hero) {
-        int count = 0;
-        for (int x = 0; x < map.getWidth(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.staticObjects.KeyItem) {
-                    count++;
-                }
-            }
-        }
-        if (hero != null && hero.getInventory() != null) {
-            for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                if (item instanceof domain.models.staticObjects.KeyItem) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
 }

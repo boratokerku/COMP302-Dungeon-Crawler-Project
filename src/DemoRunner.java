@@ -906,6 +906,30 @@ public class DemoRunner {
         final javax.swing.Timer[] logicRef = new javax.swing.Timer[1];
         final javax.swing.Timer[] renderRef = new javax.swing.Timer[1];
 
+        // GameOverMenu — JFrame glass pane olarak Hero ölünce veya kazanılınca bindirilecek
+        final view.GameOverMenu gameOverMenu = new view.GameOverMenu(
+                () -> {
+                    if (logicRef[0] != null)
+                        logicRef[0].stop();
+                    if (renderRef[0] != null)
+                        renderRef[0].stop();
+                    restartGame(frame, mainPanel, cardLayout);
+                },
+                (loadedState) -> {
+                    if (logicRef[0] != null)
+                        logicRef[0].stop();
+                    if (renderRef[0] != null)
+                        renderRef[0].stop();
+                    loadGame(frame, mainPanel, cardLayout, loadedState);
+                },
+                () -> {
+                    if (logicRef[0] != null)
+                        logicRef[0].stop();
+                    if (renderRef[0] != null)
+                        renderRef[0].stop();
+                    cardLayout.show(mainPanel, "Menu");
+                });
+
         final long[] totalElapsedTimeMs = new long[] { state != null ? state.elapsedSeconds * 1000 : 0 };
         final long[] lastTickTime = new long[] { System.currentTimeMillis() };
 
@@ -994,12 +1018,9 @@ public class DemoRunner {
 
             util.helpers.SoundManager.playVictory();
 
-            javax.swing.JOptionPane.showMessageDialog(frame,
-                    "🏆 VICTORY! You have conquered the Dungeon! 🏆\n\nYou have defeated the Final Boss and secured the Victory Coin!",
-                    "Victory!",
-                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
-
-            cardLayout.show(mainPanel, "Menu");
+            gameOverMenu.setupGameOverMenu("YOU WIN", "You have conquered the Dungeon!", false, true);
+            frame.setGlassPane(gameOverMenu);
+            gameOverMenu.setVisible(true);
         });
 
         // PauseMenu — JFrame glass pane olarak oyunun üstüne bindiriliyor
@@ -1029,29 +1050,7 @@ public class DemoRunner {
                 });
         frame.setGlassPane(pauseMenu);
 
-        // GameOverMenu — JFrame glass pane olarak Hero ölünce bindirilecek
-        view.GameOverMenu gameOverMenu = new view.GameOverMenu(
-                () -> {
-                    if (logicRef[0] != null)
-                        logicRef[0].stop();
-                    if (renderRef[0] != null)
-                        renderRef[0].stop();
-                    restartGame(frame, mainPanel, cardLayout);
-                },
-                (loadedState) -> {
-                    if (logicRef[0] != null)
-                        logicRef[0].stop();
-                    if (renderRef[0] != null)
-                        renderRef[0].stop();
-                    loadGame(frame, mainPanel, cardLayout, loadedState);
-                },
-                () -> {
-                    if (logicRef[0] != null)
-                        logicRef[0].stop();
-                    if (renderRef[0] != null)
-                        renderRef[0].stop();
-                    cardLayout.show(mainPanel, "Menu");
-                });
+        // GameOverMenu glass pane reference is setup earlier
 
         // ESC tuşu — pause/resume toggle
         gameView.getInputMap(javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW)
@@ -1170,10 +1169,9 @@ public class DemoRunner {
 
                     util.helpers.SoundManager.playVictory();
 
-                    javax.swing.JOptionPane.showMessageDialog(frame,
-                            "🌟 TEBRİKLER! 🌟\n\nTüm düşmanları yendin ve Çıkış Kapısı'nı açarak COMP302 Zindanından başarıyla kaçtın!\nPhase I başarıyla tamamlandı!",
-                            "Zafer!",
-                            javax.swing.JOptionPane.INFORMATION_MESSAGE);
+                    gameOverMenu.setupGameOverMenu("YOU WIN", "You have escaped the COMP302 dungeon!", false, true);
+                    frame.setGlassPane(gameOverMenu);
+                    gameOverMenu.setVisible(true);
                     return;
                 }
 

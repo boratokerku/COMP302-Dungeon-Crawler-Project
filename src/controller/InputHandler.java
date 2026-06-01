@@ -230,6 +230,12 @@ public class InputHandler implements KeyListener {
             }
 
             // Çevredeki tüm nesnelerle (3x3 çevre karesi) etkileşime gir
+            domain.models.entity.GameObject bestObj = null;
+            int bestTypePriority = Integer.MAX_VALUE;
+            int bestSpatialPriority = Integer.MAX_VALUE;
+            int bestNx = -1;
+            int bestNy = -1;
+
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
                     if (dx == 0 && dy == 0) continue; // Kendini pas geç
@@ -247,6 +253,56 @@ public class InputHandler implements KeyListener {
                             if (obj instanceof domain.models.entity.Chest) {
                                 continue;
                             }
+                            
+                            java.util.List<domain.logic.Action> objActions = obj.getActions();
+                            boolean hasAvailable = false;
+                            boolean hasTake = false;
+                            if (objActions != null) {
+                                for (domain.logic.Action action : objActions) {
+                                    if (action.isAvailable(hero, obj)) {
+                                        hasAvailable = true;
+                                        if (action.getName().equals("Take")) {
+                                            hasTake = true;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (!hasAvailable && !(obj instanceof domain.models.staticObjects.Door) && !(obj instanceof domain.models.entity.SearchableObject)) {
+                                continue;
+                            }
+
+                            int typePriority = hasTake ? 1 : 2;
+                            int spatialPriority = 3; // Diagonal default
+                            domain.models.Direction facing = hero.getDirection();
+                            boolean isFront = false;
+                            if (facing == domain.models.Direction.UP && dx == 0 && dy == -1) isFront = true;
+                            else if (facing == domain.models.Direction.DOWN && dx == 0 && dy == 1) isFront = true;
+                            else if (facing == domain.models.Direction.LEFT && dx == -1 && dy == 0) isFront = true;
+                            else if (facing == domain.models.Direction.RIGHT && dx == 1 && dy == 0) isFront = true;
+
+                            if (isFront) {
+                                spatialPriority = 1;
+                            } else if (dx == 0 || dy == 0) {
+                                spatialPriority = 2; // Orthogonal
+                            }
+
+                            if (typePriority < bestTypePriority || (typePriority == bestTypePriority && spatialPriority < bestSpatialPriority)) {
+                                bestTypePriority = typePriority;
+                                bestSpatialPriority = spatialPriority;
+                                bestObj = obj;
+                                bestNx = nx;
+                                bestNy = ny;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (bestObj != null) {
+                int nx = bestNx;
+                int ny = bestNy;
+                domain.models.entity.GameObject obj = bestObj;
                             if (obj instanceof domain.models.entity.SearchableObject) {
                                 java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(gameView);
                                 java.awt.Frame parentFrame = (parentWindow instanceof java.awt.Frame) ? (java.awt.Frame) parentWindow : null;
@@ -486,9 +542,6 @@ public class InputHandler implements KeyListener {
                                     return; // Etkileşim tamamlandı, çık
                                 }
                             }
-                        }
-                    }
-                }
             }
         }
     }

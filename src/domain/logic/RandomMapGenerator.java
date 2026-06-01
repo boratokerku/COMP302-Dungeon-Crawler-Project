@@ -99,6 +99,7 @@ public class RandomMapGenerator {
         }
 
         int numCrates = rand.nextInt(3) + 4;
+        String[] crateTypes = { "Crate", "Brown Crate", "Double Crate" };
         for (int i = 0; i < numCrates; i++) {
             int cx, cy;
             int attempts = 0;
@@ -109,7 +110,14 @@ public class RandomMapGenerator {
             } while ((reserved[cx][cy] || !isFarEnough(map, cx, cy)) && attempts < 100);
 
             if (attempts < 100) {
-                map.placeObject(new Crate("Crate", cx, cy), cx, cy);
+                String chosenType = crateTypes[rand.nextInt(crateTypes.length)];
+                if (chosenType.equals("Double Crate")) {
+                    map.placeObject(new domain.models.staticObjects.DoubleCrate("Double Crate", cx, cy), cx, cy);
+                } else if (chosenType.equals("Brown Crate")) {
+                    map.placeObject(new Crate("Brown Crate", cx, cy), cx, cy);
+                } else {
+                    map.placeObject(new Crate("Crate", cx, cy), cx, cy);
+                }
                 reserved[cx][cy] = true;
             }
         }
@@ -138,7 +146,11 @@ public class RandomMapGenerator {
                 patts++;
             } while ((reserved[px][py] || !isFarEnough(map, px, py)) && patts < 100);
             if (patts < 100) {
-                map.placeObject(PotionItem.createRandomPotionItem(px, py), px, py);
+                if (rand.nextInt(100) < 15) {
+                    map.placeObject(new PotionItem("Shadow Clone", px, py, "images/items/readings/totem_3.png"), px, py);
+                } else {
+                    map.placeObject(PotionItem.createRandomPotionItem(px, py), px, py);
+                }
                 reserved[px][py] = true;
             }
         }
@@ -174,13 +186,43 @@ public class RandomMapGenerator {
             }
         }
 
+        int numDecors = rand.nextInt(3) + 2;
+        for (int i = 0; i < numDecors; i++) {
+            int dx, dy;
+            int datts = 0;
+            do {
+                dx = rand.nextInt(w - 2) + 1;
+                dy = rand.nextInt(h - 2) + 1;
+                datts++;
+            } while ((reserved[dx][dy] || !isFarEnough(map, dx, dy)) && datts < 100);
+            if (datts < 100) {
+                if (rand.nextBoolean()) {
+                    map.placeObject(new Decoration("Skull", dx, dy, "images/containers/skull.png"), dx, dy);
+                } else {
+                    map.placeObject(new Decoration("Statue", dx, dy, "images/containers/statue.png"), dx, dy);
+                }
+                reserved[dx][dy] = true;
+            }
+        }
+
         List<String[]> wallObjects = new ArrayList<>();
-        wallObjects.add(new String[] { "WallObject", "Banner (Blue)", "WallDecoration/banner_blue" });
-        wallObjects.add(new String[] { "WallObject", "Banner (Red)", "WallDecoration/banner_red" });
-        wallObjects.add(new String[] { "WallObject", "Blood Stain", "WallDecoration/blood_stain" });
-        wallObjects.add(new String[] { "SearchableObject", "Gargoyle Statue", "WallSearchable/gargoyle" });
-        wallObjects.add(new String[] { "WallObject", "Goo Stain", "WallDecoration/goo_stain" });
-        wallObjects.add(new String[] { "WallObject", "Moss", "WallDecoration/moss" });
+        wallObjects.add(new String[] { "WallObject", "Blue Banner", "images/WallDecoration/blue_flag.png" });
+        wallObjects.add(new String[] { "WallObject", "Red Banner", "images/WallDecoration/red_flag.png" });
+        wallObjects.add(new String[] { "WallObject", "Green Banner", "images/WallDecoration/green_flag.png" });
+        wallObjects.add(new String[] { "WallObject", "Blood Stain", "images/WallDecoration/blood_stain.png" });
+        wallObjects.add(new String[] { "WallObject", "Acid Ooze", "images/WallDecoration/acid_ooze.png" });
+        wallObjects.add(new String[] { "WallObject", "Moss", "images/WallDecoration/moss.png" });
+        wallObjects.add(new String[] { "WallObject", "Chain", "images/WallDecoration/chain.png" });
+        wallObjects.add(new String[] { "WallObject", "Crack", "images/WallDecoration/crack.png" });
+        wallObjects.add(new String[] { "WallObject", "Cobweb", "images/WallDecoration/cobweb.png" });
+        wallObjects.add(new String[] { "WallObject", "Wall Torch", "images/WallDecoration/torch1.png" });
+
+        wallObjects.add(new String[] { "SearchableObject", "Gargoyle Statue", "images/WallSearchable/gargoyle.png" });
+        wallObjects.add(new String[] { "SearchableObject", "Missing Brick", "images/WallSearchable/missing_brick.png" });
+        wallObjects.add(new String[] { "SearchableObject", "Wall Grill", "images/WallSearchable/wall_grill.png" });
+        wallObjects.add(new String[] { "SearchableObject", "Pipe Hole", "images/WallSearchable/pipe_hole.png" });
+        wallObjects.add(new String[] { "SearchableObject", "Wall Cavity", "images/WallSearchable/wall_cavity.png" });
+        wallObjects.add(new String[] { "SearchableObject", "Loose Stone", "images/WallSearchable/loose_stone.png" });
 
         int levelDoorXVal = -1;
         for (int x = 0; x < w; x++) {

@@ -57,13 +57,6 @@ public class OpenAction implements Action {
                         System.out.println("Unlocked chest using key!");
                         view.GameView.addFloatingText(tx, ty, "UNLOCKED!", java.awt.Color.GREEN);
                     } else {
-                        // Show warning dialog for locked chest without key!
-                        javax.swing.JOptionPane.showMessageDialog(
-                                null,
-                                "This chest is locked! You need a Key to open it.",
-                                "Chest Locked",
-                                javax.swing.JOptionPane.WARNING_MESSAGE
-                        );
                         System.out.println("Chest is locked! Need a key!");
                         view.GameView.addFloatingText(tx, ty, "LOCKED!", java.awt.Color.RED);
                         return; // Stop execution
@@ -101,7 +94,7 @@ public class OpenAction implements Action {
             
             util.helpers.SoundManager.playUnlock();
             // Show floating text feedback!
-            view.GameView.addFloatingText(tx, ty, "OPENED!", java.awt.Color.YELLOW);
+            view.GameView.addFloatingText(tx, ty, "OPENED!", java.awt.Color.GREEN);
             
             contents.clear();
         }

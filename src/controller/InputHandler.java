@@ -244,6 +244,9 @@ public class InputHandler implements KeyListener {
                             }
                         }
                         if (obj != null) {
+                            if (obj instanceof domain.models.entity.Chest) {
+                                continue;
+                            }
                             if (obj instanceof domain.models.entity.SearchableObject) {
                                 java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(gameView);
                                 java.awt.Frame parentFrame = (parentWindow instanceof java.awt.Frame) ? (java.awt.Frame) parentWindow : null;

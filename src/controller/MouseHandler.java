@@ -132,6 +132,16 @@ public class MouseHandler extends MouseAdapter {
             return;
         }
 
+        if (obj instanceof domain.models.entity.Chest) {
+            java.util.List<domain.logic.Action> actions = obj.getActions();
+            if (actions != null && !actions.isEmpty()) {
+                actions.get(0).execute(hero, obj);
+                gameView.repaint();
+            }
+            actionMenu.hideMenu();
+            return;
+        }
+
         if (obj instanceof domain.models.entity.SearchableObject) {
             // Dismiss any active search dialog to prevent duplicates
             if (activeDialog != null) {

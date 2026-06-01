@@ -1186,7 +1186,7 @@ public class DemoRunner {
                     util.helpers.SoundManager.playGameOver();
 
                     // Reset to default Adventure mode style
-                    gameOverMenu.setupGameOverMenu("GAME OVER", "You have succumbed to your fate.", true, false);
+                    gameOverMenu.setupGameOverMenu("GAME OVER", "You have succumbed to your fate.", false, false);
 
                     // Game Over ekranını JFrame'in en üst katmanına (GlassPane) bas
                     frame.setGlassPane(gameOverMenu);

@@ -25,6 +25,7 @@ public class GameOverMenu extends JPanel {
     private final Runnable onMainMenu;
 
     private JPanel containerPanel;
+    private JPanel btnPanel;
     private JLabel heading;
     private JLabel subHeading;
     private JButton restartBtn;
@@ -108,8 +109,8 @@ public class GameOverMenu extends JPanel {
         containerPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
         // Buttons Panel
-        JPanel btnPanel = new JPanel();
-        btnPanel.setLayout(new GridLayout(3, 1, 0, 15));
+        btnPanel = new JPanel();
+        btnPanel.setLayout(new GridLayout(0, 1, 0, 15));
         btnPanel.setOpaque(false);
 
         restartBtn = createMenuButton("Restart Game");
@@ -162,7 +163,13 @@ public class GameOverMenu extends JPanel {
     private void setupFallbackPanel(String headingText, String subHeadingText, boolean showLoad, boolean isVictory) {
         heading.setText(headingText);
         subHeading.setText(subHeadingText);
-        loadBtn.setVisible(showLoad);
+        
+        btnPanel.removeAll();
+        btnPanel.add(restartBtn);
+        if (showLoad) {
+            btnPanel.add(loadBtn);
+        }
+        btnPanel.add(menuBtn);
 
         if (isVictory) {
             containerPanel.setBackground(new Color(10, 35, 30, 230)); // Deep emerald-black transparent tint

@@ -1,6 +1,6 @@
 package domain.models.staticObjects;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class WallObject extends GameObject {
     public WallObject(String name, int x, int y, String imageName) {

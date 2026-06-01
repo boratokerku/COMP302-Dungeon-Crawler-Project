@@ -1,7 +1,9 @@
 package domain.logic;
 
+import domain.logic.event.GameEventBus;
+import domain.logic.event.SoundEvent;
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class UseAction implements Action {
 
@@ -37,19 +39,19 @@ public class UseAction implements Action {
             // Execute the domain item logic
             pot.use(hero);
 
-            // Execute the feedback logic (sound, floating text)
-            util.helpers.SoundManager.playHeal();
+            // Publish sound & floating text via EventBus (no view.GameView dependency)
+            GameEventBus.fireSound(SoundEvent.SoundType.HEAL);
             if (pot instanceof domain.models.item.usables.ManaPotion) {
-                view.GameView.addFloatingText(hero.getX(), hero.getY(), "+20 Mana", java.awt.Color.CYAN);
+                GameEventBus.fireFloatingText(hero.getX(), hero.getY(), "+20 Mana", java.awt.Color.CYAN);
             } else if (pot instanceof domain.models.item.usables.EnergyPotion) {
-                view.GameView.addFloatingText(hero.getX(), hero.getY(), "+30 Energy", java.awt.Color.YELLOW);
+                GameEventBus.fireFloatingText(hero.getX(), hero.getY(), "+30 Energy", java.awt.Color.YELLOW);
             } else if (pot instanceof domain.models.item.usables.HealthPotion) {
-                view.GameView.addFloatingText(hero.getX(), hero.getY(), "+5 HP", java.awt.Color.GREEN);
+                GameEventBus.fireFloatingText(hero.getX(), hero.getY(), "+5 HP", java.awt.Color.GREEN);
             }
 
             hero.getInventory().removeItem(target);
-        } else if (target instanceof domain.models.staticObjects.KeyItem) {
-            domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) target;
+        } else if (target instanceof domain.models.item.KeyItem) {
+            domain.models.item.KeyItem key = (domain.models.item.KeyItem) target;
             domain.models.map.GameMap map = hero.getCurrentMap();
             boolean unlockedAny = false;
 
@@ -59,7 +61,7 @@ public class UseAction implements Action {
                         int nx = hero.getX() + dx;
                         int ny = hero.getY() + dy;
                         if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
-                            domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
+                            domain.models.GameObject obj = map.getObjectAt(nx, ny);
                             if (obj instanceof domain.models.staticObjects.Door) {
                                 domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
                                 if (door.isLocked()) {
@@ -67,9 +69,7 @@ public class UseAction implements Action {
                                     door.open();
                                     unlockedAny = true;
                                     System.out.println("Door unlocked and opened at (" + nx + ", " + ny + ")!");
-
-                                    // Show floating text feedback!
-                                    view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
+                                    GameEventBus.fireFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
                                 }
                             }
                         }

@@ -1,4 +1,5 @@
 package view;
+import domain.models.GameObject;
 
 import domain.models.entity.Hero;
 import domain.models.inventory.InventoryHotbar;
@@ -165,7 +166,7 @@ public class InventoryView {
                 }
             }
 
-            domain.models.entity.GameObject item = hotbar.getSlot(slotIndex);
+            domain.models.GameObject item = hotbar.getSlot(slotIndex);
             if (item != null) {
                 drawItemInSlot(g, item, slotX_item, slotY_item, slotW_item, slotH_item);
             }
@@ -173,17 +174,44 @@ public class InventoryView {
     }
 
     private void syncHotbarItems() {
-        java.util.List<domain.models.entity.GameObject> items = hero.getInventory().getItems();
+        java.util.List<domain.models.GameObject> items = hero.getInventory().getItems();
         for (int i = 0; i < InventoryHotbar.SLOT_COUNT; i++) {
-            domain.models.entity.GameObject item = i < items.size() ? items.get(i) : null;
+            domain.models.GameObject item = i < items.size() ? items.get(i) : null;
             hotbar.setItemInSlot(i + 1, item);
+        }
+        syncEquippedWeaponWithSelectionOnly();
+    }
+
+    public domain.models.GameObject getSelectedItem() {
+        return hotbar.getSlot(hotbar.getSelectedSlot());
+    }
+
+    public void syncEquippedWeaponWithSelectionOnly() {
+        if (hero == null) return;
+        domain.models.GameObject item = hotbar.getSlot(hotbar.getSelectedSlot());
+        if (item instanceof domain.models.item.MapItem && ((domain.models.item.MapItem) item).isWeapon()) {
+            if (hero.getEquippedWeapon() != item) {
+                // Find the EquipAction on the weapon and execute it!
+                for (domain.logic.Action action : item.getActions()) {
+                    if ("Equip".equals(action.getName())) {
+                        if (action.isAvailable(hero, item)) {
+                            action.execute(hero, item);
+                        }
+                        break;
+                    }
+                }
+            }
+        } else {
+            if (hero.getEquippedWeapon() != null) {
+                hero.unequipWeapon();
+            }
         }
     }
 
     /**
      * Draws the sprite (or a colour placeholder) of a game object inside a slot.
      */
-    private void drawItemInSlot(Graphics2D g, domain.models.entity.GameObject item,
+    private void drawItemInSlot(Graphics2D g, domain.models.GameObject item,
             int slotX, int slotY, int slotW, int slotH) {
         if (item == null) {
             return;
@@ -230,7 +258,7 @@ public class InventoryView {
     // ── Hit-testing ───────────────────────────────────────────────────────────
 
     /** Returns the hotbar item that was clicked, or null if the slot is empty. */
-    public domain.models.entity.GameObject getClickedItem(int screenX, int screenY) {
+    public domain.models.GameObject getClickedItem(int screenX, int screenY) {
         if (hero == null || hero.getInventory() == null)
             return null;
         syncHotbarItems();
@@ -247,7 +275,7 @@ public class InventoryView {
 
                 if (screenX >= slotX && screenX <= slotX + slotW &&
                         screenY >= slotY && screenY <= slotY + slotH) {
-                    hotbar.setSelectedSlot(slotIndex);
+                    selectSlot(slotIndex);
                     return hotbar.getSlot(slotIndex);
                 }
             }
@@ -259,7 +287,7 @@ public class InventoryView {
 
                 if (screenX >= slotX && screenX <= slotX + slotWidth &&
                         screenY >= slotY && screenY <= slotY + slotHeight) {
-                    hotbar.setSelectedSlot(slotIndex);
+                    selectSlot(slotIndex);
                     return hotbar.getSlot(slotIndex);
                 }
             }
@@ -269,11 +297,13 @@ public class InventoryView {
 
     public void scrollSelection(int offset) {
         hotbar.scroll(offset);
+        syncHotbarItems();
     }
 
     public void selectSlot(int slot) {
         if (slot >= 1 && slot <= InventoryHotbar.SLOT_COUNT) {
             hotbar.setSelectedSlot(slot);
+            syncHotbarItems();
         }
     }
 

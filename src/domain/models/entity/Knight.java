@@ -1,7 +1,10 @@
 package domain.models.entity;
+import domain.models.GameObject;
+import domain.models.Renderable;
 
 import java.awt.Point;
 import java.util.Random;
+import domain.models.item.MapItem;
 
 public class Knight extends Entity implements Renderable {
 
@@ -10,9 +13,23 @@ public class Knight extends Entity implements Renderable {
 
     private final Random random = new Random();
     private int moveCooldown = 0;
+    
+    private MapItem equippedWeapon = null;
+    private int weaponAtk = 0;
 
     public Knight(int x, int y) {
         super(x, y, 20); // Design doc §2.5.1: "Knights start with 20HP"
+    }
+
+    public boolean hasWeapon() {
+        if (this.getTeam() == domain.models.Team.NONE || this.getTeam() == null) {
+            return true;
+        }
+        return equippedWeapon != null;
+    }
+
+    public MapItem getEquippedWeapon() {
+        return equippedWeapon;
     }
 
     // Knight AI ana metodu — en yakın hedefi (Hero veya ShadowClone) takip eder
@@ -24,6 +41,22 @@ public class Knight extends Entity implements Renderable {
             return;
         }
         moveCooldown = 0;
+
+        // In Team Match, pick up weapon if standing on one
+        if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
+            domain.models.GameObject obj = map.getObjectAt(this.x, this.y);
+            if (obj instanceof MapItem && ((MapItem) obj).isWeapon()) {
+                pickUpWeapon((MapItem) obj, map);
+            }
+        }
+
+        if (!hasWeapon()) {
+            MapItem weapon = findNearestWeaponOnMap(map);
+            if (weapon != null) {
+                chaseWeapon(weapon, map, entities);
+                return;
+            }
+        }
 
         Entity target;
         if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
@@ -89,11 +122,101 @@ public class Knight extends Entity implements Renderable {
     // Design doc §2.5.1: "4HP damage, some absorbed by DEF stat of hero"
     private void attackTarget(Entity target) {
         int baseDamage = 4;
-        int def = (target instanceof Hero) ? ((Hero) target).getDef() : 0;
+        if (this.getTeam() != domain.models.Team.NONE && this.getTeam() != null) {
+            if (this.equippedWeapon != null) {
+                baseDamage = 6; // Base 4 + 50% bonus = 6
+            }
+        }
+        int def = 0;
+        if (target instanceof Hero) {
+            def = ((Hero) target).getDef();
+        } else if (target instanceof Knight) {
+            def = 1;
+        }
         int damage = Math.max(1, baseDamage - def); // Minimum 1 damage to prevent complete invincibility
         target.takeDamage(damage);
         view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP", new java.awt.Color(255, 200, 50));
         System.out.println("Knight dealt " + damage + " dmg | Target HP: " + target.getHp());
+    }
+
+    private void pickUpWeapon(MapItem weapon, domain.models.map.GameMap map) {
+        this.equippedWeapon = weapon;
+        int atk = 5; // default fallback
+        for (domain.logic.Action action : weapon.getActions()) {
+            if (action instanceof domain.logic.EquipAction) {
+                atk = ((domain.logic.EquipAction) action).getAtkBonus();
+                break;
+            }
+        }
+        this.weaponAtk = atk;
+        map.removeObject(weapon);
+        System.out.println("Knight (" + this.getTeam() + ") picked up weapon " + weapon.getName() + " with ATK: " + atk);
+    }
+
+    private MapItem findNearestWeaponOnMap(domain.models.map.GameMap map) {
+        if (map == null) return null;
+        MapItem nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for (int x = 0; x < map.getWidth(); x++) {
+            for (int y = 0; y < map.getHeight(); y++) {
+                domain.models.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof MapItem) {
+                    MapItem item = (MapItem) obj;
+                    if (item.isWeapon()) {
+                        double dx = this.x - x;
+                        double dy = this.y - y;
+                        double d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < minDist) {
+                            minDist = d;
+                            nearest = item;
+                        }
+                    }
+                }
+            }
+        }
+        return nearest;
+    }
+
+    private void chaseWeapon(MapItem weapon, domain.models.map.GameMap map, java.util.List<Entity> entities) {
+        int nextX = this.x;
+        int nextY = this.y;
+
+        if (this.x < weapon.getX()) {
+            nextX++;
+        } else if (this.x > weapon.getX()) {
+            nextX--;
+        } else if (this.y < weapon.getY()) {
+            nextY++;
+        } else if (this.y > weapon.getY()) {
+            nextY--;
+        }
+
+        if (canMoveTo(nextX, nextY, map, entities)) {
+            this.x = nextX;
+            this.y = nextY;
+        } else {
+            // Try alternate axis if blocked
+            nextX = this.x;
+            nextY = this.y;
+            if (this.y < weapon.getY()) {
+                nextY++;
+            } else if (this.y > weapon.getY()) {
+                nextY--;
+            } else if (this.x < weapon.getX()) {
+                nextX++;
+            } else if (this.x > weapon.getX()) {
+                nextX--;
+            }
+            if (canMoveTo(nextX, nextY, map, entities)) {
+                this.x = nextX;
+                this.y = nextY;
+            }
+        }
+        
+        // Pick it up immediately if we stepped on it
+        if (this.x == weapon.getX() && this.y == weapon.getY()) {
+            pickUpWeapon(weapon, map);
+        }
     }
 
     // Herhangi bir Entity hedefine doğru bir adım atar (Hero veya ShadowClone)

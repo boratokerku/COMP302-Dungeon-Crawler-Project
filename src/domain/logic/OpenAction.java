@@ -1,7 +1,7 @@
 package domain.logic;
 
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -34,15 +34,18 @@ public class OpenAction implements Action {
             domain.models.map.GameMap map = target.getMap();
             
             boolean wasLocked = false;
-            if (target instanceof domain.models.entity.Chest) {
-                domain.models.entity.Chest chest = (domain.models.entity.Chest) target;
+            if (target instanceof domain.models.staticObjects.Chest) {
+                domain.models.staticObjects.Chest chest = (domain.models.staticObjects.Chest) target;
                 if (chest.isLocked()) {
                     wasLocked = true;
-                    domain.models.staticObjects.KeyItem keyToUse = null;
+                    domain.models.item.KeyItem keyToUse = null;
                     for (GameObject item : hero.getInventory().getItems()) {
-                        if (item instanceof domain.models.staticObjects.KeyItem) {
-                            keyToUse = (domain.models.staticObjects.KeyItem) item;
-                            break;
+                        if (item instanceof domain.models.item.KeyItem) {
+                            domain.models.item.KeyItem key = (domain.models.item.KeyItem) item;
+                            if (canKeyOpenChest(key, chest)) {
+                                keyToUse = key;
+                                break;
+                            }
                         }
                     }
                     if (keyToUse != null) {
@@ -54,13 +57,6 @@ public class OpenAction implements Action {
                         System.out.println("Unlocked chest using key!");
                         view.GameView.addFloatingText(tx, ty, "UNLOCKED!", java.awt.Color.GREEN);
                     } else {
-                        // Show warning dialog for locked chest without key!
-                        javax.swing.JOptionPane.showMessageDialog(
-                                null,
-                                "This chest is locked! You need a Key to open it.",
-                                "Chest Locked",
-                                javax.swing.JOptionPane.WARNING_MESSAGE
-                        );
                         System.out.println("Chest is locked! Need a key!");
                         view.GameView.addFloatingText(tx, ty, "LOCKED!", java.awt.Color.RED);
                         return; // Stop execution
@@ -98,9 +94,14 @@ public class OpenAction implements Action {
             
             util.helpers.SoundManager.playUnlock();
             // Show floating text feedback!
-            view.GameView.addFloatingText(tx, ty, "OPENED!", java.awt.Color.YELLOW);
+            view.GameView.addFloatingText(tx, ty, "OPENED!", java.awt.Color.GREEN);
             
             contents.clear();
         }
+    }
+
+    private boolean canKeyOpenChest(domain.models.item.KeyItem key, domain.models.staticObjects.Chest chest) {
+        // Since all keys have been unified into a single key type, any key can open any locked chest.
+        return true;
     }
 }

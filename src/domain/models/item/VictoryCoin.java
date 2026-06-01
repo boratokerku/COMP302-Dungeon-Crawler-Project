@@ -26,4 +26,10 @@ public class VictoryCoin extends MapItem {
             victoryCallback.run();
         }
     }
+
+    /** Victory Coin is not a weapon. GRASP Polymorphism override. */
+    @Override
+    public boolean isWeapon() {
+        return false;
+    }
 }

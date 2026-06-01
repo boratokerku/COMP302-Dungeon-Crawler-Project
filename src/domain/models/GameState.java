@@ -23,7 +23,7 @@ public class GameState {
 
     // Alt veri sınıfları
     public HeroRecord hero;
-    public List<String> inventoryItems = new ArrayList<>();
+    public List<ItemRecord> inventoryItems = new ArrayList<>();
     public List<ItemRecord> mapItems    = new ArrayList<>();
     public List<EnemyRecord> enemies    = new ArrayList<>();
     public List<ProjectileRecord> projectiles = new ArrayList<>(); // Uçan mermiler
@@ -62,6 +62,7 @@ public class GameState {
         public boolean isLocked; // Door kilitli mi bilgisi için
         public boolean searched; // SearchableObject için
         public String hiddenItemType; // SearchableObject içindeki gizli item için (varsa)
+        public String imageName; // Custom image/sprite path
 
         public ItemRecord() {}
 

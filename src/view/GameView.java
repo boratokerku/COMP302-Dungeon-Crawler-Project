@@ -1,5 +1,6 @@
 
 package view;
+import domain.models.GameObject;
 
 import domain.models.Direction;
 import domain.models.entity.Hero;
@@ -511,7 +512,7 @@ public class GameView extends JPanel {
         drawSingleBar(g, "HP", hero.getHp(), hero.getMaxHp(), hpIntImg, hpExtImg, hpIconImg, startX, y, barW, barH);
 
         // 2. Energy
-        drawSingleBar(g, "ENG", hero.getEnergy(), 100, energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap),
+        drawSingleBar(g, "ENG", hero.getEnergy(), hero.getMaxEnergy(), energyIntImg, energyExtImg, energyIconImg, startX + (barW + gap),
                 y, barW, barH);
 
         // 3. Mana
@@ -544,7 +545,7 @@ public class GameView extends JPanel {
 
             g.setColor(new Color(255, 220, 100));
             double timerScale = (double) timerBgW / timerBgImg.getWidth();
-            int textSlotW = (int) Math.round((1275 - 490) * timerScale);
+            int textSlotW = (int) Math.round(720.0 * timerScale);
             
             float fontSize = 26f;
             g.setFont(vt323Font.deriveFont(java.awt.Font.BOLD, fontSize));
@@ -559,7 +560,7 @@ public class GameView extends JPanel {
                 timeStrW = tfm.stringWidth(timeStr);
             }
 
-            int textCenterX = timerBgX + (int) Math.round(882.5 * timerScale);
+            int textCenterX = timerBgX + (int) Math.round(910.0 * timerScale);
             int textX = textCenterX - timeStrW / 2;
             int textY = timerBgY + (timerBgH + tfm.getAscent()) / 2 - 3;
             g.drawString(timeStr, textX, textY);
@@ -583,7 +584,7 @@ public class GameView extends JPanel {
     }
 
     /** Returns the hotbar item clicked at the given screen position. */
-    public domain.models.entity.GameObject getClickedInventoryItem(int screenX, int screenY) {
+    public domain.models.GameObject getClickedInventoryItem(int screenX, int screenY) {
         return inventoryView.getClickedItem(screenX, screenY);
     }
 
@@ -595,6 +596,10 @@ public class GameView extends JPanel {
     public void setHotbarSlot(int slot) {
         inventoryView.selectSlot(slot);
         repaint();
+    }
+
+    public int getSelectedSlot() {
+        return inventoryView.getSelectedSlot();
     }
 
     private final java.util.Map<String, BufferedImage> weaponImageCache = new java.util.HashMap<>();
@@ -638,19 +643,28 @@ public class GameView extends JPanel {
 
     private String lastLoggedWeapon = null;
 
-    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh) {
-        if (hero.getEquippedWeapon() == null) {
+    private void drawEquippedWeapon(Graphics2D g2d, int x, int y, Direction dir, int dw, int dh, domain.models.GameObject equipped) {
+        if (!(equipped instanceof domain.models.item.MapItem)) {
             if (lastLoggedWeapon != null) {
-                System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL");
+                System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon is now NULL or not MapItem");
                 lastLoggedWeapon = null;
             }
             return;
         }
 
-        String path = hero.getEquippedWeapon().getImageName();
+        domain.models.item.MapItem mapItem = (domain.models.item.MapItem) equipped;
+        if (!mapItem.isWeapon()) {
+            if (lastLoggedWeapon != null) {
+                System.out.println("[DEBUG] drawEquippedWeapon: Equipped item is not a weapon: " + mapItem.getName());
+                lastLoggedWeapon = null;
+            }
+            return;
+        }
+
+        String path = mapItem.getImageName();
         if (!path.equals(lastLoggedWeapon)) {
             System.out.println("[DEBUG] drawEquippedWeapon: Equipped weapon changed to: "
-                    + hero.getEquippedWeapon().getName() + " (path: " + path + ")");
+                    + mapItem.getName() + " (path: " + path + ")");
             lastLoggedWeapon = path;
         }
 
@@ -660,7 +674,18 @@ public class GameView extends JPanel {
             return;
         }
 
-        int wSize = dw / 2; // weapon size scales with the hero's width
+        int wSize = (int) (dw * 0.7); // weapon size scales with the hero's width (enlarged from dw / 2)
+
+        // Preserve aspect ratio of the weapon image
+        int imgW = weaponImg.getWidth();
+        int imgH = weaponImg.getHeight();
+        int wDraw = wSize;
+        int hDraw = wSize;
+        if (imgW > imgH) {
+            hDraw = (int) Math.round(wSize * ((double) imgH / imgW));
+        } else if (imgH > imgW) {
+            wDraw = (int) Math.round(wSize * ((double) imgW / imgH));
+        }
 
         // Dynamically fetch weapon metadata (or use defaults)
         double pivotX = 0.5;
@@ -669,15 +694,11 @@ public class GameView extends JPanel {
         int customHandX = 0;
         int customHandY = 0;
 
-        domain.models.entity.GameObject equipped = hero.getEquippedWeapon();
-        if (equipped instanceof domain.models.item.MapItem) {
-            domain.models.item.MapItem item = (domain.models.item.MapItem) equipped;
-            pivotX = item.getWeaponPivotX();
-            pivotY = item.getWeaponPivotY();
-            angleOffset = item.getWeaponAngleOffset();
-            customHandX = item.getHandOffsetX();
-            customHandY = item.getHandOffsetY();
-        }
+        pivotX = mapItem.getWeaponPivotX();
+        pivotY = mapItem.getWeaponPivotY();
+        angleOffset = mapItem.getWeaponAngleOffset();
+        customHandX = mapItem.getHandOffsetX();
+        customHandY = mapItem.getHandOffsetY();
 
         java.awt.geom.AffineTransform oldTransform = g2d.getTransform();
 
@@ -704,20 +725,17 @@ public class GameView extends JPanel {
 
         // 4. Calculate dynamic rotation angle (melee swing angle defaults to 45 deg, or
         // customized per weapon)
-        double swingAngle = Math.toRadians(45);
-        if (equipped instanceof domain.models.item.MapItem) {
-            swingAngle = ((domain.models.item.MapItem) equipped).getBaseRotationAngle();
-        }
+        double swingAngle = mapItem.getBaseRotationAngle();
         double totalAngle = swingAngle + angleOffset;
         g2d.rotate(totalAngle);
 
         // 5. Calculate offset based on weapon pivot points
-        int px = (int) (pivotX * wSize);
-        int py = (int) (pivotY * wSize);
+        int px = (int) (pivotX * wDraw);
+        int py = (int) (pivotY * hDraw);
 
         // 6. Draw the weapon icon such that the pivot (px, py) aligns exactly with hand
         // (0,0)
-        g2d.drawImage(weaponImg, -px, -py, wSize, wSize, null);
+        g2d.drawImage(weaponImg, -px, -py, wDraw, hDraw, null);
 
         g2d.setTransform(oldTransform);
     }
@@ -757,7 +775,15 @@ public class GameView extends JPanel {
     private void drawHero(Graphics2D g2d, int yVal) {
         if (hero == null || hero.getY() != yVal)
             return;
-        BufferedImage frame = assetManager.getHeroSprite(hero.getAnimationState());
+        if (gameMode == domain.models.GameMode.TEAM_MATCH && !hero.isAlive()) {
+            return;
+        }
+        BufferedImage frame;
+        if (gameMode == domain.models.GameMode.TEAM_MATCH) {
+            frame = assetManager.getKnightSprite();
+        } else {
+            frame = assetManager.getHeroSprite(hero.getAnimationState());
+        }
 
         if (frame != null) {
             boolean isHitFlash = (System.currentTimeMillis() - hero.getLastHitTime() < 250);
@@ -776,10 +802,10 @@ public class GameView extends JPanel {
             if (hero.getDirection() == Direction.LEFT) {
                 // Resmi yatayda aynalayarak çiziyoruz
                 g2d.drawImage(frame, x + dw, y, -dw, dh, null);
-                drawEquippedWeapon(g2d, x, y, Direction.LEFT, dw, dh);
+                drawEquippedWeapon(g2d, x, y, Direction.LEFT, dw, dh, hero.getEquippedWeapon());
             } else {
                 g2d.drawImage(frame, x, y, dw, dh, null);
-                drawEquippedWeapon(g2d, x, y, Direction.RIGHT, dw, dh);
+                drawEquippedWeapon(g2d, x, y, Direction.RIGHT, dw, dh, hero.getEquippedWeapon());
             }
         }
     }
@@ -827,23 +853,44 @@ public class GameView extends JPanel {
                             g2d.fillOval(px, py, size, size);
                         }
                     } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
-                        // Blazing Fireball (Orange-Red glowing orb)
-                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
-                        int size = tileSize / 2;
-                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
-                        g2d.fillOval(px, py, size, size);
-                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
-                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                        BufferedImage fireballImg = assetManager.getProjectileFireball();
+                        if (fireballImg != null) {
+                            int px = (int) Math.round(offsetX + (proj.getExactX() * tileSize));
+                            int py = (int) Math.round(offsetY + (proj.getExactY() * tileSize));
+                            g2d.drawImage(fireballImg, px, py, tileSize, tileSize, null);
+                        } else {
+                            // Fallback if image fails
+                            int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                            int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                            int size = tileSize / 2;
+                            g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                            g2d.fillOval(px, py, size, size);
+                            g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                            g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                        }
+                    } else if ("SORCERER_FIREBALL".equalsIgnoreCase(proj.getType())) {
+                        BufferedImage sorcererImg = assetManager.getProjectileSorcererFireball();
+                        if (sorcererImg != null) {
+                            int px = (int) Math.round(offsetX + (proj.getExactX() * tileSize));
+                            int py = (int) Math.round(offsetY + (proj.getExactY() * tileSize));
+                            g2d.drawImage(sorcererImg, px, py, tileSize, tileSize, null);
+                        } else {
+                            // Fallback (Purple Mage Spell)
+                            int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                            int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                            int size = tileSize / 2;
+                            g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                            g2d.fillOval(px, py, size, size);
+                            g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
+                            g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                        }
                     } else {
-                        // Purple Mage Spell
+                        // Other projectiles fallback
                         int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
                         int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
                         int size = tileSize / 2;
-                        g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                        g2d.setColor(new java.awt.Color(255, 69, 0, 220));
                         g2d.fillOval(px, py, size, size);
-                        g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
-                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
                     }
                     continue;
                 } else if (e instanceof domain.models.entity.ShadowClone) {
@@ -931,6 +978,14 @@ public class GameView extends JPanel {
                     drawTeamAura(g2d, e, dx + dw / 2, dy + dh - 5, tileSize);
 
                     g2d.drawImage(frame, dx, dy, dw, dh, null);
+
+                    if (e instanceof domain.models.entity.Knight) {
+                        domain.models.item.MapItem weapon = ((domain.models.entity.Knight) e).getEquippedWeapon();
+                        if (weapon != null) {
+                            // By default draw it facing RIGHT for enemies since they don't have a specific facing direction stored
+                            drawEquippedWeapon(g2d, dx, dy, Direction.RIGHT, dw, dh, weapon);
+                        }
+                    }
 
                     // Draw thin health bar above regular enemies
                     int barW = (int) (dw * 0.8);
@@ -1047,7 +1102,19 @@ public class GameView extends JPanel {
                         java.awt.geom.AffineTransform old = g2d.getTransform();
                         g2d.translate(px + tileSize / 2.0, py + tileSize / 2.0);
                         g2d.rotate(angle);
-                        g2d.drawImage(arrowImg, -tileSize / 2, -tileSize / 2, tileSize, tileSize, null);
+
+                        // Preserve aspect ratio of the arrow image
+                        int imgW = arrowImg.getWidth();
+                        int imgH = arrowImg.getHeight();
+                        int aDrawW = tileSize;
+                        int aDrawH = tileSize;
+                        if (imgW > imgH) {
+                            aDrawH = (int) Math.round(tileSize * ((double) imgH / imgW));
+                        } else if (imgH > imgW) {
+                            aDrawW = (int) Math.round(tileSize * ((double) imgW / imgH));
+                        }
+
+                        g2d.drawImage(arrowImg, -aDrawW / 2, -aDrawH / 2, aDrawW, aDrawH, null);
                         g2d.setTransform(old);
                     } else {
                         // Fallback if arrow image fails
@@ -1058,14 +1125,21 @@ public class GameView extends JPanel {
                         g2d.fillOval(px, py, size, size);
                     }
                 } else if ("FIREBALL".equalsIgnoreCase(proj.getType())) {
-                    // Blazing Fireball (Orange-Red glowing orb)
-                    int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
-                    int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
-                    int size = tileSize / 2;
-                    g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
-                    g2d.fillOval(px, py, size, size);
-                    g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
-                    g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    BufferedImage fireballImg = assetManager.getProjectileFireball();
+                    if (fireballImg != null) {
+                        int px = (int) Math.round(offsetX + (proj.getExactX() * tileSize));
+                        int py = (int) Math.round(offsetY + (proj.getExactY() * tileSize));
+                        g2d.drawImage(fireballImg, px, py, tileSize, tileSize, null);
+                    } else {
+                        // Fallback
+                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(255, 69, 0, 220)); // Deep orange-red
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 215, 0, 180)); // Gold aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    }
                 } else if ("BOSS_FIREBALL".equalsIgnoreCase(proj.getType())) {
                     // Boss Fireball — larger, darker, more menacing
                     int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 6);
@@ -1077,15 +1151,29 @@ public class GameView extends JPanel {
                     g2d.drawOval(px - 3, py - 3, size + 6, size + 6);
                     g2d.setColor(new java.awt.Color(255, 150, 0, 120)); // Outer glow
                     g2d.drawOval(px - 5, py - 5, size + 10, size + 10);
+                } else if ("SORCERER_FIREBALL".equalsIgnoreCase(proj.getType())) {
+                    BufferedImage sorcererImg = assetManager.getProjectileSorcererFireball();
+                    if (sorcererImg != null) {
+                        int px = (int) Math.round(offsetX + (proj.getExactX() * tileSize));
+                        int py = (int) Math.round(offsetY + (proj.getExactY() * tileSize));
+                        g2d.drawImage(sorcererImg, px, py, tileSize, tileSize, null);
+                    } else {
+                        // Fallback (Purple Mage Spell)
+                        int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
+                        int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
+                        int size = tileSize / 2;
+                        g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                        g2d.fillOval(px, py, size, size);
+                        g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
+                        g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
+                    }
                 } else {
-                    // Purple Mage Spell
+                    // Other projectiles fallback
                     int px = (int) (offsetX + (proj.getExactX() * tileSize) + tileSize / 4);
                     int py = (int) (offsetY + (proj.getExactY() * tileSize) + tileSize / 4);
                     int size = tileSize / 2;
-                    g2d.setColor(new java.awt.Color(186, 85, 211, 220)); // Magical Orchid
+                    g2d.setColor(new java.awt.Color(255, 69, 0, 220));
                     g2d.fillOval(px, py, size, size);
-                    g2d.setColor(new java.awt.Color(255, 200, 255, 180)); // Light aura
-                    g2d.drawOval(px - 2, py - 2, size + 4, size + 4);
                 }
             }
         }
@@ -1098,8 +1186,13 @@ public class GameView extends JPanel {
         if (team == domain.models.Team.NONE || team == null)
             return;
 
-        Color centerColor = (team == domain.models.Team.CYAN) ? new Color(0, 255, 255, 150)
-                : new Color(255, 140, 0, 150);
+        Color centerColor;
+        if (entity instanceof domain.models.entity.Hero) {
+            centerColor = new Color(138, 43, 226, 150); // Purple for Hero
+        } else {
+            centerColor = (team == domain.models.Team.CYAN) ? new Color(0, 255, 255, 150)
+                    : new Color(255, 140, 0, 150);
+        }
         Color edgeColor = new Color(0, 0, 0, 0);
 
         int radius = size / 2 + 15;
@@ -1119,7 +1212,7 @@ public class GameView extends JPanel {
     private boolean isSameWall(domain.models.map.GameMap map, int x, int y, String imgName) {
         if (x < 0 || x >= map.getWidth() || y < 0 || y >= map.getHeight())
             return false;
-        domain.models.entity.GameObject obj = map.getObjectAt(x, y);
+        domain.models.GameObject obj = map.getObjectAt(x, y);
         return obj instanceof domain.models.tile.WallTile && imgName != null && imgName.equals(obj.getImageName());
     }
 
@@ -1129,18 +1222,18 @@ public class GameView extends JPanel {
 
         for (int x = 0; x < gameMap.getWidth(); x++) {
             for (int y = 0; y < gameMap.getHeight(); y++) {
-                domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
+                domain.models.GameObject obj = gameMap.getObjectAt(x, y);
                 if (obj != null) {
                     if (obj instanceof domain.models.item.MapItem ||
-                            obj instanceof domain.models.entity.Column ||
-                            obj instanceof domain.models.entity.Chest ||
-                            obj instanceof domain.models.entity.Crate ||
+                            obj instanceof domain.models.staticObjects.Column ||
+                            obj instanceof domain.models.staticObjects.Chest ||
+                            obj instanceof domain.models.staticObjects.Crate ||
                             (obj instanceof domain.models.staticObjects.Door
                                     && !(obj instanceof domain.models.staticObjects.LevelDoor))
                             ||
                             obj instanceof domain.models.staticObjects.Decoration ||
-                            obj instanceof domain.models.entity.SearchableObject ||
-                            obj instanceof domain.models.entity.Sign ||
+                            obj instanceof domain.models.staticObjects.SearchableObject ||
+                            obj instanceof domain.models.staticObjects.Sign ||
                             obj instanceof domain.models.tile.FloorTile) {
                         // Eğer hücrede bir eşya, statik obje veya zemin varsa zemin (FloorTile)
                         // çiziyoruz
@@ -1161,7 +1254,7 @@ public class GameView extends JPanel {
 
         // PASS 1: Draw all base walls for the current row (yVal)
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
+            domain.models.GameObject obj = gameMap.getObjectAt(x, yVal);
             if (obj instanceof domain.models.tile.WallTile) {
                 if ("wall/wall_side".equals(obj.getImageName())) {
                     // Yan duvarlar: ince çiz (tile genişliğinin 1/3'ü)
@@ -1182,7 +1275,7 @@ public class GameView extends JPanel {
 
                     domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
                     if (wall.getDecoration() != null) {
-                        domain.models.entity.GameObject deco = wall.getDecoration();
+                        domain.models.GameObject deco = wall.getDecoration();
                         String imgName = deco.getImageName();
                         if (imgName != null && imgName.contains("WallDecoration/torch")) {
                             long now = System.currentTimeMillis();
@@ -1197,14 +1290,14 @@ public class GameView extends JPanel {
                             if (deco instanceof domain.models.staticObjects.Decoration) {
                                 dw = (int) (tileSize * 0.4);
                             } else if (deco instanceof domain.models.staticObjects.WallObject
-                                    || deco instanceof domain.models.entity.SearchableObject) {
+                                    || deco instanceof domain.models.staticObjects.SearchableObject) {
                                 dw = Math.max(tileSize - 6, 4);
                             }
                             int dh = (int) (ih * ((double) dw / iw));
                             int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                             int drawY;
                             if (deco instanceof domain.models.staticObjects.WallObject
-                                    || deco instanceof domain.models.entity.SearchableObject) {
+                                    || deco instanceof domain.models.staticObjects.SearchableObject) {
                                 drawY = offsetY + (yVal * tileSize) - 3 + (tileSize - dh) / 2; // wallOffset=6
                             } else {
                                 drawY = offsetY + (yVal * tileSize) + tileSize - dh;
@@ -1254,11 +1347,11 @@ public class GameView extends JPanel {
         // PASS 2: Draw all wall-mounted decorations on top of all base walls and floor
         // tiles for this row (yVal)
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
+            domain.models.GameObject obj = gameMap.getObjectAt(x, yVal);
             if (obj instanceof domain.models.tile.WallTile) {
                 domain.models.tile.WallTile wall = (domain.models.tile.WallTile) obj;
                 if (wall.getDecoration() != null) {
-                    domain.models.entity.GameObject deco = wall.getDecoration();
+                    domain.models.GameObject deco = wall.getDecoration();
                     String imgName = deco.getImageName();
                     if (imgName != null && imgName.contains("WallDecoration/torch")) {
                         long now = System.currentTimeMillis();
@@ -1277,7 +1370,7 @@ public class GameView extends JPanel {
                         int drawX = offsetX + (x * tileSize) + (tileSize - dw) / 2;
                         int drawY;
                         if (deco instanceof domain.models.staticObjects.WallObject
-                                || deco instanceof domain.models.entity.SearchableObject) {
+                                || deco instanceof domain.models.staticObjects.SearchableObject) {
                             int wallOffset = "wall/wall_1".equals(obj.getImageName()) ? 8 : 6;
                             drawY = offsetY + (yVal * tileSize) - wallOffset / 2 + (tileSize - dh) / 2;
                         } else {
@@ -1305,7 +1398,7 @@ public class GameView extends JPanel {
                         && Math.abs(y - heroGridY) <= 1;
 
                 if (inZone) { // dim tiles INSIDE the zone
-                    domain.models.entity.GameObject obj = gameMap.getObjectAt(x, y);
+                    domain.models.GameObject obj = gameMap.getObjectAt(x, y);
                     // Eğer hücredeki obje 'wall' ise (geçilemezse) üzerine karanlık efekti çizme
                     if (obj != null && obj.isPassable()) {
                         g2d.setColor(new Color(0, 0, 0, 60));
@@ -1321,7 +1414,7 @@ public class GameView extends JPanel {
             return;
 
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
+            domain.models.GameObject obj = gameMap.getObjectAt(x, yVal);
             if (obj instanceof domain.models.item.MapItem) {
                 domain.models.item.MapItem item = (domain.models.item.MapItem) obj;
 
@@ -1373,14 +1466,14 @@ public class GameView extends JPanel {
             return;
 
         for (int x = 0; x < gameMap.getWidth(); x++) {
-            domain.models.entity.GameObject obj = gameMap.getObjectAt(x, yVal);
-            if (obj instanceof domain.models.entity.Column ||
-                    obj instanceof domain.models.entity.Chest ||
-                    obj instanceof domain.models.entity.Crate ||
+            domain.models.GameObject obj = gameMap.getObjectAt(x, yVal);
+            if (obj instanceof domain.models.staticObjects.Column ||
+                    obj instanceof domain.models.staticObjects.Chest ||
+                    obj instanceof domain.models.staticObjects.Crate ||
                     obj instanceof domain.models.staticObjects.Door ||
                     obj instanceof domain.models.staticObjects.Decoration ||
-                    obj instanceof domain.models.entity.SearchableObject ||
-                    obj instanceof domain.models.entity.Sign) {
+                    obj instanceof domain.models.staticObjects.SearchableObject ||
+                    obj instanceof domain.models.staticObjects.Sign) {
 
                 if (obj instanceof domain.models.staticObjects.LevelDoor) {
                     int tx = offsetX + (x * tileSize);
@@ -1447,15 +1540,15 @@ public class GameView extends JPanel {
                     int drawX = offsetX + (x * tileSize);
                     int drawY = offsetY + (yVal * tileSize);
                     Color color = Color.MAGENTA;
-                    if (obj instanceof domain.models.entity.Column)
+                    if (obj instanceof domain.models.staticObjects.Column)
                         color = Color.GRAY;
-                    else if (obj instanceof domain.models.entity.Chest)
+                    else if (obj instanceof domain.models.staticObjects.Chest)
                         color = new Color(139, 69, 19);
-                    else if (obj instanceof domain.models.entity.Crate)
+                    else if (obj instanceof domain.models.staticObjects.Crate)
                         color = new Color(101, 67, 33);
-                    else if (obj instanceof domain.models.entity.SearchableObject)
+                    else if (obj instanceof domain.models.staticObjects.SearchableObject)
                         color = Color.DARK_GRAY;
-                    else if (obj instanceof domain.models.entity.Sign)
+                    else if (obj instanceof domain.models.staticObjects.Sign)
                         color = new Color(180, 115, 60);
 
                     g2d.setColor(color);

@@ -2,7 +2,7 @@ package domain.logic;
 
 import domain.models.entity.Hero;
 import domain.models.entity.Entity;
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 import domain.models.entity.ShadowClone;
 import domain.models.map.GameMap;
 

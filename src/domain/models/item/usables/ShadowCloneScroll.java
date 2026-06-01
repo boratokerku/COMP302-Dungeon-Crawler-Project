@@ -12,7 +12,7 @@ public class ShadowCloneScroll extends MapItem {
 
     public ShadowCloneScroll(int x, int y, List<Entity> entities, GameMap map,
             controller.InputHandler inputHandler) {
-        super("Shadow Clone Scroll", x, y, "images/items/readings/book.png");
+        super("Shadow Clone Scroll", x, y, "images/items/readings/totem_3.png");
         this.addAction(new TakeAction());
         this.addAction(new ReadAction(entities, map, inputHandler));
     }

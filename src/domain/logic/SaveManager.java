@@ -1,4 +1,5 @@
 package domain.logic;
+import domain.models.GameObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -30,8 +31,8 @@ public class SaveManager {
         state.elapsedSeconds = elapsedSeconds;
 
         // Global Timerlar
-        state.enemySpawnTimeLeft = enemySpawner.getTimeLeft();
-        state.scrollSpawnTimeLeft = scrollSpawner.getTimeLeft();
+        state.enemySpawnTimeLeft = enemySpawner != null ? enemySpawner.getTimeLeft() : 9000;
+        state.scrollSpawnTimeLeft = scrollSpawner != null ? scrollSpawner.getTimeLeft() : 15000;
 
         // Hero verisi
         String equippedWeaponType = hero.getEquippedWeapon() != null ? hero.getEquippedWeapon().getClass().getSimpleName() : null;
@@ -44,48 +45,68 @@ public class SaveManager {
                 hero.getStr(), equippedWeaponType, equippedArmorType, equippedRingType
         );
 
-        // Envanter (sınıf ismine göre — yüklerken yeniden oluşturmak için)
+        // Envanter (detaylı nesne kaydı)
         for (GameObject item : hero.getInventory().getItems()) {
-            state.inventoryItems.add(item.getClass().getSimpleName());
+            GameState.ItemRecord rec = new GameState.ItemRecord(
+                    item.getClass().getSimpleName(), item.getName(), item.getX(), item.getY()
+            );
+            rec.imageName = item.getImageName();
+            state.inventoryItems.add(rec);
         }
 
         // Haritadaki eşyalar — alınabilir itemlar ve static nesneler
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
                 GameObject obj = map.getObjectAt(x, y);
+                if (obj == null) continue;
+                
+                GameState.ItemRecord rec = null;
                 if (obj instanceof MapItem) {
-                    state.mapItems.add(new GameState.ItemRecord(
-                            obj.getClass().getSimpleName(), x, y
-                    ));
-                } else if (obj instanceof domain.models.entity.Chest) {
-                    domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
-                    state.mapItems.add(new GameState.ItemRecord(
-                            "Chest", chest.getName(), x, y, chest.isLocked()
-                    ));
-                } else if (obj instanceof domain.models.tile.WallTile) {
-                    domain.models.entity.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
-                    if (deco instanceof domain.models.entity.SearchableObject) {
-                        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) deco;
-                        String hiddenItemType = so.getHiddenItem() != null ? so.getHiddenItem().getClass().getSimpleName() : null;
-                        state.mapItems.add(new GameState.ItemRecord(
-                                "SearchableObject", so.getName(), x, y, so.isSearched(), hiddenItemType
-                        ));
-                    }
-                } else if (obj instanceof domain.models.entity.Column
-                        || obj instanceof domain.models.entity.Crate
-                        || obj instanceof domain.models.entity.SearchableObject
-                        || obj instanceof domain.models.staticObjects.Decoration
-                        || obj instanceof domain.models.entity.Sign) {
-                    // Static nesneleri ismiyle birlikte kaydet
-                    state.mapItems.add(new GameState.ItemRecord(
+                    rec = new GameState.ItemRecord(
                             obj.getClass().getSimpleName(), obj.getName(), x, y
-                    ));
+                    );
+                    rec.imageName = obj.getImageName();
+                } else if (obj instanceof domain.models.staticObjects.Chest) {
+                    domain.models.staticObjects.Chest chest = (domain.models.staticObjects.Chest) obj;
+                    rec = new GameState.ItemRecord(
+                            "Chest", chest.getName(), x, y, chest.isLocked()
+                    );
+                    rec.imageName = chest.getImageName();
+                } else if (obj instanceof domain.models.tile.WallTile) {
+                    domain.models.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
+                    if (deco instanceof domain.models.staticObjects.SearchableObject) {
+                        domain.models.staticObjects.SearchableObject so = (domain.models.staticObjects.SearchableObject) deco;
+                        String hiddenItemType = so.getHiddenItem() != null ? so.getHiddenItem().getClass().getSimpleName() : null;
+                        rec = new GameState.ItemRecord(
+                                "SearchableObject", so.getName(), x, y, so.isSearched(), hiddenItemType
+                        );
+                        rec.imageName = so.getImageName();
+                    }
+                } else if (obj instanceof domain.models.staticObjects.Crate) {
+                    domain.models.staticObjects.Crate crate = (domain.models.staticObjects.Crate) obj;
+                    String hiddenItemType = crate.getHiddenItem() != null ? crate.getHiddenItem().getClass().getSimpleName() : null;
+                    rec = new GameState.ItemRecord(
+                            "Crate", crate.getName(), x, y, false, hiddenItemType
+                    );
+                    rec.imageName = crate.getImageName();
+                } else if (obj instanceof domain.models.staticObjects.Column
+                        || obj instanceof domain.models.staticObjects.SearchableObject
+                        || obj instanceof domain.models.staticObjects.Decoration
+                        || obj instanceof domain.models.staticObjects.Sign) {
+                    rec = new GameState.ItemRecord(
+                            obj.getClass().getSimpleName(), obj.getName(), x, y
+                    );
+                    rec.imageName = obj.getImageName();
                 } else if (obj instanceof domain.models.staticObjects.Door) {
-                    // Kapıları kilit bilgisiyle kaydet
                     domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
-                    state.mapItems.add(new GameState.ItemRecord(
+                    rec = new GameState.ItemRecord(
                             "Door", door.getName(), x, y, door.isLocked()
-                    ));
+                    );
+                    rec.imageName = door.getImageName();
+                }
+
+                if (rec != null) {
+                    state.mapItems.add(rec);
                 }
             }
         }

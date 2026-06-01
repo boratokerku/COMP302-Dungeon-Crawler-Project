@@ -21,9 +21,10 @@ public class PotionItem extends MapItem {
     // palette
     public PotionItem(String name, int x, int y, String imagePath) {
         super(name, x, y, imagePath);
-        if (name != null && name.toLowerCase().contains("blue")) {
+        String lower = name != null ? name.toLowerCase() : "";
+        if (lower.contains("blue") || lower.contains("mana")) {
             this.potion = new ManaPotion(name, 20);
-        } else if (name != null && name.toLowerCase().contains("green")) {
+        } else if (lower.contains("green") || lower.contains("poison") || lower.contains("energy")) {
             this.potion = new EnergyPotion(name, 30);
         } else {
             this.potion = new HealthPotion(name, 5);
@@ -34,7 +35,7 @@ public class PotionItem extends MapItem {
     }
 
     public PotionItem(int x, int y) {
-        this(new HealthPotion("Red Potion", 5), x, y, "images/items/potion/red_potion.png");
+        this(new HealthPotion("Health Potion", 5), x, y, "images/items/potion/red_potion.png");
     }
 
     public Item getPotion() {
@@ -44,11 +45,17 @@ public class PotionItem extends MapItem {
     public static PotionItem createRandomPotionItem(int x, int y) {
         double roll = Math.random();
         if (roll < 0.4) {
-            return new PotionItem(new HealthPotion("Red Potion", 5), x, y, "images/items/potion/red_potion.png");
+            return new PotionItem(new HealthPotion("Health Potion", 5), x, y, "images/items/potion/red_potion.png");
         } else if (roll < 0.7) {
-            return new PotionItem(new ManaPotion("Blue Potion", 20), x, y, "images/items/potion/blue_potion.png");
+            return new PotionItem(new ManaPotion("Mana Potion", 20), x, y, "images/items/potion/blue_potion.png");
         } else {
-            return new PotionItem(new EnergyPotion("Green Potion", 30), x, y, "images/items/potion/green_potion.png");
+            return new PotionItem(new EnergyPotion("Poison Potion", 30), x, y, "images/items/potion/green_potion.png");
         }
+    }
+
+    /** Potions are not weapons. GRASP Polymorphism override. */
+    @Override
+    public boolean isWeapon() {
+        return false;
     }
 }

@@ -5,6 +5,8 @@ import domain.logic.LevelManager;
 import domain.models.entity.Entity;
 import domain.models.entity.Hero;
 import domain.models.map.GameMap;
+import view.dialogs.SaveGameDialog;
+import view.dialogs.GameSavedDialog;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -223,39 +225,21 @@ public class PauseMenu extends JPanel {
     }
 
     private void handleSave() {
-        // Mevcut save'leri listele
         java.util.List<domain.models.GameState> existingSaves = domain.logic.SaveManager.listSaves();
-        String[] options = new String[existingSaves.size() + 1];
-        options[0] = "[ New Save ]";
-        for (int i = 0; i < existingSaves.size(); i++) {
-            options[i + 1] = existingSaves.get(i).saveName + "  —  " + existingSaves.get(i).timestamp;
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+
+        SaveGameDialog dialog = new SaveGameDialog(parentFrame, existingSaves);
+        dialog.setVisible(true);
+
+        if (dialog.isSaved()) {
+            String saveName = dialog.getSaveName();
+            // Sanitise save name to prevent file path injection issues
+            saveName = saveName.trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
+            SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner, levelManager.getCurrentLevel(), gameView.getElapsedSeconds());
+            GameSavedDialog successDialog = new GameSavedDialog(parentFrame);
+            successDialog.setVisible(true);
         }
-
-        String selected = (String) JOptionPane.showInputDialog(
-                this,
-                "Create a new save or overwrite an existing one:",
-                "Save Game",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                options,
-                options[0]
-        );
-
-        if (selected == null) return;
-
-        String saveName;
-        if ("[ New Save ]".equals(selected)) {
-            saveName = JOptionPane.showInputDialog(this, "Enter save name:", "New Save", JOptionPane.PLAIN_MESSAGE);
-            if (saveName == null || saveName.trim().isEmpty()) return;
-            saveName = saveName.trim();
-        } else {
-            // Seçilen save'in adını çıkar (format: "name  —  date")
-            int idx = java.util.Arrays.asList(options).indexOf(selected) - 1;
-            saveName = existingSaves.get(idx).saveName;
-        }
-
-        SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner, levelManager.getCurrentLevel(), gameView.getElapsedSeconds());
-        JOptionPane.showMessageDialog(this, "Saved successfully: " + saveName, "Save Successful", JOptionPane.INFORMATION_MESSAGE);
     }
 
     @Override

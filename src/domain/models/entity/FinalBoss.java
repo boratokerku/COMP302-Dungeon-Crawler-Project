@@ -1,5 +1,6 @@
 package domain.models.entity;
 
+import domain.models.Renderable;
 import domain.models.map.GameMap;
 
 import java.awt.Point;

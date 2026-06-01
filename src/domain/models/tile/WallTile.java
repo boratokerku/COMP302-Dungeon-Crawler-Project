@@ -1,6 +1,6 @@
 package domain.models.tile;
 
-import domain.models.entity.GameObject;
+import domain.models.GameObject;
 
 public class WallTile extends Tile {
     private GameObject decoration;
@@ -22,5 +22,14 @@ public class WallTile extends Tile {
         if (decoration != null) {
             decoration.setPosition(this.getX(), this.getY());
         }
+    }
+
+    @Override
+    public WallTile clone() {
+        WallTile cloned = (WallTile) super.clone();
+        if (this.decoration != null) {
+            cloned.decoration = this.decoration.clone();
+        }
+        return cloned;
     }
 }

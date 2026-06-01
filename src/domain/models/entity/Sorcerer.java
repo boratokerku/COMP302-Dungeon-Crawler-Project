@@ -1,5 +1,6 @@
 package domain.models.entity;
 
+import domain.models.Renderable;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
@@ -151,7 +152,6 @@ public class Sorcerer extends Entity implements Renderable {
         if (dist == 0) return null; // Aynı konumda ise ates etme
 
         // Pürüzsüz vektörel yönelim (Tam isabet)
-        // GameView artık getExactX/Y kullandığı için zigzag yapmadan hedefe dümdüz uçar.
         double speed = 0.5;
         double dx = (diffX / dist) * speed;
         double dy = (diffY / dist) * speed;

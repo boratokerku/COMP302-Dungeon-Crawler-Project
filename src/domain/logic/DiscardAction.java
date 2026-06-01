@@ -1,8 +1,7 @@
 package domain.logic;
 
 import domain.models.entity.Hero;
-import domain.models.entity.GameObject;
-import javax.swing.JOptionPane;
+import domain.models.GameObject;
 
 public class DiscardAction implements Action {
 
@@ -18,15 +17,7 @@ public class DiscardAction implements Action {
 
     @Override
     public void execute(Hero hero, GameObject target) {
-        int choice = JOptionPane.showConfirmDialog(null, 
-            "Are you sure? This item will be lost forever.", 
-            "Confirm Discard", 
-            JOptionPane.YES_NO_OPTION, 
-            JOptionPane.WARNING_MESSAGE);
-            
-        if (choice == JOptionPane.YES_OPTION) {
-            hero.getInventory().removeItem(target);
-            System.out.println("Item discarded: " + target.getName());
-        }
+        hero.getInventory().removeItem(target);
+        System.out.println("Item discarded: " + target.getName());
     }
 }

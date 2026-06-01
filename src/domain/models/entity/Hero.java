@@ -1,7 +1,10 @@
 package domain.models.entity;
+import domain.models.GameObject;
 
 import java.util.Random;
 
+import domain.logic.event.GameEventBus;
+import domain.logic.event.SoundEvent;
 import domain.models.AnimationState;
 import domain.models.Direction;
 
@@ -14,10 +17,14 @@ public class Hero extends Entity {
     private AnimationState currentAnimationState = AnimationState.IDLE;
     private domain.models.inventory.Inventory inventory;
     private int weaponAtk = 0;
+    private int attackDelayMs = 800; // default 0.8 seconds
+    private long lastAttackTime = 0;
     private domain.models.item.MapItem equippedWeapon;
     private domain.models.item.MapItem equippedArmor = null;
     private domain.models.item.MapItem equippedRing = null;
     private domain.models.map.GameMap currentMap = null;
+    private int lastMaxHp = 17;
+    private int lastMaxEnergy = 100;
 
     public void setCurrentMap(domain.models.map.GameMap map) {
         this.currentMap = map;
@@ -30,7 +37,9 @@ public class Hero extends Entity {
     public Hero(int x, int y) {
         super(x, y, 17); // Max HP = 17
         this.str = new Random().nextInt(8) + 8;
-        this.inventory = new domain.models.inventory.Inventory(8); // 2x4 layout
+        this.inventory = new domain.models.inventory.Inventory(8, this); // 2x4 layout
+        this.lastMaxHp = 17;
+        this.lastMaxEnergy = 100;
     }
 
     public domain.models.inventory.Inventory getInventory() {
@@ -72,18 +81,29 @@ public class Hero extends Entity {
 
     @Override
     public int getMaxHp() {
-        int bonus = (equippedRing != null) ? equippedRing.getHpBonus() : 0;
-        return 17 + bonus;
+        return 17 + getRingHpBonus();
+    }
+
+    public int getMaxEnergy() {
+        return 100 + getRingEnergyBonus();
     }
 
     public void equipWeapon(domain.models.item.MapItem weapon) {
         this.equippedWeapon = weapon;
         this.weaponAtk = 5; // Default ATK
+        this.attackDelayMs = 800;
     }
 
     public void equipWeapon(domain.models.item.MapItem weapon, int atk) {
         this.equippedWeapon = weapon;
         this.weaponAtk = atk; // Real weapon ATK
+        this.attackDelayMs = 800;
+    }
+
+    public void equipWeapon(domain.models.item.MapItem weapon, int atk, int delayMs) {
+        this.equippedWeapon = weapon;
+        this.weaponAtk = atk;
+        this.attackDelayMs = delayMs;
     }
 
     public void equipWeapon(domain.models.item.wearables.SwordItem sword) {
@@ -94,9 +114,14 @@ public class Hero extends Entity {
         equipWeapon((domain.models.item.MapItem) sword, atk);
     }
 
+    public void equipWeapon(domain.models.item.wearables.SwordItem sword, int atk, int delayMs) {
+        equipWeapon((domain.models.item.MapItem) sword, atk, delayMs);
+    }
+
     public void unequipWeapon() {
         this.equippedWeapon = null;
         this.weaponAtk = 0;
+        this.attackDelayMs = 800;
     }
 
     // We put this in the Hero class using Information Expert
@@ -126,8 +151,7 @@ public class Hero extends Entity {
     }
 
     public int getStr() {
-        int bonus = (equippedRing != null) ? equippedRing.getStrBonus() : 0;
-        return this.str + bonus;
+        return this.str + getRingStrBonus();
     }
 
     public void setStr(int str) {
@@ -139,7 +163,14 @@ public class Hero extends Entity {
     }
 
     public int getDef() {
-        int bonus = (equippedArmor != null) ? equippedArmor.getDefBonus() : 0;
+        int bonus = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.ArmorItem) {
+                    bonus += ((domain.models.item.wearables.ArmorItem) item).getDefBonus();
+                }
+            }
+        }
         return this.def + bonus;
     }
 
@@ -165,13 +196,100 @@ public class Hero extends Entity {
 
     public void equipRing(domain.models.item.MapItem ring) {
         this.equippedRing = ring;
+        if (ring != null) {
+            boolean alreadyHas = false;
+            for (GameObject item : inventory.getItems()) {
+                if (item.getClass().equals(ring.getClass())) {
+                    alreadyHas = true;
+                    break;
+                }
+            }
+            if (!alreadyHas) {
+                inventory.addItem(ring);
+            }
+        }
     }
 
     public void unequipRing() {
-        this.equippedRing = null;
-        if (this.hp > getMaxHp()) {
-            this.hp = getMaxHp();
+        if (this.equippedRing != null) {
+            GameObject toRemove = null;
+            for (GameObject item : inventory.getItems()) {
+                if (item.getClass().equals(this.equippedRing.getClass())) {
+                    toRemove = item;
+                    break;
+                }
+            }
+            if (toRemove != null) {
+                inventory.removeItem(toRemove);
+            }
+            this.equippedRing = null;
         }
+    }
+
+    public int getRingHpBonus() {
+        int total = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.RingItem) {
+                    total += ((domain.models.item.wearables.RingItem) item).getHpBonus();
+                }
+            }
+        }
+        return total;
+    }
+
+    public int getRingEnergyBonus() {
+        int total = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.RingItem) {
+                    total += ((domain.models.item.wearables.RingItem) item).getEnergyBonus();
+                }
+            }
+        }
+        return total;
+    }
+
+    public int getRingStrBonus() {
+        int total = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.RingItem) {
+                    total += ((domain.models.item.wearables.RingItem) item).getStrBonus();
+                }
+            }
+        }
+        return total;
+    }
+
+    public int getRingManaCostReduction() {
+        int total = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.RingItem) {
+                    total += ((domain.models.item.wearables.RingItem) item).getManaCostReduction();
+                }
+            }
+        }
+        return total;
+    }
+
+    public void onInventoryChanged() {
+        int newMaxHp = getMaxHp();
+        if (newMaxHp > lastMaxHp) {
+            this.hp = Math.min(newMaxHp, this.hp + (newMaxHp - lastMaxHp));
+        } else if (newMaxHp < lastMaxHp) {
+            this.hp = Math.min(this.hp, newMaxHp);
+        }
+        lastMaxHp = newMaxHp;
+
+        int newMaxEnergy = getMaxEnergy();
+        if (newMaxEnergy > lastMaxEnergy) {
+            this.energy = Math.min(newMaxEnergy, this.energy + (newMaxEnergy - lastMaxEnergy));
+        } else if (newMaxEnergy < lastMaxEnergy) {
+            this.energy = Math.min(this.energy, newMaxEnergy);
+        }
+        lastMaxEnergy = newMaxEnergy;
     }
 
     public GameObject getEquippedWeapon() {
@@ -246,11 +364,17 @@ public class Hero extends Entity {
             this.x = nextX;
             this.y = nextY;
             consumeEnergyForMove();
-            util.helpers.SoundManager.playWalk();
+            GameEventBus.fireSound(SoundEvent.SoundType.WALK);
             System.out.println("Hero moving " + dir + " to (" + this.x + ", " + this.y + ") Energy: " + this.energy);
             return true;
         } else if (!occupied) {
             System.out.println("Hero blocked at (" + nextX + ", " + nextY + ")");
+            if (map != null) {
+                domain.models.GameObject obj = map.getObjectAt(nextX, nextY);
+                if (obj instanceof domain.models.staticObjects.LevelDoor && ((domain.models.staticObjects.LevelDoor) obj).isLocked()) {
+                    GameEventBus.fireFloatingText(nextX, nextY, "Locked", java.awt.Color.RED);
+                }
+            }
             return false;
         }
         return true; // Occupied covers attack, which is an action
@@ -260,20 +384,26 @@ public class Hero extends Entity {
      * Hero attacks the entity in the current facing direction.
      */
     public void attack(Entity target, domain.models.map.GameMap map) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastAttackTime < this.attackDelayMs) {
+            return; // Wait for attack cooldown
+        }
+
         int attackCost = 10;
         if (target != null && target.isAlive()) {
             if (this.energy >= attackCost) {
-                util.helpers.SoundManager.playSwing();
+                GameEventBus.fireSound(SoundEvent.SoundType.SWING);
                 int damage = calculateDamage(this.weaponAtk);
                 target.takeDamage(damage);
-                view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP",
+                GameEventBus.fireFloatingText(target.getX(), target.getY(), "-" + damage + " HP",
                         new java.awt.Color(255, 60, 60));
                 this.energy -= attackCost; // Saldırı maliyeti
+                this.lastAttackTime = currentTime;
                 System.out.println("Hero attacked target! Damage: " + damage + " Energy: " + this.energy);
 
                 if (!target.isAlive() && map != null) {
                     System.out.println("Enemy defeated!");
-                    domain.models.entity.GameObject loot = null;
+                    domain.models.GameObject loot = null;
                     if (target instanceof domain.models.entity.FinalBoss) {
                         loot = new domain.models.item.VictoryCoin(target.getX(), target.getY());
                     } else {
@@ -288,7 +418,7 @@ public class Hero extends Entity {
                             int locked = countLockedChests(map);
                             int keys = countKeys(map, this);
                             if (keys < locked) {
-                                loot = new domain.models.staticObjects.KeyItem(target.getX(), target.getY());
+                                loot = new domain.models.item.KeyItem(target.getX(), target.getY());
                             } else {
                                 loot = rand.nextBoolean()
                                         ? domain.models.item.MapItem.createRandomItem(target.getX(), target.getY())
@@ -319,8 +449,8 @@ public class Hero extends Entity {
         int count = 0;
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.entity.Chest && ((domain.models.entity.Chest) obj).isLocked()) {
+                domain.models.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.staticObjects.Chest && ((domain.models.staticObjects.Chest) obj).isLocked()) {
                     count++;
                 }
             }
@@ -332,15 +462,15 @@ public class Hero extends Entity {
         int count = 0;
         for (int x = 0; x < map.getWidth(); x++) {
             for (int y = 0; y < map.getHeight(); y++) {
-                domain.models.entity.GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof domain.models.staticObjects.KeyItem) {
+                domain.models.GameObject obj = map.getObjectAt(x, y);
+                if (obj instanceof domain.models.item.KeyItem) {
                     count++;
                 }
             }
         }
         if (hero != null && hero.getInventory() != null) {
-            for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                if (item instanceof domain.models.staticObjects.KeyItem) {
+            for (domain.models.GameObject item : hero.getInventory().getItems()) {
+                if (item instanceof domain.models.item.KeyItem) {
                     count++;
                 }
             }
@@ -351,7 +481,7 @@ public class Hero extends Entity {
     @Override
     public void update() {
         // Enerji yenilenmesi (Logic Loop her 120ms'de bir çağırdığında azar azar dolar)
-        if (this.energy < 100) {
+        if (this.energy < getMaxEnergy()) {
             this.energy += 1;
         }
     }

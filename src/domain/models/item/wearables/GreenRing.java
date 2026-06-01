@@ -6,7 +6,7 @@ public class GreenRing extends Ring {
     }
 
     @Override
-    public int getStrBonus() {
-        return 5; // Might Ring increases strength by 5
+    public int getEnergyBonus() {
+        return 10; // Energy Ring increases max energy by 10
     }
 }

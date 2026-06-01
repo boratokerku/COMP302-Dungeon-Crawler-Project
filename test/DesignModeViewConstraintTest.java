@@ -294,4 +294,46 @@ public class DesignModeViewConstraintTest {
             dialog.dispose();
         });
     }
+
+    @Test
+    public void testSaveAndLoadInventoryAndChestPersistence() throws Exception {
+        domain.models.entity.Hero hero = new domain.models.entity.Hero(1, 1);
+        GameMap gameMap = new GameMap(5, 5);
+        hero.setCurrentMap(gameMap);
+        
+        domain.models.staticObjects.KeyItem goldKey2 = new domain.models.staticObjects.KeyItem("Golden Key 2", 1, 1, "images/items/key/golden_key_2.png");
+        hero.getInventory().addItem(goldKey2);
+        
+        domain.models.entity.Chest goldChest = new domain.models.entity.Chest("Gold Chest", 2, 2, true, "containers/gold_chest_closed");
+        gameMap.placeObject(goldChest, 2, 2);
+        
+        // Use SaveManager to save game progress
+        domain.logic.SaveManager.save("test_persistence_save", hero, new ArrayList<>(), gameMap, null, null, 1, 0);
+        
+        // Load the saved progress state
+        domain.models.GameState loadedState = domain.logic.SaveManager.load("test_persistence_save");
+        assertNotNull(loadedState, "Loaded state should not be null");
+        
+        // Clean up save file
+        new java.io.File("saves/test_persistence_save.json").delete();
+        
+        // Verify inventory items
+        assertEquals(1, loadedState.inventoryItems.size(), "Inventory size should be 1");
+        domain.models.GameState.ItemRecord invRec = loadedState.inventoryItems.get(0);
+        assertEquals("KeyItem", invRec.type);
+        assertEquals("Golden Key 2", invRec.name);
+        assertEquals("images/items/key/golden_key_2.png", invRec.imageName);
+        
+        // Verify map items
+        boolean foundChest = false;
+        for (domain.models.GameState.ItemRecord mapRec : loadedState.mapItems) {
+            if ("Chest".equals(mapRec.type)) {
+                assertEquals("Gold Chest", mapRec.name);
+                assertEquals("containers/gold_chest_closed", mapRec.imageName);
+                assertTrue(mapRec.isLocked);
+                foundChest = true;
+            }
+        }
+        assertTrue(foundChest, "Should have saved and loaded the Gold Chest");
+    }
 }

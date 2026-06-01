@@ -2,6 +2,9 @@ package view;
 
 import domain.logic.SaveManager;
 import domain.models.GameState;
+import view.dialogs.LoadGameDialog;
+import view.dialogs.DeleteConfirmDialog;
+
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -22,6 +25,7 @@ public class GameOverMenu extends JPanel {
     private final Runnable onMainMenu;
 
     private JPanel containerPanel;
+    private JPanel btnPanel;
     private JLabel heading;
     private JLabel subHeading;
     private JButton restartBtn;
@@ -33,6 +37,11 @@ public class GameOverMenu extends JPanel {
     private BufferedImage restartImage;
     private BufferedImage saveImage;
     private BufferedImage mainMenuImage;
+
+    // Victory custom image assets
+    private BufferedImage winBgImage;
+    private BufferedImage winRestartImage;
+    private BufferedImage winMainMenuImage;
 
     public GameOverMenu(Runnable onRestart, java.util.function.Consumer<GameState> onLoadGame, Runnable onMainMenu) {
         this.onRestart = onRestart;
@@ -52,6 +61,10 @@ public class GameOverMenu extends JPanel {
         restartImage = loadImg("resources/images/PopUpImages/GameOverRestartButton.png");
         saveImage = loadImg("resources/images/PopUpImages/GameOverSaveGameButton.png");
         mainMenuImage = loadImg("resources/images/PopUpImages/GameOverMainMenuButton.png");
+
+        winBgImage = loadImg("resources/images/PopUpImages/YouWinPopUp.png");
+        winRestartImage = loadImg("resources/images/PopUpImages/CyanRestartGameButton.png");
+        winMainMenuImage = loadImg("resources/images/PopUpImages/CyanMainMenuButton.png");
     }
 
     private BufferedImage loadImg(String path) {
@@ -96,8 +109,8 @@ public class GameOverMenu extends JPanel {
         containerPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
         // Buttons Panel
-        JPanel btnPanel = new JPanel();
-        btnPanel.setLayout(new GridLayout(3, 1, 0, 15));
+        btnPanel = new JPanel();
+        btnPanel.setLayout(new GridLayout(0, 1, 0, 15));
         btnPanel.setOpaque(false);
 
         restartBtn = createMenuButton("Restart Game");
@@ -129,10 +142,18 @@ public class GameOverMenu extends JPanel {
     public void setupGameOverMenu(String headingText, String subHeadingText, boolean showLoad, boolean isVictory) {
         removeAll(); // Clear previous components
 
-        if (!isVictory && bgImage != null) {
-            setupImagePanel(showLoad);
+        if (isVictory) {
+            if (winBgImage != null) {
+                setupVictoryImagePanel();
+            } else {
+                setupFallbackPanel(headingText, subHeadingText, showLoad, isVictory);
+            }
         } else {
-            setupFallbackPanel(headingText, subHeadingText, showLoad, isVictory);
+            if (bgImage != null) {
+                setupImagePanel(showLoad);
+            } else {
+                setupFallbackPanel(headingText, subHeadingText, showLoad, isVictory);
+            }
         }
 
         revalidate();
@@ -142,7 +163,13 @@ public class GameOverMenu extends JPanel {
     private void setupFallbackPanel(String headingText, String subHeadingText, boolean showLoad, boolean isVictory) {
         heading.setText(headingText);
         subHeading.setText(subHeadingText);
-        loadBtn.setVisible(showLoad);
+        
+        btnPanel.removeAll();
+        btnPanel.add(restartBtn);
+        if (showLoad) {
+            btnPanel.add(loadBtn);
+        }
+        btnPanel.add(menuBtn);
 
         if (isVictory) {
             containerPanel.setBackground(new Color(10, 35, 30, 230)); // Deep emerald-black transparent tint
@@ -259,6 +286,72 @@ public class GameOverMenu extends JPanel {
         add(menuBoxPanel);
     }
 
+    private void setupVictoryImagePanel() {
+        float scale = 1.25f;
+        int bgWidth = Math.round(512 * scale);
+        int bgHeight = Math.round(488 * scale);
+
+        int btnHeight = Math.round(52 * scale * 1.0f);
+
+        // Pre-trim images to get accurate bounds and aspect ratio
+        BufferedImage trimmedRestart = trimImage(winRestartImage);
+        BufferedImage trimmedMenu = trimImage(winMainMenuImage);
+
+        // Calculate precise widths to match aspect ratio
+        int restartW = getWidthForHeight(trimmedRestart, btnHeight, Math.round(160 * scale));
+        int menuW = getWidthForHeight(trimmedMenu, btnHeight, Math.round(160 * scale));
+
+        // Use the maximum width to ensure all buttons are exactly the same size
+        int btnWidth = Math.max(restartW, menuW);
+
+        JPanel menuBoxPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2.drawImage(winBgImage, 0, 0, getWidth(), getHeight(), null);
+                g2.dispose();
+            }
+        };
+        menuBoxPanel.setOpaque(false);
+        menuBoxPanel.setLayout(null);
+        menuBoxPanel.setPreferredSize(new Dimension(bgWidth, bgHeight));
+        menuBoxPanel.setMinimumSize(new Dimension(bgWidth, bgHeight));
+        menuBoxPanel.setMaximumSize(new Dimension(bgWidth, bgHeight));
+
+        // Create custom image buttons
+        ImageButton restartBtnImg = new ImageButton(trimmedRestart, "Restart Game");
+        ImageButton menuBtnImg = new ImageButton(trimmedMenu, "Main Menu");
+
+        restartBtnImg.addActionListener(e -> {
+            setVisible(false);
+            if (onRestart != null)
+                onRestart.run();
+        });
+
+        menuBtnImg.addActionListener(e -> {
+            setVisible(false);
+            if (onMainMenu != null)
+                onMainMenu.run();
+        });
+
+        // Position the buttons in the blank area of the You Win popup
+        int spacing = Math.round(20 * scale);
+        int y0 = Math.round(210 * scale);
+        int y1 = y0 + btnHeight + spacing;
+
+        int btnX = (bgWidth - btnWidth) / 2;
+
+        restartBtnImg.setBounds(btnX, y0, btnWidth, btnHeight);
+        menuBtnImg.setBounds(btnX, y1, btnWidth, btnHeight);
+
+        menuBoxPanel.add(restartBtnImg);
+        menuBoxPanel.add(menuBtnImg);
+
+        add(menuBoxPanel);
+    }
+
     private void styleButton(JButton btn, Color fg, Color bg, Color border) {
         btn.setForeground(fg);
         btn.setBackground(bg);
@@ -279,67 +372,28 @@ public class GameOverMenu extends JPanel {
 
     private void showLoadDialog() {
         List<GameState> saves = SaveManager.listSaves();
-        if (saves.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No saved games found.", "Load Game", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
 
-        String[] labels = saves.stream()
-                .map(s -> s.saveName + "  —  " + s.timestamp)
-                .toArray(String[]::new);
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
 
-        JDialog dialog = new JDialog((java.awt.Frame) null, "Load Game", true);
-        dialog.setLayout(new java.awt.BorderLayout(10, 10));
-
-        JList<String> list = new JList<>(labels);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setSelectedIndex(0);
-        list.setFont(new Font("Arial", Font.PLAIN, 14));
-
-        JScrollPane scrollPane = new JScrollPane(list);
-        scrollPane.setPreferredSize(new Dimension(380, 200));
-        dialog.add(scrollPane, java.awt.BorderLayout.CENTER);
-
-        JPanel btnPanel = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
-        JButton loadBtn2 = new JButton("Load");
-        JButton deleteBtn = new JButton("Delete");
-        JButton cancelBtn = new JButton("Cancel");
-
-        loadBtn2.addActionListener(ev -> {
-            int idx = list.getSelectedIndex();
-            if (idx >= 0 && onLoadGame != null) {
-                dialog.dispose();
-                setVisible(false); // Hide the GameOverMenu overlay
-                onLoadGame.accept(saves.get(idx));
-            }
-        });
-
-        deleteBtn.addActionListener(ev -> {
-            int idx = list.getSelectedIndex();
-            if (idx >= 0) {
-                int confirm = JOptionPane.showConfirmDialog(dialog,
-                        "Are you sure you want to delete " + saves.get(idx).saveName + "?", "Confirm",
-                        JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    File f = new File("saves/" + saves.get(idx).saveName + ".json");
-                    if (f.delete()) {
-                        dialog.dispose();
-                        showLoadDialog(); // Refresh list
-                    }
-                }
-            }
-        });
-
-        cancelBtn.addActionListener(ev -> dialog.dispose());
-
-        btnPanel.add(loadBtn2);
-        btnPanel.add(deleteBtn);
-        btnPanel.add(cancelBtn);
-        dialog.add(btnPanel, java.awt.BorderLayout.SOUTH);
-
-        dialog.pack();
-        dialog.setLocationRelativeTo(this);
+        LoadGameDialog dialog = new LoadGameDialog(parentFrame, saves);
         dialog.setVisible(true);
+
+        if (dialog.isLoaded()) {
+            setVisible(false); // Hide the GameOverMenu overlay
+            if (onLoadGame != null) {
+                onLoadGame.accept(dialog.getSelectedState());
+            }
+        } else if (dialog.isDeleteRequested()) {
+            GameState toDelete = dialog.getDeleteState();
+            DeleteConfirmDialog confirmDialog = new DeleteConfirmDialog(parentFrame, "Delete " + toDelete.saveName + "?");
+            confirmDialog.setVisible(true);
+            if (confirmDialog.isConfirmed()) {
+                File f = new File("saves/" + toDelete.saveName + ".json");
+                f.delete();
+            }
+            showLoadDialog(); // Refresh list
+        }
     }
 
     private int getWidthForHeight(BufferedImage img, int targetHeight, int fallbackWidth) {

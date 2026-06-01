@@ -1,4 +1,5 @@
 package domain.logic;
+import domain.models.GameObject;
 
 import domain.models.entity.Entity;
 import domain.models.entity.Knight;
@@ -138,7 +139,7 @@ public class EnemySpawner {
                             int nx = x + dx;
                             int ny = y + dy;
                             if (map.isValidPosition(nx, ny)) {
-                                domain.models.entity.GameObject neighbor = map.getObjectAt(nx, ny);
+                                domain.models.GameObject neighbor = map.getObjectAt(nx, ny);
                                 if (neighbor instanceof domain.models.tile.WallTile) {
                                     nextToWall = true;
                                     break;

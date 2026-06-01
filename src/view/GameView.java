@@ -774,6 +774,9 @@ public class GameView extends JPanel {
     private void drawHero(Graphics2D g2d, int yVal) {
         if (hero == null || hero.getY() != yVal)
             return;
+        if (gameMode == domain.models.GameMode.TEAM_MATCH && !hero.isAlive()) {
+            return;
+        }
         BufferedImage frame;
         if (gameMode == domain.models.GameMode.TEAM_MATCH) {
             frame = assetManager.getKnightSprite();

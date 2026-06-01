@@ -1368,6 +1368,9 @@ public class DemoRunner {
             ShadowClone activeCloneForUpdate = inputHandler.getShadowClone();
             if (activeCloneForUpdate != null)
                 activeCloneForUpdate.update();
+
+            // Cleanup dead entities (including dead player/clones/enemies) and dead projectiles
+            entities.removeIf(ent -> !ent.isAlive());
         });
 
         logicRef[0].start();

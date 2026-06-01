@@ -5,7 +5,7 @@ import domain.logic.LevelManager;
 import domain.models.entity.Entity;
 import domain.models.entity.Hero;
 import domain.models.map.GameMap;
-import ui.SaveGameDialog;
+import ui.dialogs.SaveGameDialog;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

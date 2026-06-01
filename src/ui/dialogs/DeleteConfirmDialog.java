@@ -1,4 +1,4 @@
-package ui;
+package ui.dialogs;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

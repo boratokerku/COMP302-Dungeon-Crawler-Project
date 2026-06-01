@@ -1,5 +1,7 @@
 package domain.logic;
 
+import domain.logic.event.GameEventBus;
+import domain.logic.event.TrapFlashEvent;
 import domain.models.entity.Hero;
 import domain.models.entity.GameObject;
 
@@ -30,7 +32,7 @@ public class SearchAction implements Action {
 
         if (so.isSearched()) {
             System.out.println("Already searched.");
-            view.GameView.addFloatingText(so.getX(), so.getY(), "Already searched", java.awt.Color.LIGHT_GRAY);
+            GameEventBus.fireFloatingText(so.getX(), so.getY(), "Already searched", java.awt.Color.LIGHT_GRAY);
             return;
         }
 
@@ -49,10 +51,10 @@ public class SearchAction implements Action {
             map.placeObject(hidden, so.getX(), dropY);
 
             if (hidden instanceof domain.models.staticObjects.LevelKey) {
-                view.GameView.addFloatingText(so.getX(), so.getY(), "Level key found!", new java.awt.Color(255, 215, 0));
+                GameEventBus.fireFloatingText(so.getX(), so.getY(), "Level key found!", new java.awt.Color(255, 215, 0));
                 domain.logic.LevelManager.clearAllOtherSkullKeys(map, so.getX(), dropY);
             } else {
-                view.GameView.addFloatingText(so.getX(), so.getY(), "Found Key!", java.awt.Color.YELLOW);
+                GameEventBus.fireFloatingText(so.getX(), so.getY(), "Found Key!", java.awt.Color.YELLOW);
             }
             System.out.println("You found something! A key was hidden here. It fell to the ground.");
             return;
@@ -62,7 +64,7 @@ public class SearchAction implements Action {
         int roll = rand.nextInt(100);
 
         if (roll < 40) {
-            // 40% empty -> atmospheric message
+            // 40% empty — atmospheric message
             String msg = "Nothing found.";
             String imgName = so.getImageName();
             if (imgName != null) {
@@ -79,14 +81,13 @@ public class SearchAction implements Action {
                 else if (imgName.contains("loose_stone"))
                     msg = "The stone is solid. Nothing here.";
             }
-            view.GameView.addFloatingText(so.getX(), so.getY(), "Empty", java.awt.Color.LIGHT_GRAY);
+            GameEventBus.fireFloatingText(so.getX(), so.getY(), "Empty", java.awt.Color.LIGHT_GRAY);
             System.out.println(msg);
 
         } else if (roll < 75) {
-            // 35% small item -> random Potion or GoldCoin
+            // 35% small item — random Potion
             domain.models.item.MapItem item = new domain.models.item.usables.PotionItem(so.getX(), so.getY());
 
-            // Searchable object duvardan kalksın
             domain.models.map.GameMap map = so.getMap();
             GameObject existingWall = map.getObjectAt(so.getX(), so.getY());
             if (existingWall instanceof domain.models.tile.WallTile) {
@@ -96,11 +97,11 @@ public class SearchAction implements Action {
             int dropY = (so.getY() == 0) ? 1 : so.getY() - 1;
             map.placeObject(item, so.getX(), dropY);
 
-            view.GameView.addFloatingText(so.getX(), so.getY(), "Found Item!", java.awt.Color.GREEN);
+            GameEventBus.fireFloatingText(so.getX(), so.getY(), "Found Item!", java.awt.Color.GREEN);
             System.out.println("You found a " + item.getName() + "! It fell to the ground.");
 
         } else if (roll < 95) {
-            // 20% key item -> KeyItem
+            // 20% key item
             domain.models.staticObjects.KeyItem key = new domain.models.staticObjects.KeyItem(so.getX(), so.getY());
 
             domain.models.map.GameMap map = so.getMap();
@@ -112,7 +113,7 @@ public class SearchAction implements Action {
             int dropY = (so.getY() == 0) ? 1 : so.getY() - 1;
             map.placeObject(key, so.getX(), dropY);
 
-            view.GameView.addFloatingText(so.getX(), so.getY(), "Found Key!", java.awt.Color.ORANGE);
+            GameEventBus.fireFloatingText(so.getX(), so.getY(), "Found Key!", java.awt.Color.ORANGE);
             System.out.println("A key was hidden here! It fell to the ground.");
 
         } else {
@@ -120,12 +121,12 @@ public class SearchAction implements Action {
             if (!so.isTrapTriggered()) {
                 so.setTrapTriggered(true);
                 hero.takeDamage(2);
-                view.GameView.trapFlashFrames = 15; // 15 frames of red flash
-                view.GameView.addFloatingText(so.getX(), so.getY(), "-2 HP", java.awt.Color.RED);
+                GameEventBus.publish(new TrapFlashEvent(15)); // 15 frames of red flash
+                GameEventBus.fireFloatingText(so.getX(), so.getY(), "-2 HP", java.awt.Color.RED);
                 System.out.println("It was a trap! You lost 2 HP.");
             } else {
                 // If already triggered, act as empty
-                view.GameView.addFloatingText(so.getX(), so.getY(), "Empty", java.awt.Color.LIGHT_GRAY);
+                GameEventBus.fireFloatingText(so.getX(), so.getY(), "Empty", java.awt.Color.LIGHT_GRAY);
                 System.out.println("Nothing found.");
             }
         }

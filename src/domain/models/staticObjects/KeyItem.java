@@ -26,4 +26,10 @@ public class KeyItem extends MapItem {
     public void setSingleUse(boolean singleUse) {
         this.isSingleUse = singleUse;
     }
+
+    /** Keys are not weapons. GRASP Polymorphism override. */
+    @Override
+    public boolean isWeapon() {
+        return false;
+    }
 }

@@ -8,9 +8,9 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import domain.models.GameState;
 import domain.logic.SaveManager;
-import ui.HelpDialog;
-import ui.LoadGameDialog;
-import ui.DeleteConfirmDialog;
+import ui.dialogs.HelpDialog;
+import ui.dialogs.LoadGameDialog;
+import ui.dialogs.DeleteConfirmDialog;
 
 public class MainMenuView extends JPanel {
 

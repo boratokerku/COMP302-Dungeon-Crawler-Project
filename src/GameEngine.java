@@ -1,6 +1,12 @@
 import domain.logic.EnemySpawner;
+import domain.logic.GameObjectFactory;
 import domain.logic.LevelManager;
 import domain.logic.ScrollSpawner;
+import domain.logic.event.FloatingTextEvent;
+import domain.logic.event.GameEventBus;
+import domain.logic.event.GameEventListener;
+import domain.logic.event.SoundEvent;
+import domain.logic.event.TrapFlashEvent;
 import domain.models.GameState;
 import domain.models.entity.*;
 import domain.models.map.GameMap;
@@ -22,7 +28,7 @@ import view.AssetManager;
 import view.GameView;
 import view.TileManager;
 
-public class DemoRunner {
+public class GameEngine {
     private static GameMap initialDesignedMap = null;
     private static domain.models.GameMode activeGameMode = domain.models.GameMode.ADVENTURE;
     private static LevelManager levelManager = null;
@@ -39,169 +45,34 @@ public class DemoRunner {
                 domain.models.entity.GameObject obj = original.getObjectAt(x, y);
                 if (obj == null)
                     continue;
-                if (obj instanceof domain.models.tile.WallTile) {
-                    domain.models.tile.WallTile origWall = (domain.models.tile.WallTile) obj;
-                    domain.models.tile.WallTile newWall = new domain.models.tile.WallTile(origWall.getImageName());
-                    copy.placeObject(newWall, x, y);
-                    if (origWall.getDecoration() != null) {
-                        domain.models.entity.GameObject origDeco = origWall.getDecoration();
-                        domain.models.entity.GameObject newDeco = null;
-                        if (origDeco instanceof domain.models.entity.Column) {
-                            newDeco = new domain.models.entity.Column(origDeco.getName(), x, y,
-                                    origDeco.getImageName());
-                        } else if (origDeco instanceof domain.models.entity.Sign) {
-                            newDeco = new domain.models.entity.Sign(origDeco.getName(), x, y, origDeco.getImageName());
-                        } else if (origDeco instanceof domain.models.staticObjects.Decoration) {
-                            newDeco = new domain.models.staticObjects.Decoration(origDeco.getName(), x, y,
-                                    origDeco.getImageName());
-                        } else if (origDeco instanceof domain.models.staticObjects.WallObject) {
-                            newDeco = new domain.models.staticObjects.WallObject(origDeco.getName(), x, y,
-                                    origDeco.getImageName());
-                        } else if (origDeco instanceof domain.models.entity.SearchableObject) {
-                            domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) origDeco;
-                            domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(
-                                    so.getName(), x, y,
-                                    so.getImageName(), so.getOpenImageName());
-                            if (isRestart) {
-                                newSo.setSearched(false);
-                                newSo.setTrapTriggered(false);
-                                newSo.setHiddenItem(null);
-                            } else {
-                                newSo.setSearched(so.isSearched());
-                                newSo.setTrapTriggered(so.isTrapTriggered());
-                                if (so.getHiddenItem() != null) {
-                                    if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                                        domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so
-                                                .getHiddenItem();
-                                        newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y,
-                                                lk.getImageName()));
-                                    } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
-                                        domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so
-                                                .getHiddenItem();
-                                        newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y,
-                                                key.getImageName()));
-                                    }
-                                }
-                            }
-                            newDeco = newSo;
-                        }
-                        if (newDeco != null) {
-                            newDeco.setCustomScale(origDeco.getCustomScale());
-                            newWall.setDecoration(newDeco);
-                            newDeco.setMap(copy);
-                        }
+
+                // Prototype Pattern in action!
+                domain.models.entity.GameObject clonedObj = obj.clone();
+                clonedObj.setMap(copy); // Ensure map reference points to new map
+
+                // If it's a restart, we might need to reset certain states like searchable traps
+                if (isRestart && clonedObj instanceof domain.models.entity.SearchableObject) {
+                    domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) clonedObj;
+                    so.setSearched(false);
+                    so.setTrapTriggered(false);
+                    so.setHiddenItem(null);
+                } else if (isRestart && clonedObj instanceof domain.models.entity.Crate) {
+                    domain.models.entity.Crate crate = (domain.models.entity.Crate) clonedObj;
+                    crate.setHiddenItem(null);
+                }
+                
+                // For WallTiles with SearchableObject decorations, also reset
+                if (isRestart && clonedObj instanceof domain.models.tile.WallTile) {
+                    domain.models.tile.WallTile wall = (domain.models.tile.WallTile) clonedObj;
+                    if (wall.getDecoration() instanceof domain.models.entity.SearchableObject) {
+                        domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) wall.getDecoration();
+                        so.setSearched(false);
+                        so.setTrapTriggered(false);
+                        so.setHiddenItem(null);
                     }
-                } else if (obj instanceof domain.models.tile.FloorTile) {
-                    copy.placeObject(new domain.models.tile.FloorTile(), x, y);
-                } else if (obj instanceof domain.models.entity.Chest) {
-                    domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
-                    copy.placeObject(new domain.models.entity.Chest(chest.getName(), x, y, chest.isLocked(),
-                            chest.getImageName()), x, y);
-                } else if (obj instanceof domain.models.entity.DoubleCrate) {
-                    copy.placeObject(new domain.models.entity.DoubleCrate(obj.getName(), x, y), x, y);
-                } else if (obj instanceof domain.models.entity.Crate) {
-                    domain.models.entity.Crate crate = (domain.models.entity.Crate) obj;
-                    domain.models.entity.Crate newCrate = new domain.models.entity.Crate(crate.getName(), x, y);
-                    if (isRestart) {
-                        newCrate.setHiddenItem(null);
-                    } else {
-                        if (crate.getHiddenItem() != null) {
-                            if (crate.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                                domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) crate
-                                        .getHiddenItem();
-                                newCrate.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y,
-                                        lk.getImageName()));
-                            } else if (crate.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
-                                domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) crate
-                                        .getHiddenItem();
-                                newCrate.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y,
-                                        key.getImageName()));
-                            }
-                        }
-                    }
-                    copy.placeObject(newCrate, x, y);
-                } else if (obj instanceof domain.models.entity.Column) {
-                    copy.placeObject(new domain.models.entity.Column(obj.getName(), x, y, obj.getImageName()), x, y);
-                } else if (obj instanceof domain.models.entity.Sign) {
-                    copy.placeObject(new domain.models.entity.Sign(obj.getName(), x, y, obj.getImageName()), x, y);
-                } else if (obj instanceof domain.models.staticObjects.LevelDoor) {
-                    copy.placeObject(new domain.models.staticObjects.LevelDoor(obj.getName(), x, y), x, y);
-                } else if (obj instanceof domain.models.staticObjects.Door) {
-                    domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
-                    copy.placeObject(new domain.models.staticObjects.Door(door.getName(), x, y, door.isLocked()), x, y);
-                } else if (obj instanceof domain.models.staticObjects.Decoration) {
-                    copy.placeObject(
-                            new domain.models.staticObjects.Decoration(obj.getName(), x, y, obj.getImageName()), x, y);
-                } else if (obj instanceof domain.models.staticObjects.LevelKey) {
-                    domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) obj;
-                    copy.placeObject(new domain.models.staticObjects.LevelKey(lk.getName(), x, y, lk.getImageName()), x,
-                            y);
-                } else if (obj instanceof VictoryCoin) {
-                    copy.placeObject(new VictoryCoin(x, y), x, y);
-                } else if (obj instanceof domain.models.staticObjects.KeyItem) {
-                    domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) obj;
-                    copy.placeObject(new domain.models.staticObjects.KeyItem(key.getName(), x, y, key.getImageName()),
-                            x, y);
-                } else if (obj instanceof PotionItem) {
-                    PotionItem pot = (PotionItem) obj;
-                    copy.placeObject(
-                            new PotionItem(pot.getPotion(), x, y, pot.getImageName()), x, y);
-                } else if (obj instanceof SwordItem) {
-                    copy.placeObject(new SwordItem(x, y), x, y);
-                } else if (obj instanceof WoodenSwordItem) {
-                    copy.placeObject(new WoodenSwordItem(x, y), x, y);
-                } else if (obj instanceof AxeItem) {
-                    copy.placeObject(new AxeItem(x, y), x, y);
-                } else if (obj instanceof BowItem) {
-                    copy.placeObject(new BowItem(x, y), x, y);
-                } else if (obj instanceof FireWandItem) {
-                    copy.placeObject(new FireWandItem(x, y), x, y);
-                } else if (obj instanceof SamuraiSwordItem) {
-                    copy.placeObject(new SamuraiSwordItem(x, y), x, y);
-                } else if (obj instanceof DiamondSwordItem) {
-                    copy.placeObject(new DiamondSwordItem(x, y), x, y);
-                } else if (obj instanceof ArmorItem) {
-                    copy.placeObject(new ArmorItem(x, y), x, y);
-                } else if (obj instanceof RingItem) {
-                    RingItem oldRing = (RingItem) obj;
-                    copy.placeObject(new RingItem(oldRing.getName(), x, y, oldRing.getImageName()), x, y);
-                } else if (obj instanceof domain.models.entity.SearchableObject) {
-                    domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) obj;
-                    domain.models.entity.SearchableObject newSo = new domain.models.entity.SearchableObject(
-                            so.getName(), x, y, so.getImageName(),
-                            so.getOpenImageName());
-                    if (isRestart) {
-                        newSo.setSearched(false);
-                        newSo.setTrapTriggered(false);
-                        newSo.setHiddenItem(null);
-                    } else {
-                        newSo.setSearched(so.isSearched());
-                        newSo.setTrapTriggered(so.isTrapTriggered());
-                        if (so.getHiddenItem() != null) {
-                            if (so.getHiddenItem() instanceof domain.models.staticObjects.LevelKey) {
-                                domain.models.staticObjects.LevelKey lk = (domain.models.staticObjects.LevelKey) so
-                                        .getHiddenItem();
-                                newSo.setHiddenItem(new domain.models.staticObjects.LevelKey(lk.getName(), x, y,
-                                        lk.getImageName()));
-                            } else if (so.getHiddenItem() instanceof domain.models.staticObjects.KeyItem) {
-                                domain.models.staticObjects.KeyItem key = (domain.models.staticObjects.KeyItem) so
-                                        .getHiddenItem();
-                                newSo.setHiddenItem(new domain.models.staticObjects.KeyItem(key.getName(), x, y,
-                                        key.getImageName()));
-                            }
-                        }
-                    }
-                    copy.placeObject(newSo, x, y);
-                } else {
-                    copy.placeObject(obj, x, y);
                 }
 
-                if (!(obj instanceof domain.models.tile.WallTile)) {
-                    domain.models.entity.GameObject clonedObj = copy.getObjectAt(x, y);
-                    if (clonedObj != null) {
-                        clonedObj.setCustomScale(obj.getCustomScale());
-                    }
-                }
+                copy.placeObject(clonedObj, x, y);
             }
         }
         return copy;
@@ -539,21 +410,21 @@ public class DemoRunner {
 
         // Kılıcı veya kuşanılmış silahı takılıysa ayarla
         if (state.hero.equippedWeaponType != null && !state.hero.equippedWeaponType.isEmpty()) {
-            domain.models.entity.GameObject weapon = createItem(state.hero.equippedWeaponType, 0, 0);
+            domain.models.entity.GameObject weapon = GameObjectFactory.create(state.hero.equippedWeaponType, null, 0, 0);
             if (weapon instanceof MapItem) {
                 hero.equipWeapon((MapItem) weapon);
             }
         }
         // Kuşanılmış zırhı takılıysa ayarla
         if (state.hero.equippedArmorType != null && !state.hero.equippedArmorType.isEmpty()) {
-            domain.models.entity.GameObject armor = createItem(state.hero.equippedArmorType, 0, 0);
+            domain.models.entity.GameObject armor = GameObjectFactory.create(state.hero.equippedArmorType, null, 0, 0);
             if (armor instanceof MapItem) {
                 hero.equipArmor((MapItem) armor);
             }
         }
         // Kuşanılmış yüzüğü takılıysa ayarla
         if (state.hero.equippedRingType != null && !state.hero.equippedRingType.isEmpty()) {
-            domain.models.entity.GameObject ring = createItem(state.hero.equippedRingType, 0, 0);
+            domain.models.entity.GameObject ring = GameObjectFactory.create(state.hero.equippedRingType, null, 0, 0);
             if (ring instanceof MapItem) {
                 hero.equipRing((MapItem) ring);
             }
@@ -629,8 +500,7 @@ public class DemoRunner {
                 // Scroll'lar setupGameView içinde inputHandler ile birlikte oluşturulur
                 scrollItems.add(rec);
             } else if ("SearchableObject".equals(rec.type)) {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked,
-                        rec.imageName);
+                domain.models.entity.GameObject item = GameObjectFactory.create(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
                 if (item instanceof domain.models.entity.SearchableObject) {
                     domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) item;
                     so.setSearched(rec.searched);
@@ -648,8 +518,7 @@ public class DemoRunner {
                     map.placeObject(item, rec.x, rec.y);
                 }
             } else {
-                domain.models.entity.GameObject item = createItem(rec.type, rec.name, rec.x, rec.y, rec.isLocked,
-                        rec.imageName);
+                domain.models.entity.GameObject item = GameObjectFactory.create(rec.type, rec.name, rec.x, rec.y, rec.isLocked, rec.imageName);
                 if (item instanceof domain.models.entity.Crate) {
                     domain.models.entity.Crate crate = (domain.models.entity.Crate) item;
                     if (rec.hiddenItemType != null) {
@@ -672,7 +541,7 @@ public class DemoRunner {
                 // Scroll inputHandler gerektirir — setupGameView'da oluşturulacak
                 inventoryScrollTypes.add(type);
             } else {
-                domain.models.entity.GameObject item = createItem(type, rec.name, 0, 0, rec.isLocked, rec.imageName);
+                domain.models.entity.GameObject item = GameObjectFactory.create(type, rec.name, 0, 0, rec.isLocked, rec.imageName);
                 if (item != null)
                     hero.getInventory().addItem(item);
             }
@@ -682,120 +551,7 @@ public class DemoRunner {
                 inventoryScrollTypes, state, domain.models.GameMode.ADVENTURE);
     }
 
-    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y,
-            boolean isLocked, String imgName) {
-        String displayName = (name != null && !name.isEmpty()) ? name : type;
-        switch (type) {
-            case "PotionItem":
-            case "HealthPotionItem":
-                return new PotionItem(
-                        new HealthPotion("Health Potion", 5), x, y,
-                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/red_potion.png");
-            case "ManaPotionItem":
-                return new PotionItem(
-                        new ManaPotion("Mana Potion", 20), x, y,
-                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/blue_potion.png");
-            case "EnergyPotionItem":
-                return new PotionItem(
-                        new EnergyPotion("Poison Potion", 30), x, y,
-                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/potion/green_potion.png");
-            case "SwordItem":
-                return new SwordItem(x, y);
-            case "SteelSwordItem":
-                return new SteelSwordItem(x, y);
-            case "GoldenSwordItem":
-                return new GoldenSwordItem(x, y);
-            case "KnightHammerItem":
-                return new KnightHammerItem(x, y);
-            case "AxeItem":
-                return new AxeItem(x, y);
-            case "WoodenSwordItem":
-                return new WoodenSwordItem(x, y);
-            case "SamuraiSwordItem":
-                return new SamuraiSwordItem(x, y);
-            case "DiamondSwordItem":
-                return new DiamondSwordItem(x, y);
-            case "BowItem":
-                return new BowItem(x, y);
-            case "FireWandItem":
-                return new FireWandItem(x, y);
-            case "ArmorItem":
-                return new ArmorItem(x, y);
-            case "RingItem":
-                if (imgName != null && !imgName.isEmpty()) {
-                    if (imgName.contains("blue") || imgName.contains("mana")) {
-                        return new RingItem(new BlueRing("Mana Ring"), x, y, imgName);
-                    } else if (imgName.contains("red") || imgName.contains("health")) {
-                        return new RingItem(new RedRing("Health Ring"), x, y, imgName);
-                    } else {
-                        return new RingItem(new GreenRing("Poison Ring"), x, y, imgName);
-                    }
-                }
-                if (displayName != null
-                        && (displayName.toLowerCase().contains("blue") || displayName.toLowerCase().contains("mana"))) {
-                    return new RingItem(
-                            new BlueRing("Mana Ring"), x, y, "images/items/ring/blue_ring.png");
-                } else if (displayName != null && (displayName.toLowerCase().contains("red")
-                        || displayName.toLowerCase().contains("health"))) {
-                    return new RingItem(
-                            new RedRing("Health Ring"), x, y, "images/items/ring/red_ring.png");
-                } else {
-                    return new RingItem(
-                            new GreenRing("Poison Ring"), x, y, "images/items/ring/green_ring.png");
-                }
-            case "KeyItem":
-                return new domain.models.staticObjects.KeyItem(displayName, x, y,
-                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/key/golden_key_1.png");
-            case "Column":
-                return new domain.models.entity.Column(displayName, x, y, imgName);
-            case "Sign":
-                return new domain.models.entity.Sign(displayName, x, y, imgName != null ? imgName : "sign/sign_brown");
-            case "DoubleCrate":
-                return new domain.models.entity.DoubleCrate(displayName, x, y);
-            case "Crate":
-                return new domain.models.entity.Crate(displayName, x, y);
-            case "Chest":
-                return (imgName != null && !imgName.isEmpty())
-                        ? new domain.models.entity.Chest(displayName, x, y, isLocked, imgName)
-                        : new domain.models.entity.Chest(displayName, x, y, isLocked);
-            case "SearchableObject":
-                return new domain.models.entity.SearchableObject(displayName, x, y, imgName);
-            case "Decoration":
-                return new domain.models.staticObjects.Decoration(displayName, x, y, imgName);
-            case "WallObject":
-                return new domain.models.staticObjects.WallObject(displayName, x, y, imgName);
-            case "Door":
-                domain.models.staticObjects.Door door = new domain.models.staticObjects.Door(displayName, x, y,
-                        isLocked);
-                if (!isLocked)
-                    door.open(); // Eğer kilitli değilse açık görseline geç
-                return door;
-            case "LevelDoor":
-                return new domain.models.staticObjects.LevelDoor(displayName, x, y);
-            case "LevelKey":
-                return new domain.models.staticObjects.LevelKey(displayName, x, y,
-                        (imgName != null && !imgName.isEmpty()) ? imgName : "images/items/key/skull_key.png");
-            case "VictoryCoin":
-                return new VictoryCoin(x, y);
-            default:
-                System.err.println("Bilinmeyen item tipi: " + type);
-                return null;
-        }
-    }
 
-    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y,
-            boolean isLocked) {
-        return createItem(type, name, x, y, isLocked, null);
-    }
-
-    private static domain.models.entity.GameObject createItem(String type, String name, int x, int y) {
-        return createItem(type, name, x, y, false, null);
-    }
-
-    // Eski imza — envanter için (name yok)
-    private static domain.models.entity.GameObject createItem(String type, int x, int y) {
-        return createItem(type, null, x, y, false);
-    }
 
     // startGame ve loadGame tarafından ortak kullanılan view/timer/input kurulum
     // scrollItems: haritaya yerleştirilecek scroll kayıtları — inputHandler
@@ -807,7 +563,17 @@ public class DemoRunner {
             List<String> inventoryScrollTypes,
             GameState state,
             domain.models.GameMode mode) {
+
+        // ── GameEventBus wiring ───────────────────────────────────────────────
+        // Clear any listeners from a previous game session to avoid duplicates.
+        GameEventBus.clearListeners();
+
+        // This listener will be replaced with the real GameView instance below,
+        // but we register a temporary no-op so compile won't complain.
+        // The real listener is registered after gameView is created (see below).
+
         if (state == null && mode == domain.models.GameMode.ADVENTURE) {
+
             boolean hasLevelDoor = false;
             for (int x = 0; x < map.getWidth(); x++) {
                 for (int y = 0; y < map.getHeight(); y++) {
@@ -838,6 +604,31 @@ public class DemoRunner {
             gameView.setEnemies(knight, sorcerer);
         }
         gameView.setEntityList(entities);
+
+        // ── GameEventBus listeners ────────────────────────────────────────────
+        // Now that gameView is created, register listeners that bridge domain
+        // events to the view and sound layers (Model-View Separation / Observer).
+        final GameView gvRef = gameView;
+        GameEventBus.addListener(event -> {
+            if (event instanceof FloatingTextEvent) {
+                FloatingTextEvent fte = (FloatingTextEvent) event;
+                GameView.addFloatingText((int) fte.getX(), (int) fte.getY(), fte.getText(), fte.getColor());
+            } else if (event instanceof SoundEvent) {
+                SoundEvent se = (SoundEvent) event;
+                switch (se.getSoundType()) {
+                    case WALK:      util.helpers.SoundManager.playWalk(); break;
+                    case SWING:     util.helpers.SoundManager.playSwing(); break;
+                    case HEAL:      util.helpers.SoundManager.playHeal(); break;
+                    case SHOOT:     util.helpers.SoundManager.playShoot(); break;
+                    case UNLOCK:    util.helpers.SoundManager.playUnlock(); break;
+                    case ENEMY_HIT: util.helpers.SoundManager.playEnemyHit(); break;
+                    case VICTORY:   util.helpers.SoundManager.playVictory(); break;
+                }
+            } else if (event instanceof TrapFlashEvent) {
+                TrapFlashEvent tfe = (TrapFlashEvent) event;
+                GameView.trapFlashFrames = tfe.getFrames();
+            }
+        });
 
         mainPanel.add(gameView, "Game");
         cardLayout.show(mainPanel, "Game");

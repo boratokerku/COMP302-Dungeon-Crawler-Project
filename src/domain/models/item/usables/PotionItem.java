@@ -52,4 +52,10 @@ public class PotionItem extends MapItem {
             return new PotionItem(new EnergyPotion("Poison Potion", 30), x, y, "images/items/potion/green_potion.png");
         }
     }
+
+    /** Potions are not weapons. GRASP Polymorphism override. */
+    @Override
+    public boolean isWeapon() {
+        return false;
+    }
 }

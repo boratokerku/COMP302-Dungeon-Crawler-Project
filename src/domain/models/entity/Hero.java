@@ -2,6 +2,8 @@ package domain.models.entity;
 
 import java.util.Random;
 
+import domain.logic.event.GameEventBus;
+import domain.logic.event.SoundEvent;
 import domain.models.AnimationState;
 import domain.models.Direction;
 
@@ -361,7 +363,7 @@ public class Hero extends Entity {
             this.x = nextX;
             this.y = nextY;
             consumeEnergyForMove();
-            util.helpers.SoundManager.playWalk();
+            GameEventBus.fireSound(SoundEvent.SoundType.WALK);
             System.out.println("Hero moving " + dir + " to (" + this.x + ", " + this.y + ") Energy: " + this.energy);
             return true;
         } else if (!occupied) {
@@ -383,10 +385,10 @@ public class Hero extends Entity {
         int attackCost = 10;
         if (target != null && target.isAlive()) {
             if (this.energy >= attackCost) {
-                util.helpers.SoundManager.playSwing();
+                GameEventBus.fireSound(SoundEvent.SoundType.SWING);
                 int damage = calculateDamage(this.weaponAtk);
                 target.takeDamage(damage);
-                view.GameView.addFloatingText(target.getX(), target.getY(), "-" + damage + " HP",
+                GameEventBus.fireFloatingText(target.getX(), target.getY(), "-" + damage + " HP",
                         new java.awt.Color(255, 60, 60));
                 this.energy -= attackCost; // Saldırı maliyeti
                 this.lastAttackTime = currentTime;

@@ -4,7 +4,7 @@ package domain.models.entity;
  * Base class for everything that can exists on the Grid.
  * Both moving entities (Hero) and static tiles (Wall) are GameObjects.
  */
-public abstract class GameObject {
+public abstract class GameObject implements Cloneable {
     protected String name;
     protected int x, y;
     protected String imageName;
@@ -33,6 +33,20 @@ public abstract class GameObject {
 
     public String getName() { return name == null ? "Object" : name; }
     public void setName(String name) { this.name = name; }
+    public void setPassable(boolean p) { this.passable = p; }
+
+    @Override
+    public GameObject clone() {
+        try {
+            GameObject cloned = (GameObject) super.clone();
+            // Deep copy of actions array list to avoid shared state
+            cloned.actions = new java.util.ArrayList<>(this.actions);
+            // Map is intentionally left as a reference (or null), since placing handles map assignment
+            return cloned;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Clone not supported", e);
+        }
+    }
 
     public domain.models.map.GameMap getMap() { return map; }
     public void setMap(domain.models.map.GameMap map) { this.map = map; }

@@ -12,6 +12,7 @@ public class InputHandler implements KeyListener {
     private domain.models.map.GameMap map;
     private java.util.List<domain.models.entity.Entity> entities;
     private view.GameView gameView;
+    private InteractionHandler interactionHandler;
 
     // Aktif shadow clone (null ise henüz çağrılmamış veya süresi dolmuş)
     private ShadowClone shadowClone;
@@ -29,6 +30,7 @@ public class InputHandler implements KeyListener {
         this.map = map;
         this.entities = entities;
         this.gameView = gameView;
+        this.interactionHandler = new InteractionHandler(hero, map, gameView);
     }
 
     public void setShadowClone(ShadowClone clone) {
@@ -37,6 +39,9 @@ public class InputHandler implements KeyListener {
 
     public void setGameMap(domain.models.map.GameMap map) {
         this.map = map;
+        if (this.interactionHandler != null) {
+            this.interactionHandler.setGameMap(map);
+        }
     }
 
     public void disableInput() {
@@ -200,7 +205,7 @@ public class InputHandler implements KeyListener {
                 if (targetEnemy != null) {
                     hero.attack(targetEnemy, map);
                 } else {
-                    util.helpers.SoundManager.playSwing();
+                    domain.logic.event.GameEventBus.fireSound(domain.logic.event.SoundEvent.SoundType.SWING);
                 }
             }
         } else if (code == KeyEvent.VK_I) {
@@ -209,339 +214,8 @@ public class InputHandler implements KeyListener {
                 gameView.repaint();
             }
         } else if (code == KeyEvent.VK_E) {
-            // Önce kendi bulunduğumuz hücreyle etkileşime girmeyi dene
-            domain.models.entity.GameObject selfObj = map.getObjectAt(hero.getX(), hero.getY());
-            if (selfObj != null) {
-                java.util.List<domain.logic.Action> actions = selfObj.getActions();
-                if (actions != null && !actions.isEmpty()) {
-                    java.util.List<domain.logic.Action> available = new java.util.ArrayList<>();
-                    for (domain.logic.Action action : actions) {
-                        if (action.isAvailable(hero, selfObj)) {
-                            available.add(action);
-                        }
-                    }
-                    if (!available.isEmpty()) {
-                        available.get(0).execute(hero, selfObj);
-                        System.out.println(available.get(0).getName() + " executed on " + selfObj.getName() + " on player's tile");
-                        if (gameView != null) gameView.repaint();
-                        return;
-                    }
-                }
-            }
-
-            // Çevredeki tüm nesnelerle (3x3 çevre karesi) etkileşime gir
-            domain.models.entity.GameObject bestObj = null;
-            int bestTypePriority = Integer.MAX_VALUE;
-            int bestSpatialPriority = Integer.MAX_VALUE;
-            int bestNx = -1;
-            int bestNy = -1;
-
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    if (dx == 0 && dy == 0) continue; // Kendini pas geç
-                    int nx = hero.getX() + dx;
-                    int ny = hero.getY() + dy;
-                    if (nx >= 0 && nx < map.getWidth() && ny >= 0 && ny < map.getHeight()) {
-                        domain.models.entity.GameObject obj = map.getObjectAt(nx, ny);
-                        if (obj instanceof domain.models.tile.WallTile) {
-                            domain.models.entity.GameObject deco = ((domain.models.tile.WallTile) obj).getDecoration();
-                            if (deco instanceof domain.models.entity.SearchableObject) {
-                                obj = deco;
-                            }
-                        }
-                        if (obj != null) {
-                            if (obj instanceof domain.models.entity.Chest) {
-                                continue;
-                            }
-                            
-                            java.util.List<domain.logic.Action> objActions = obj.getActions();
-                            boolean hasAvailable = false;
-                            boolean hasTake = false;
-                            if (objActions != null) {
-                                for (domain.logic.Action action : objActions) {
-                                    if (action.isAvailable(hero, obj)) {
-                                        hasAvailable = true;
-                                        if (action.getName().equals("Take")) {
-                                            hasTake = true;
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            if (!hasAvailable && !(obj instanceof domain.models.staticObjects.Door) && !(obj instanceof domain.models.entity.SearchableObject)) {
-                                continue;
-                            }
-
-                            int typePriority = hasTake ? 1 : 2;
-                            int spatialPriority = 3; // Diagonal default
-                            domain.models.Direction facing = hero.getDirection();
-                            boolean isFront = false;
-                            if (facing == domain.models.Direction.UP && dx == 0 && dy == -1) isFront = true;
-                            else if (facing == domain.models.Direction.DOWN && dx == 0 && dy == 1) isFront = true;
-                            else if (facing == domain.models.Direction.LEFT && dx == -1 && dy == 0) isFront = true;
-                            else if (facing == domain.models.Direction.RIGHT && dx == 1 && dy == 0) isFront = true;
-
-                            if (isFront) {
-                                spatialPriority = 1;
-                            } else if (dx == 0 || dy == 0) {
-                                spatialPriority = 2; // Orthogonal
-                            }
-
-                            if (typePriority < bestTypePriority || (typePriority == bestTypePriority && spatialPriority < bestSpatialPriority)) {
-                                bestTypePriority = typePriority;
-                                bestSpatialPriority = spatialPriority;
-                                bestObj = obj;
-                                bestNx = nx;
-                                bestNy = ny;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (bestObj != null) {
-                int nx = bestNx;
-                int ny = bestNy;
-                domain.models.entity.GameObject obj = bestObj;
-                            if (obj instanceof domain.models.entity.SearchableObject) {
-                                java.awt.Window parentWindow = javax.swing.SwingUtilities.getWindowAncestor(gameView);
-                                java.awt.Frame parentFrame = (parentWindow instanceof java.awt.Frame) ? (java.awt.Frame) parentWindow : null;
-
-                                float scale = 0.35f;
-                                int width = Math.round(612 * scale);
-                                int height = Math.round(408 * scale);
-
-                                int objScreenX = gameView.getOffsetX() + obj.getX() * gameView.getTileSize();
-                                int objScreenY = gameView.getOffsetY() + obj.getY() * gameView.getTileSize();
-
-                                java.awt.Point screenLoc = gameView.getLocationOnScreen();
-                                int targetX = screenLoc.x + objScreenX + gameView.getTileSize() + 5;
-                                
-                                // If it exceeds the right bounds of the game view, place it to the left of the item
-                                if (objScreenX + gameView.getTileSize() + 5 + width > gameView.getWidth()) {
-                                    targetX = screenLoc.x + objScreenX - width - 5;
-                                }
-                                int targetY = screenLoc.y + objScreenY + (gameView.getTileSize() - height) / 2;
-
-                                final domain.models.entity.GameObject targetObj = obj;
-                                ui.SearchPopupDialog dialog = new ui.SearchPopupDialog(parentFrame, obj.getName(), () -> {
-                                    domain.logic.SearchAction sa = new domain.logic.SearchAction(null);
-                                    sa.execute(hero, targetObj);
-                                    gameView.repaint();
-                                });
-                                dialog.setLocation(targetX, targetY);
-                                dialog.setVisible(true);
-                                return;
-                            }
-
-                            if (obj instanceof domain.models.staticObjects.Door) {
-                                domain.models.staticObjects.Door door = (domain.models.staticObjects.Door) obj;
-                                if (door.isLocked()) {
-                                    boolean isLevelDoor = (door instanceof domain.models.staticObjects.LevelDoor);
-                                    boolean hasKey = false;
-                                    if (isLevelDoor) {
-                                        for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                                            if (item instanceof domain.models.staticObjects.LevelKey) {
-                                                hasKey = true;
-                                                break;
-                                            }
-                                        }
-                                    } else {
-                                        for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                                            if (item instanceof domain.models.staticObjects.KeyItem) {
-                                                hasKey = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    String keyTypeStr = isLevelDoor ? "Skull Key" : "Key";
-                                    String[] options = new String[]{hasKey ? "Open (Uses " + keyTypeStr + ")" : "Open (Need " + keyTypeStr + ")", "Cancel"};
-
-                                    int choice = javax.swing.JOptionPane.showOptionDialog(
-                                            gameView,
-                                            "What would you like to do with " + door.getName() + "?",
-                                            "Select Interaction",
-                                            javax.swing.JOptionPane.DEFAULT_OPTION,
-                                            javax.swing.JOptionPane.QUESTION_MESSAGE,
-                                            null,
-                                            options,
-                                            options[0]
-                                    );
-
-                                    if (choice == 0) {
-                                        if (isLevelDoor) {
-                                            domain.models.staticObjects.LevelDoor levelDoor = (domain.models.staticObjects.LevelDoor) door;
-                                            boolean success = levelDoor.tryUnlockWithKey(hero);
-                                            if (success) {
-                                                util.helpers.SoundManager.playUnlock();
-                                                view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
-                                            } else {
-                                                javax.swing.JOptionPane.showMessageDialog(
-                                                        gameView,
-                                                        "This door is locked! You need a Skull Key to open it.",
-                                                        "Door Locked",
-                                                        javax.swing.JOptionPane.WARNING_MESSAGE
-                                                );
-                                                view.GameView.addFloatingText(nx, ny, "Skull Key Required", java.awt.Color.RED);
-                                            }
-                                        } else {
-                                            // Normal door
-                                            domain.models.staticObjects.KeyItem keyToUse = null;
-                                            for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                                                if (item instanceof domain.models.staticObjects.KeyItem) {
-                                                    keyToUse = (domain.models.staticObjects.KeyItem) item;
-                                                    break;
-                                                }
-                                            }
-
-                                            if (keyToUse != null) {
-                                                if (keyToUse.isSingleUse()) {
-                                                    hero.getInventory().removeItem(keyToUse);
-                                                }
-                                                door.unlock();
-                                                door.open();
-                                                util.helpers.SoundManager.playUnlock();
-                                                System.out.println("Unlocked door using key!");
-                                                view.GameView.addFloatingText(nx, ny, "UNLOCKED!", java.awt.Color.GREEN);
-                                            } else {
-                                                javax.swing.JOptionPane.showMessageDialog(
-                                                        gameView,
-                                                        "This door is locked! You need a Key to open it.",
-                                                        "Door Locked",
-                                                        javax.swing.JOptionPane.WARNING_MESSAGE
-                                                );
-                                                view.GameView.addFloatingText(nx, ny, "Key Required", java.awt.Color.RED);
-                                            }
-                                        }
-                                        if (gameView != null) gameView.repaint();
-                                    }
-                                    return;
-                                } else {
-                                    // Door is unlocked (open). If it is a LevelDoor, add "New Level" interaction choice
-                                    if (door instanceof domain.models.staticObjects.LevelDoor) {
-                                        String[] options = new String[]{"New Level", "Cancel"};
-                                        int choice = javax.swing.JOptionPane.showOptionDialog(
-                                                gameView,
-                                                "What would you like to do with " + door.getName() + "?",
-                                                "Select Interaction",
-                                                javax.swing.JOptionPane.DEFAULT_OPTION,
-                                                javax.swing.JOptionPane.QUESTION_MESSAGE,
-                                                null,
-                                                options,
-                                                options[0]
-                                        );
-                                        if (choice == 0) {
-                                            domain.models.staticObjects.LevelDoor.triggerOpenTransition();
-                                        }
-                                        return;
-                                    }
-                                }
-                            }
-                            java.util.List<domain.logic.Action> actions = obj.getActions();
-                            if (actions != null && !actions.isEmpty()) {
-                                // Kullanılabilir eylemleri filtrele
-                                java.util.List<domain.logic.Action> available = new java.util.ArrayList<>();
-                                for (domain.logic.Action action : actions) {
-                                    if (action.isAvailable(hero, obj)) {
-                                        available.add(action);
-                                    }
-                                }
-                                
-                                if (available.size() == 1 && !(obj instanceof domain.models.entity.Crate) && !(obj instanceof domain.models.entity.Chest)) {
-                                    available.get(0).execute(hero, obj);
-                                    System.out.println(available.get(0).getName() + " executed on " + obj.getName() + " via E key");
-                                    if (gameView != null) gameView.repaint();
-                                    return; // Bir etkileşim yetti, döngüden çık
-                                } else if (available.size() >= 1) {
-                                    // Oyuncuya butonlu dialog penceresi sun (maliyetler dahil)
-                                     boolean hasKey = false;
-                                     if (obj instanceof domain.models.entity.Chest) {
-                                         domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
-                                         for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                                             if (item instanceof domain.models.staticObjects.KeyItem) {
-                                                 if (canKeyOpenChest((domain.models.staticObjects.KeyItem) item, chest)) {
-                                                     hasKey = true;
-                                                     break;
-                                                 }
-                                             }
-                                         }
-                                     } else {
-                                         for (domain.models.entity.GameObject item : hero.getInventory().getItems()) {
-                                             if (item instanceof domain.models.staticObjects.KeyItem) {
-                                                 hasKey = true;
-                                                 break;
-                                             }
-                                         }
-                                     }
-                                    
-                                    String[] options;
-                                    if (obj instanceof domain.models.entity.Crate) {
-                                        options = new String[]{"Break (-10 Energy)", "Cancel"};
-                                    } else if (obj instanceof domain.models.entity.Chest) {
-                                        domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
-                                        if (chest.isLocked()) {
-                                            options = new String[available.size() + 1];
-                                            for (int i = 0; i < available.size(); i++) {
-                                                domain.logic.Action act = available.get(i);
-                                                if (act instanceof domain.logic.BreakAction) {
-                                                    options[i] = "Break (-10 Energy)";
-                                                } else if (act instanceof domain.logic.OpenAction) {
-                                                    options[i] = hasKey ? "Open (Uses Key)" : "Open (Need Key)";
-                                                } else {
-                                                    options[i] = act.getName();
-                                                }
-                                            }
-                                            options[available.size()] = "Cancel";
-                                        } else {
-                                            options = new String[]{"Open (Unlocked)", "Cancel"};
-                                        }
-                                    } else {
-                                        options = new String[available.size()];
-                                        for (int i = 0; i < available.size(); i++) {
-                                            options[i] = available.get(i).getName();
-                                        }
-                                    }
-                                    
-                                    int choice = javax.swing.JOptionPane.showOptionDialog(
-                                            gameView,
-                                            "What would you like to do with " + obj.getName() + "?",
-                                            "Select Interaction",
-                                            javax.swing.JOptionPane.DEFAULT_OPTION,
-                                            javax.swing.JOptionPane.QUESTION_MESSAGE,
-                                            null,
-                                            options,
-                                            options[0]
-                                    );
-                                    
-                                    if (obj instanceof domain.models.entity.Crate) {
-                                        if (choice == 0) { // Break (-10 Energy) selected
-                                            available.get(0).execute(hero, obj);
-                                            if (gameView != null) gameView.repaint();
-                                        }
-                                    } else if (obj instanceof domain.models.entity.Chest) {
-                                        domain.models.entity.Chest chest = (domain.models.entity.Chest) obj;
-                                        if (chest.isLocked()) {
-                                            if (choice >= 0 && choice < available.size()) {
-                                                available.get(choice).execute(hero, obj);
-                                                if (gameView != null) gameView.repaint();
-                                            }
-                                        } else {
-                                            if (choice == 0) { // Open (Unlocked) selected
-                                                available.get(0).execute(hero, obj);
-                                                if (gameView != null) gameView.repaint();
-                                            }
-                                        }
-                                    } else {
-                                        if (choice >= 0 && choice < available.size()) {
-                                            available.get(choice).execute(hero, obj);
-                                            System.out.println(available.get(choice).getName() + " executed on " + obj.getName() + " via E dialog choice");
-                                            if (gameView != null) gameView.repaint();
-                                        }
-                                    }
-                                    return; // Etkileşim tamamlandı, çık
-                                }
-                            }
+            if (interactionHandler != null) {
+                interactionHandler.handleInteract();
             }
         }
     }

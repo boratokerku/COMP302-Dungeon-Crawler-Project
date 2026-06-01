@@ -75,13 +75,14 @@ public abstract class MapItem extends GameObject {
         return Math.toRadians(45.0); // Default melee swing angle (45 degrees)
     }
 
-    // Default item stat bonuses for Armors and Rings
+    /**
+     * Returns true if this item is a weapon.
+     * Default implementation returns true (most MapItems are weapons).
+     * Non-weapon subclasses (PotionItem, ArmorItem, RingItem, etc.) override this.
+     * GRASP Polymorphism: no instanceof chain needed.
+     */
     public boolean isWeapon() {
-        return !(this instanceof PotionItem || 
-                 this instanceof ArmorItem || 
-                 this instanceof RingItem || 
-                 this.getClass().getSimpleName().contains("Key") || 
-                 this.getClass().getSimpleName().contains("Coin"));
+        return true;
     }
 
     public int getDefBonus() {

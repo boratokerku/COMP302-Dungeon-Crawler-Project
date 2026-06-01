@@ -62,4 +62,10 @@ public class RingItem extends MapItem {
     public int getManaCostReduction() {
         return ring != null ? ring.getManaCostReduction() : 0;
     }
+
+    /** Rings are not weapons. GRASP Polymorphism override. */
+    @Override
+    public boolean isWeapon() {
+        return false;
+    }
 }

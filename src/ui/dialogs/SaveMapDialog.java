@@ -1,7 +1,4 @@
-package ui;
-
-import domain.logic.SaveManager;
-import domain.models.GameState;
+package ui.dialogs;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -10,34 +7,42 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
 
-public class SaveGameDialog extends JDialog {
+public class SaveMapDialog extends JDialog {
     private BufferedImage bgImage;
+    private BufferedImage bookIcon;
     private BufferedImage confirmButtonImage;
     private BufferedImage cancelButtonImage;
 
     private JTextField nameField;
+    private JLabel nameLabel;
     private ImageButton confirmBtn;
     private ImageButton cancelBtn;
 
     private boolean saved = false;
-    private String resultSaveName = null;
+    private String resultMapName = null;
 
-    private static final int INSET = 60; // 9-slice boundary insets
+    private static final int DIALOG_W = 460;
+    private static final int DIALOG_H = 240;
 
-    public SaveGameDialog(Frame owner, List<GameState> existingSaves) {
-        super(owner, "Save Game", true);
+    public SaveMapDialog(Frame owner, List<String> existingMaps) {
+        super(owner, "Save Map", true);
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0));
+        setSize(DIALOG_W, DIALOG_H);
 
         loadImages();
 
         // Initial setup
         nameField = new JTextField(15);
         nameField.setFont(getRetroFont(Font.PLAIN, 18f));
-        nameField.setBackground(new Color(40, 20, 30));
-        nameField.setForeground(Color.WHITE);
+        nameField.setBackground(new Color(30, 15, 22));
+        nameField.setForeground(new Color(255, 235, 180));
         nameField.setCaretColor(Color.WHITE);
-        nameField.setBorder(BorderFactory.createLineBorder(new Color(150, 100, 120), 1));
+        nameField.setBorder(BorderFactory.createLineBorder(new Color(180, 140, 60), 1));
+
+        nameLabel = new JLabel("Map Name:");
+        nameLabel.setFont(getRetroFont(Font.BOLD, 18f));
+        nameLabel.setForeground(Color.LIGHT_GRAY);
 
         // Layout container
         JPanel contentPanel = new JPanel() {
@@ -47,7 +52,32 @@ public class SaveGameDialog extends JDialog {
                 if (bgImage != null) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                    drawNineSlice(g2, bgImage, 0, 0, getWidth(), getHeight(), INSET, INSET, INSET, INSET);
+
+                    // Draw background frame to fit the window exactly
+                    g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
+
+                    // Draw Book decoration icon on the left
+                    if (bookIcon != null) {
+                        g2.drawImage(bookIcon, 35, 98, 48, 48, null);
+                    }
+
+                    // Render custom retro title with shadow
+                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    Font titleFont = getRetroFont(Font.BOLD, 30f);
+                    g2.setFont(titleFont);
+                    String titleText = "SAVE MAP";
+                    FontMetrics fm = g2.getFontMetrics();
+                    int titleX = (getWidth() - fm.stringWidth(titleText)) / 2;
+                    int titleY = 62;
+
+                    // Shadow
+                    g2.setColor(Color.BLACK);
+                    g2.drawString(titleText, titleX + 2, titleY + 2);
+
+                    // Foreground (gold)
+                    g2.setColor(new Color(255, 215, 0));
+                    g2.drawString(titleText, titleX, titleY);
+
                     g2.dispose();
                 }
             }
@@ -55,14 +85,11 @@ public class SaveGameDialog extends JDialog {
         contentPanel.setOpaque(false);
         contentPanel.setLayout(null);
 
-        // Name Label & Field
-        JLabel nameLabel = new JLabel("Save Name:");
-        nameLabel.setFont(getRetroFont(Font.BOLD, 18f));
-        nameLabel.setForeground(Color.LIGHT_GRAY);
-        nameLabel.setBounds(35, 80, 100, 20);
+        // Position components
+        nameLabel.setBounds(100, 103, 100, 24);
         contentPanel.add(nameLabel);
 
-        nameField.setBounds(135, 80, 190, 24);
+        nameField.setBounds(210, 103, 210, 24);
         contentPanel.add(nameField);
 
         // Buttons
@@ -77,8 +104,13 @@ public class SaveGameDialog extends JDialog {
         confirmBtn = new ImageButton(trimmedConfirm, "Save");
         cancelBtn = new ImageButton(trimmedCancel, "Cancel");
 
-        confirmBtn.setBounds(80, 135, confirmW, btnHeight);
-        cancelBtn.setBounds(85 + confirmW, 135, cancelW, btnHeight);
+        // Center the buttons horizontally at the bottom (fixed position)
+        int totalBtnWidth = confirmW + cancelW + 20;
+        int startX = (DIALOG_W - totalBtnWidth) / 2;
+        int btnY = 170;
+
+        confirmBtn.setBounds(startX, btnY, confirmW, btnHeight);
+        cancelBtn.setBounds(startX + confirmW + 20, btnY, cancelW, btnHeight);
 
         contentPanel.add(confirmBtn);
         contentPanel.add(cancelBtn);
@@ -86,12 +118,12 @@ public class SaveGameDialog extends JDialog {
         confirmBtn.addActionListener(e -> {
             String text = nameField.getText().trim();
             if (text.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid save name.", "Error",
+                JOptionPane.showMessageDialog(this, "Please enter a valid map name.", "Error",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
             saved = true;
-            resultSaveName = text;
+            resultMapName = text;
             dispose();
         });
 
@@ -101,7 +133,6 @@ public class SaveGameDialog extends JDialog {
         });
 
         setContentPane(contentPanel);
-        setSize(370, 210);
         setLocationRelativeTo(owner);
     }
 
@@ -122,7 +153,8 @@ public class SaveGameDialog extends JDialog {
     }
 
     private void loadImages() {
-        bgImage = loadImg("resources/images/PopUpImages/SaveGameBox.png");
+        bgImage = trimImage(loadImg("resources/images/PopUpImages/BlankDialogBox.png"));
+        bookIcon = loadImg("resources/images/items/readings/book.png");
         confirmButtonImage = loadImg("resources/images/PopUpImages/ConfirmButton_Build.png");
         cancelButtonImage = loadImg("resources/images/PopUpImages/CancelButton.png");
     }
@@ -187,30 +219,12 @@ public class SaveGameDialog extends JDialog {
         return img.getSubimage(left, top, right - left + 1, bottom - top + 1);
     }
 
-    private void drawNineSlice(Graphics g, BufferedImage img, int x, int y, int width, int height, int top, int right,
-            int bottom, int left) {
-        int iw = img.getWidth();
-        int ih = img.getHeight();
-
-        int[] sx = { 0, left, iw - right, iw };
-        int[] sy = { 0, top, ih - bottom, ih };
-
-        int[] dx = { x, x + left, x + width - right, x + width };
-        int[] dy = { y, y + top, y + height - bottom, y + height };
-
-        for (int r = 0; r < 3; r++) {
-            for (int c = 0; c < 3; c++) {
-                g.drawImage(img, dx[c], dy[r], dx[c + 1], dy[r + 1], sx[c], sy[r], sx[c + 1], sy[r + 1], null);
-            }
-        }
-    }
-
     public boolean isSaved() {
         return saved;
     }
 
-    public String getSaveName() {
-        return resultSaveName;
+    public String getMapName() {
+        return resultMapName;
     }
 
     private class ImageButton extends JButton {

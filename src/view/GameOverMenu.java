@@ -2,8 +2,8 @@ package view;
 
 import domain.logic.SaveManager;
 import domain.models.GameState;
-import ui.LoadGameDialog;
-import ui.DeleteConfirmDialog;
+import ui.dialogs.LoadGameDialog;
+import ui.dialogs.DeleteConfirmDialog;
 
 
 import javax.imageio.ImageIO;

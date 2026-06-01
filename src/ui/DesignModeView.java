@@ -1,5 +1,7 @@
 package ui;
 
+import ui.dialogs.*;
+
 import domain.models.entity.Chest;
 import domain.models.entity.Column;
 import domain.models.entity.Crate;
@@ -31,6 +33,7 @@ import domain.models.map.GameMap;
 import domain.models.staticObjects.*;
 import domain.models.tile.FloorTile;
 import domain.models.tile.WallTile;
+import domain.logic.GameObjectFactory;
 import view.TileManager;
 
 import javax.imageio.ImageIO;
@@ -1063,7 +1066,7 @@ public class DesignModeView extends JPanel {
 
         try {
             new File("saves/maps").mkdirs();
-            String json = mapToJson(name);
+            String json = domain.logic.MapFileManager.mapToJson(map, name);
             try (FileWriter fw = new FileWriter("saves/maps/" + name + ".mapjson")) {
                 fw.write(json);
             }
@@ -1104,7 +1107,7 @@ public class DesignModeView extends JPanel {
                 int c;
                 while ((c = fr.read()) != -1)
                     sb.append((char) c);
-                loadMapFromJson(sb.toString());
+                domain.logic.MapFileManager.loadMapFromJson(map, sb.toString());
                 repaint();
                 showMsg("Harita yüklendi: " + chosen, "Yükleme Başarılı");
             } catch (Exception ex) {
@@ -1412,260 +1415,6 @@ public class DesignModeView extends JPanel {
             }
         }
         return true;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // JSON SERIALIZE / DESERIALIZE (hafif, Gson'suz)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    private String mapToJson(String name) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\n");
-        sb.append("  \"name\": \"").append(name).append("\",\n");
-        sb.append("  \"timestamp\": \"")
-                .append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date()))
-                .append("\",\n");
-        sb.append("  \"width\": ").append(map.getWidth()).append(",\n");
-        sb.append("  \"height\": ").append(map.getHeight()).append(",\n");
-        sb.append("  \"objects\": [\n");
-
-        boolean first = true;
-        for (int x = 0; x < map.getWidth(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                GameObject obj = map.getObjectAt(x, y);
-                if (obj == null || obj instanceof FloorTile)
-                    continue;
-
-                if (obj instanceof WallTile) {
-                    WallTile wall = (WallTile) obj;
-                    GameObject deco = wall.getDecoration();
-                    if (deco != null) {
-                        String type = objectType(deco);
-                        if (type != null) {
-                            if (!first)
-                                sb.append(",\n");
-                            first = false;
-                            sb.append("    {\"type\":\"").append(type)
-                                    .append("\",\"name\":\"").append(escape(deco.getName()))
-                                    .append("\",\"x\":").append(x)
-                                    .append(",\"y\":").append(y)
-                                    .append(",\"isWallMounted\":true")
-                                    .append(",\"customScale\":").append(deco.getCustomScale())
-                                    .append(",\"imageName\":\"").append(escape(deco.getImageName())).append("\"");
-
-                            if (deco instanceof domain.models.entity.SearchableObject) {
-                                domain.models.entity.SearchableObject so = (domain.models.entity.SearchableObject) deco;
-                                sb.append(",\"searched\":").append(so.isSearched());
-                                if (so.getHiddenItem() != null) {
-                                    sb.append(",\"hiddenItemType\":\"")
-                                            .append(so.getHiddenItem().getClass().getSimpleName()).append("\"");
-                                }
-                            }
-                            sb.append("}");
-                        }
-                    }
-                    continue;
-                }
-
-                String type = objectType(obj);
-                if (type == null)
-                    continue;
-                if (!first)
-                    sb.append(",\n");
-                first = false;
-                sb.append("    {\"type\":\"").append(type)
-                        .append("\",\"name\":\"").append(escape(obj.getName()))
-                        .append("\",\"x\":").append(x)
-                        .append(",\"y\":").append(y)
-                        .append(",\"customScale\":").append(obj.getCustomScale());
-
-                if (obj instanceof Chest) {
-                    sb.append(",\"isLocked\":").append(((Chest) obj).isLocked());
-                }
-                if (obj instanceof Door) {
-                    sb.append(",\"isLocked\":").append(((Door) obj).isLocked());
-                }
-                if (obj instanceof Column || obj instanceof Sign || obj instanceof Decoration) {
-                    sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
-                }
-                if (obj instanceof SearchableObject) {
-                    sb.append(",\"openImageName\":\"").append(escape(((SearchableObject) obj).getOpenImageName()))
-                            .append("\"")
-                            .append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
-                }
-                if (obj instanceof PotionItem || obj instanceof KeyItem) {
-                    sb.append(",\"imageName\":\"").append(escape(obj.getImageName())).append("\"");
-                }
-                sb.append("}");
-            }
-        }
-        sb.append("\n  ]\n}");
-        return sb.toString();
-    }
-
-    private String objectType(GameObject obj) {
-        if (obj instanceof domain.models.staticObjects.LevelDoor)
-            return "LevelDoor";
-        if (obj instanceof domain.models.staticObjects.WallObject)
-            return "WallObject";
-        if (obj instanceof PotionItem)
-            return "PotionItem";
-        if (obj instanceof SwordItem)
-            return "SwordItem";
-        if (obj instanceof WoodenSwordItem)
-            return "WoodenSwordItem";
-        if (obj instanceof SamuraiSwordItem)
-            return "SamuraiSwordItem";
-        if (obj instanceof DiamondSwordItem)
-            return "DiamondSwordItem";
-        if (obj instanceof AxeItem)
-            return "AxeItem";
-        if (obj instanceof BowItem)
-            return "BowItem";
-        if (obj instanceof FireWandItem)
-            return "FireWandItem";
-        if (obj instanceof ArmorItem)
-            return "ArmorItem";
-        if (obj instanceof RingItem)
-            return "RingItem";
-        if (obj instanceof KeyItem)
-            return "KeyItem";
-        if (obj instanceof Chest)
-            return "Chest";
-        if (obj instanceof DoubleCrate)
-            return "DoubleCrate";
-        if (obj instanceof Crate)
-            return "Crate";
-        if (obj instanceof Column)
-            return "Column";
-        if (obj instanceof Sign)
-            return "Sign";
-        if (obj instanceof Door)
-            return "Door";
-        if (obj instanceof Decoration)
-            return "Decoration";
-        if (obj instanceof SearchableObject)
-            return "SearchableObject";
-        return null;
-    }
-
-    private void loadMapFromJson(String json) {
-        // Önce haritayı temizle (duvarlar korunur, dekorasyonları temizlenir)
-        for (int x = 0; x < map.getWidth(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof WallTile) {
-                    ((WallTile) obj).setDecoration(null);
-                } else {
-                    map.placeObject(new FloorTile(), x, y);
-                }
-            }
-        }
-
-        // Basit JSON ayrıştırıcı — her nesne kaydı satır bazında işlenir
-        for (String line : json.split("\n")) {
-            line = line.trim();
-            if (!line.startsWith("{\"type\""))
-                continue;
-            String type = jsonStr(line, "type");
-            String name = jsonStr(line, "name");
-            int x = jsonInt(line, "x");
-            int y = jsonInt(line, "y");
-            boolean locked = "true".equals(jsonStr(line, "isLocked"));
-            String imgName = jsonStr(line, "imageName");
-            String openImgName = jsonStr(line, "openImageName");
-            boolean isWallMounted = "true".equals(jsonStr(line, "isWallMounted"));
-            double scale = jsonDouble(line, "customScale");
-            boolean searched = "true".equals(jsonStr(line, "searched"));
-            String hiddenItemType = jsonStr(line, "hiddenItemType");
-
-            GameObject obj = switch (type) {
-                case "PotionItem" -> {
-                    String lowerName = name != null ? name.toLowerCase() : "";
-                    if (lowerName.contains("blue") || lowerName.contains("mana")) {
-                        yield new PotionItem(new ManaPotion("Mana Potion", 20), x, y,
-                                "images/items/potion/blue_potion.png");
-                    } else if (lowerName.contains("green") || lowerName.contains("poison")
-                            || lowerName.contains("energy")) {
-                        yield new PotionItem(new EnergyPotion("Poison Potion", 30), x, y,
-                                "images/items/potion/green_potion.png");
-                    } else {
-                        yield new PotionItem(new HealthPotion("Health Potion", 5), x, y,
-                                "images/items/potion/red_potion.png");
-                    }
-                }
-                case "SwordItem" -> new SwordItem(x, y);
-                case "WoodenSwordItem" -> new WoodenSwordItem(x, y);
-                case "SamuraiSwordItem" -> new SamuraiSwordItem(x, y);
-                case "DiamondSwordItem" -> new DiamondSwordItem(x, y);
-                case "AxeItem" -> new AxeItem(x, y);
-                case "BowItem" -> new BowItem(x, y);
-                case "FireWandItem" -> new FireWandItem(x, y);
-                case "ArmorItem" -> new ArmorItem(x, y);
-                case "RingItem" -> {
-                    String lowerName = name != null ? name.toLowerCase() : "";
-                    if (lowerName.contains("blue") || lowerName.contains("mana")) {
-                        yield new RingItem(new BlueRing("Mana Ring"), x, y, "images/items/ring/blue_ring.png");
-                    } else if (lowerName.contains("red") || lowerName.contains("health")) {
-                        yield new RingItem(new RedRing("Health Ring"), x, y, "images/items/ring/red_ring.png");
-                    } else {
-                        yield new RingItem(new GreenRing("Poison Ring"), x, y, "images/items/ring/green_ring.png");
-                    }
-                }
-                case "KeyItem" -> imgName != null && !imgName.isEmpty()
-                        ? new KeyItem(name, x, y, imgName)
-                        : new KeyItem(x, y);
-                case "Chest" -> imgName != null && !imgName.isEmpty()
-                        ? new Chest(name, x, y, locked, imgName)
-                        : new Chest(name, x, y, locked);
-                case "DoubleCrate" -> new DoubleCrate(name, x, y);
-                case "Crate" -> new Crate(name, x, y);
-                case "Column" -> imgName != null && !imgName.isEmpty()
-                        ? new Column(name, x, y, imgName)
-                        : new Column(name, x, y);
-                case "Sign" -> imgName != null && !imgName.isEmpty()
-                        ? new Sign(name, x, y, imgName)
-                        : new Sign(name, x, y);
-                case "LevelDoor" -> new domain.models.staticObjects.LevelDoor(name, x, y);
-                case "Door" -> new Door(name, x, y, locked);
-                case "Decoration" -> imgName != null && !imgName.isEmpty()
-                        ? new Decoration(name, x, y, imgName)
-                        : new Decoration(name, x, y, "torch/torch_1");
-                case "SearchableObject" -> imgName != null && !imgName.isEmpty()
-                        ? new SearchableObject(name, x, y, imgName, openImgName)
-                        : new SearchableObject(name, x, y);
-                case "WallObject" -> {
-                    if (imgName != null && imgName.contains("WallSearchable/")) {
-                        yield new SearchableObject(name, x, y, imgName, openImgName);
-                    } else {
-                        yield new domain.models.staticObjects.WallObject(name, x, y, imgName);
-                    }
-                }
-                default -> null;
-            };
-            if (obj != null) {
-                obj.setCustomScale(scale);
-                if (obj instanceof SearchableObject) {
-                    SearchableObject so = (SearchableObject) obj;
-                    so.setSearched(searched);
-                    if (hiddenItemType != null && !hiddenItemType.isEmpty()) {
-                        if (hiddenItemType.equals("LevelKey")) {
-                            so.setHiddenItem(new domain.models.staticObjects.LevelKey(x, y));
-                        } else if (hiddenItemType.equals("KeyItem")) {
-                            so.setHiddenItem(new KeyItem(x, y));
-                        }
-                    }
-                }
-                if (isWallMounted) {
-                    GameObject existing = map.getObjectAt(x, y);
-                    if (existing instanceof WallTile) {
-                        ((WallTile) existing).setDecoration(obj);
-                    }
-                } else {
-                    map.placeObject(obj, x, y);
-                }
-            }
-        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -2527,67 +2276,7 @@ public class DesignModeView extends JPanel {
         dialog.setVisible(true);
     }
 
-    // ── Basit JSON yardımcıları ───────────────────────────────────────────────
-    private String escape(String s) {
-        return s == null ? "" : s.replace("\"", "\\\"");
-    }
 
-    private String jsonStr(String line, String key) {
-        String k = "\"" + key + "\":\"";
-        int i = line.indexOf(k);
-        if (i < 0) {
-            String k2 = "\"" + key + "\":";
-            int i2 = line.indexOf(k2);
-            if (i2 < 0)
-                return null;
-            i2 += k2.length();
-            int j2 = i2;
-            while (j2 < line.length() && line.charAt(j2) != ',' && line.charAt(j2) != '}') {
-                j2++;
-            }
-            String val = line.substring(i2, j2).trim();
-            if (val.startsWith("\"") && val.endsWith("\"") && val.length() >= 2) {
-                val = val.substring(1, val.length() - 1);
-            }
-            return val;
-        }
-        i += k.length();
-        int j = line.indexOf("\"", i);
-        return j < 0 ? null : line.substring(i, j);
-    }
-
-    private int jsonInt(String line, String key) {
-        String k = "\"" + key + "\":";
-        int i = line.indexOf(k);
-        if (i < 0)
-            return 0;
-        i += k.length();
-        int j = i;
-        while (j < line.length() && (Character.isDigit(line.charAt(j)) || line.charAt(j) == '-'))
-            j++;
-        try {
-            return Integer.parseInt(line.substring(i, j));
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    private double jsonDouble(String line, String key) {
-        String k = "\"" + key + "\":";
-        int i = line.indexOf(k);
-        if (i < 0)
-            return 1.0;
-        i += k.length();
-        int j = i;
-        while (j < line.length()
-                && (Character.isDigit(line.charAt(j)) || line.charAt(j) == '-' || line.charAt(j) == '.'))
-            j++;
-        try {
-            return Double.parseDouble(line.substring(i, j));
-        } catch (Exception e) {
-            return 1.0;
-        }
-    }
 
     private boolean isSameWall(GameMap map, int x, int y, String imgName) {
         if (x < 0 || x >= map.getWidth() || y < 0 || y >= map.getHeight())

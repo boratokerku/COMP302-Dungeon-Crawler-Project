@@ -1,4 +1,4 @@
-package ui;
+package ui.dialogs;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -7,25 +7,24 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 /**
- * Design Mode'ta haritayı temizlemek istediğimizde gösterilen özel görsel popup.
+ * Design Mode'ta maksimum engel limitine ulaşıldığında gösterilen özel görsel popup.
  */
-public class ClearMapDialog extends JDialog {
-    private boolean confirmed = false;
+public class MaxObstacleDialog extends JDialog {
     private BufferedImage bgImage;
-    private BufferedImage confirmImage;
-    private BufferedImage cancelImage;
+    private BufferedImage okButtonImage;
 
-    public ClearMapDialog(Frame owner) {
-        super(owner, "Clear Map", true);
+    public MaxObstacleDialog(Frame owner) {
+        super(owner, "Limit Reached", true);
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0)); // Şeffaf arka plan
 
         loadImages();
 
-        // 0.65x scale to make the popup slightly smaller while maintaining aspect ratio
-        float scale = 0.65f;
-        int width = Math.round(546 * scale);
-        int height = Math.round(457 * scale);
+        // 0.65x scale relative to standard box size (matching MaxItemDialog)
+        float baseScale = 0.65f;
+        float scale = baseScale * (526f / 1083f);
+        int width = Math.round(1083 * scale);
+        int height = Math.round(976 * scale);
         setSize(width, height);
         setLocationRelativeTo(owner);
 
@@ -45,45 +44,28 @@ public class ClearMapDialog extends JDialog {
         contentPanel.setLayout(null);
 
         // Kenarlıkları kırp
-        BufferedImage trimmedConfirm = trimImage(confirmImage);
-        BufferedImage trimmedCancel = trimImage(cancelImage);
+        BufferedImage trimmedOK = trimImage(okButtonImage);
 
-        int btnHeight = Math.round(55 * scale);
-        int confirmW = getWidthForHeight(trimmedConfirm, btnHeight, Math.round(162 * scale));
-        int cancelW = getWidthForHeight(trimmedCancel, btnHeight, Math.round(172 * scale));
+        // OKButton size is standard, so we scale it using baseScale (0.65) to match MaxItemDialog button size
+        int btnHeight = Math.round(55 * baseScale);
+        int okW = getWidthForHeight(trimmedOK, btnHeight, Math.round(130 * baseScale));
 
-        ImageButton confirmBtn = new ImageButton(trimmedConfirm, "Confirm");
-        ImageButton cancelBtn = new ImageButton(trimmedCancel, "Cancel");
+        ImageButton okBtn = new ImageButton(trimmedOK, "OK");
+        okBtn.addActionListener(e -> dispose());
 
-        confirmBtn.addActionListener(e -> {
-            confirmed = true;
-            dispose();
-        });
+        // Tek butonu yatayda ortala
+        int startX = (width - okW) / 2;
+        int btnY = Math.round(772 * scale); // equivalent to 375 * baseScale in screen pixels
 
-        cancelBtn.addActionListener(e -> {
-            confirmed = false;
-            dispose();
-        });
-
-        // Butonları hizala ve yerleştir
-        int spacing = Math.round(20 * scale);
-        int totalWidth = confirmW + cancelW + spacing;
-        int startX = (width - totalWidth) / 2;
-        int btnY = Math.round(345 * scale);
-
-        confirmBtn.setBounds(startX, btnY, confirmW, btnHeight);
-        cancelBtn.setBounds(startX + confirmW + spacing, btnY, cancelW, btnHeight);
-
-        contentPanel.add(confirmBtn);
-        contentPanel.add(cancelBtn);
+        okBtn.setBounds(startX, btnY, okW, btnHeight);
+        contentPanel.add(okBtn);
 
         setContentPane(contentPanel);
     }
 
     private void loadImages() {
-        bgImage = loadImg("resources/images/PopUpImages/ClearMapBox.png");
-        confirmImage = loadImg("resources/images/PopUpImages/ConfirmButton_Build.png");
-        cancelImage = loadImg("resources/images/PopUpImages/CancelButton.png");
+        bgImage = loadImg("resources/images/PopUpImages/MaxObstacleBox.png");
+        okButtonImage = loadImg("resources/images/PopUpImages/OKButton.png");
     }
 
     private BufferedImage loadImg(String path) {
@@ -105,10 +87,6 @@ public class ClearMapDialog extends JDialog {
         if (img == null) return fallbackWidth;
         float aspect = img.getWidth() / (float) img.getHeight();
         return Math.round(targetHeight * aspect);
-    }
-
-    public boolean isConfirmed() {
-        return confirmed;
     }
 
     private BufferedImage trimImage(BufferedImage img) {

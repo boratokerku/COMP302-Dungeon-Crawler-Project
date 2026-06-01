@@ -1,5 +1,7 @@
 package domain.logic;
 
+import domain.logic.event.GameEventBus;
+import domain.logic.event.SoundEvent;
 import domain.models.entity.Hero;
 import domain.models.entity.GameObject;
 
@@ -58,19 +60,19 @@ public class BreakAction implements Action {
                     System.out.println("Broke " + containerType + " open! Dropped " + loot.getName() + " at (" + tx + ", " + ty + ")");
                 }
                 
-                util.helpers.SoundManager.playEnemyHit();
+                GameEventBus.fireSound(SoundEvent.SoundType.ENEMY_HIT);
                 // Show floating text feedback!
                 if (isLevelKey) {
-                    view.GameView.addFloatingText(tx, ty, "Level key found!", new java.awt.Color(255, 215, 0));
+                    GameEventBus.fireFloatingText(tx, ty, "Level key found!", new java.awt.Color(255, 215, 0));
                     domain.logic.LevelManager.clearAllOtherSkullKeys(map, tx, ty);
                 } else {
-                    view.GameView.addFloatingText(tx, ty, "BROKEN!", java.awt.Color.GREEN);
+                    GameEventBus.fireFloatingText(tx, ty, "BROKEN!", java.awt.Color.GREEN);
                 }
             }
         } else {
             if (target != null) {
-                util.helpers.SoundManager.playWalk();
-                view.GameView.addFloatingText(target.getX(), target.getY(), "FAILED!", java.awt.Color.RED);
+                GameEventBus.fireSound(SoundEvent.SoundType.WALK);
+                GameEventBus.fireFloatingText(target.getX(), target.getY(), "FAILED!", java.awt.Color.RED);
             }
             String containerType = (target instanceof domain.models.entity.Chest) ? "Locked Chest" : "Box/Crate";
             System.out.println("Failed to break " + containerType + "! (Need more STR)");

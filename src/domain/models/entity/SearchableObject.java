@@ -55,5 +55,17 @@ public class SearchableObject extends GameObject {
         return openImageName;
     }
 
+    @Override
+    public SearchableObject clone() {
+        SearchableObject cloned = new SearchableObject(this.name, this.x, this.y, this.imageName, this.openImageName);
+        cloned.setSearched(this.isSearched);
+        cloned.setTrapTriggered(this.trapTriggered);
+        cloned.setCustomScale(this.customScale);
+        if (this.hiddenItem != null) {
+            cloned.setHiddenItem(this.hiddenItem.clone());
+        }
+        return cloned;
+    }
+
 }
 

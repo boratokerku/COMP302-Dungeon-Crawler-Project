@@ -1,4 +1,4 @@
-package ui;
+package ui.dialogs;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -6,116 +6,114 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-/**
- * WallSearchable nesnelere tıklandığında açılan premium görsel arama popup'ı.
- */
-public class SearchPopupDialog extends JDialog {
-    private boolean searchTriggered = false;
-    private BufferedImage bgImage;
-    private BufferedImage searchImage;
-    private BufferedImage cancelImage;
-    private final String objectName;
+public class HelpDialog extends JDialog {
+    private BufferedImage helpBoxImg;
+    private BufferedImage objectiveBoxImg;
+    private BufferedImage leftArrowImg;
+    private BufferedImage rightArrowImg;
+    private BufferedImage confirmImg;
 
-    private final Runnable onSearchConfirm;
+    private int page = 1; // 1 = HelpBox, 2 = ObjectiveBox
 
-    public SearchPopupDialog(Frame owner, String objectName, Runnable onSearchConfirm) {
-        super(owner, "Search " + objectName, false); // modal = false
-        this.objectName = objectName;
-        this.onSearchConfirm = onSearchConfirm;
+    public HelpDialog(Frame owner) {
+        super(owner, "Help & Objective", true);
         setUndecorated(true);
-        setBackground(new Color(0, 0, 0, 0)); // Şeffaf arka plan
+        setBackground(new Color(0, 0, 0, 0)); // Transparent window background
 
         loadImages();
 
-        // 0.35x scaling factor for perfect screen fit next to tiles
-        float scale = 0.35f;
-        int width = Math.round(612 * scale);
-        int height = Math.round(408 * scale);
+        int width = 577;
+        int height = 433;
         setSize(width, height);
-        if (owner != null) {
-            setLocationRelativeTo(owner);
-        } else {
-            // Fallback for headless/no-owner environments
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            setLocation((screenSize.width - width) / 2, (screenSize.height - height) / 2);
-        }
+        setLocationRelativeTo(owner);
 
         JPanel contentPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-                if (bgImage != null) {
-                    g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
+                BufferedImage activeBg = (page == 1) ? helpBoxImg : objectiveBoxImg;
+                if (activeBg != null) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g2.drawImage(activeBg, 0, 0, getWidth(), getHeight(), null);
+                    g2.dispose();
                 }
-
-                // Centered object name inside the search box photo
-                String displayTitle = objectName.toUpperCase();
-                g2.setFont(new Font("Arial", Font.BOLD, 12));
-                FontMetrics fm = g2.getFontMetrics();
-                int textX = (getWidth() - fm.stringWidth(displayTitle)) / 2;
-                int textY = Math.round(getHeight() * 0.40f);
-
-                // Premium drop shadow
-                g2.setColor(new Color(0, 0, 0, 180));
-                g2.drawString(displayTitle, textX + 1, textY + 1);
-
-                // Gold text color matching original dungeon crawl aesthetics
-                g2.setColor(new Color(255, 215, 0));
-                g2.drawString(displayTitle, textX, textY);
-
-                g2.dispose();
             }
         };
         contentPanel.setOpaque(false);
         contentPanel.setLayout(null);
 
-        // Trim transparency paddings in button sprites
-        BufferedImage trimmedSearch = trimImage(searchImage);
-        BufferedImage trimmedCancel = trimImage(cancelImage);
+        // Trim transparency from button assets for precise bounds
+        BufferedImage trimmedLeft = trimImage(leftArrowImg);
+        BufferedImage trimmedRight = trimImage(rightArrowImg);
+        BufferedImage trimmedConfirm = trimImage(confirmImg);
 
-        int btnHeight = Math.round(55 * scale);
-        int searchW = getWidthForHeight(trimmedSearch, btnHeight, Math.round(150 * scale));
-        int cancelW = getWidthForHeight(trimmedCancel, btnHeight, Math.round(150 * scale));
+        // Standard scaled sizes
+        int arrowH = 45;
+        int leftW = getWidthForHeight(trimmedLeft, arrowH, 48);
+        int rightW = getWidthForHeight(trimmedRight, arrowH, 48);
 
-        ImageButton searchBtn = new ImageButton(trimmedSearch, "Search");
-        ImageButton cancelBtn = new ImageButton(trimmedCancel, "Cancel");
+        int confirmH = 35;
+        int confirmW = getWidthForHeight(trimmedConfirm, confirmH, 125);
 
-        searchBtn.addActionListener(e -> {
-            searchTriggered = true;
-            dispose();
-            if (onSearchConfirm != null) {
-                onSearchConfirm.run();
-            }
+        ImageButton leftArrowBtn = new ImageButton(trimmedLeft, "<");
+        ImageButton rightArrowBtn = new ImageButton(trimmedRight, ">");
+        ImageButton confirmBtn = new ImageButton(trimmedConfirm, "Confirm");
+
+        // Positions
+        // below right for rightArrowBtn: page 1
+        int marginX = 45;
+        int marginY = 40;
+        int btnY = height - arrowH - marginY;
+
+        rightArrowBtn.setBounds(width - rightW - marginX, btnY, rightW, arrowH);
+
+        // below left for leftArrowBtn: page 2
+        leftArrowBtn.setBounds(marginX, btnY, leftW, arrowH);
+
+        // right below for confirmBtn: page 2 (aligned vertically)
+        int confirmY = height - confirmH - marginY;
+        confirmBtn.setBounds(width - confirmW - marginX, confirmY, confirmW, confirmH);
+
+        // Action Listeners
+        rightArrowBtn.addActionListener(e -> {
+            page = 2;
+            leftArrowBtn.setVisible(true);
+            confirmBtn.setVisible(true);
+            rightArrowBtn.setVisible(false);
+            contentPanel.repaint();
         });
 
-        cancelBtn.addActionListener(e -> {
-            searchTriggered = false;
+        leftArrowBtn.addActionListener(e -> {
+            page = 1;
+            leftArrowBtn.setVisible(false);
+            confirmBtn.setVisible(false);
+            rightArrowBtn.setVisible(true);
+            contentPanel.repaint();
+        });
+
+        confirmBtn.addActionListener(e -> {
             dispose();
         });
 
-        // Horizontally center and vertically position buttons inside the box
-        int spacing = Math.round(30 * scale);
-        int totalWidth = searchW + cancelW + spacing;
-        int startX = (width - totalWidth) / 2;
-        int btnY = Math.round(getHeight() * 0.58f);
+        // Set initial visibility
+        leftArrowBtn.setVisible(false);
+        confirmBtn.setVisible(false);
+        rightArrowBtn.setVisible(true);
 
-        searchBtn.setBounds(startX, btnY, searchW, btnHeight);
-        cancelBtn.setBounds(startX + searchW + spacing, btnY, cancelW, btnHeight);
-
-        contentPanel.add(searchBtn);
-        contentPanel.add(cancelBtn);
+        contentPanel.add(leftArrowBtn);
+        contentPanel.add(rightArrowBtn);
+        contentPanel.add(confirmBtn);
 
         setContentPane(contentPanel);
     }
 
     private void loadImages() {
-        bgImage = loadImg("resources/images/PopUpImages/SearchBox.png");
-        searchImage = loadImg("resources/images/PopUpImages/SearchButton.png");
-        cancelImage = loadImg("resources/images/PopUpImages/CancelButton.png");
+        helpBoxImg = loadImg("resources/images/HelperMenuImages/HelpBox.png");
+        objectiveBoxImg = loadImg("resources/images/HelperMenuImages/ObjectiveBox.png");
+        leftArrowImg = loadImg("resources/images/PopUpImages/LeftArrowButton.png");
+        rightArrowImg = loadImg("resources/images/PopUpImages/RightArrowButton.png");
+        confirmImg = loadImg("resources/images/PopUpImages/ConfirmButton.png");
     }
 
     private BufferedImage loadImg(String path) {
@@ -137,10 +135,6 @@ public class SearchPopupDialog extends JDialog {
         if (img == null) return fallbackWidth;
         float aspect = img.getWidth() / (float) img.getHeight();
         return Math.round(targetHeight * aspect);
-    }
-
-    public boolean isSearchTriggered() {
-        return searchTriggered;
     }
 
     private BufferedImage trimImage(BufferedImage img) {
@@ -217,7 +211,7 @@ public class SearchPopupDialog extends JDialog {
             if (img != null) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
+                
                 int drawX = 0;
                 int drawY = 0;
                 int drawWidth = getWidth();

@@ -49,4 +49,11 @@ public class Chest extends GameObject {
         }
         return "chest";
     }
+
+    @Override
+    public Chest clone() {
+        Chest cloned = new Chest(this.name, this.x, this.y, this.isLocked, this.imageName);
+        cloned.setCustomScale(this.customScale);
+        return cloned;
+    }
 }

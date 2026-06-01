@@ -21,7 +21,7 @@ public class MouseHandler extends MouseAdapter {
 
     private javax.swing.Timer[] logicTimerRef;
     private javax.swing.Timer[] renderTimerRef;
-    private ui.SearchPopupDialog activeDialog = null;
+    private ui.dialogs.SearchPopupDialog activeDialog = null;
 
     public MouseHandler(Hero hero, domain.models.map.GameMap gameMap, view.GameView gameView, ActionMenu actionMenu) {
         this.hero = hero;
@@ -170,7 +170,7 @@ public class MouseHandler extends MouseAdapter {
             int targetY = screenLoc.y + objScreenY + (gameView.getTileSize() - height) / 2;
 
             final GameObject targetObj = obj;
-            activeDialog = new ui.SearchPopupDialog(parentFrame, obj.getName(), () -> {
+            activeDialog = new ui.dialogs.SearchPopupDialog(parentFrame, obj.getName(), () -> {
                 domain.logic.SearchAction sa = new domain.logic.SearchAction(null);
                 sa.execute(hero, targetObj);
                 gameView.repaint();

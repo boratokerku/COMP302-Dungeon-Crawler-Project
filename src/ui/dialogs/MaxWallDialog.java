@@ -1,4 +1,4 @@
-package ui;
+package ui.dialogs;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -7,13 +7,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 
 /**
- * Design Mode'ta maksimum item limitine ulaşıldığında gösterilen özel görsel popup.
+ * Design Mode'ta maksimum wall decoration/searchable limitine ulaşıldığında gösterilen özel görsel popup.
  */
-public class MaxItemDialog extends JDialog {
+public class MaxWallDialog extends JDialog {
     private BufferedImage bgImage;
     private BufferedImage okButtonImage;
 
-    public MaxItemDialog(Frame owner) {
+    public MaxWallDialog(Frame owner) {
         super(owner, "Limit Reached", true);
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0)); // Şeffaf arka plan
@@ -62,7 +62,7 @@ public class MaxItemDialog extends JDialog {
     }
 
     private void loadImages() {
-        bgImage = loadImg("resources/images/PopUpImages/MaxItemBox.png");
+        bgImage = loadImg("resources/images/PopUpImages/MaxWallBox.png");
         okButtonImage = loadImg("resources/images/PopUpImages/OKButton.png");
     }
 

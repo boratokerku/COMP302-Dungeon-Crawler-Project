@@ -23,4 +23,10 @@ public class ArmorItem extends MapItem {
     public int getDefBonus() {
         return this.defBonus;
     }
+
+    /** Armor is not a weapon. GRASP Polymorphism override. */
+    @Override
+    public boolean isWeapon() {
+        return false;
+    }
 }

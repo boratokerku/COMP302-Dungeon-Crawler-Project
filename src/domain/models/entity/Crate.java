@@ -26,4 +26,14 @@ public class Crate extends GameObject {
         }
         return "crate";
     }
+
+    @Override
+    public Crate clone() {
+        Crate cloned = new Crate(this.name, this.x, this.y, this.imageName);
+        cloned.setCustomScale(this.customScale);
+        if (this.hiddenItem != null) {
+            cloned.setHiddenItem(this.hiddenItem.clone());
+        }
+        return cloned;
+    }
 }

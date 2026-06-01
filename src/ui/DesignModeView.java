@@ -8,25 +8,19 @@ import domain.models.entity.Crate;
 import domain.models.entity.GameObject;
 import domain.models.entity.SearchableObject;
 import domain.models.entity.Sign;
-import domain.models.item.*;
-
 import domain.models.map.GameMap;
 import domain.models.staticObjects.*;
 import domain.models.tile.FloorTile;
 import domain.models.tile.WallTile;
 import view.TileManager;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class DesignModeView extends JPanel {
     public final int MAX_OBSTACLES = 50;
@@ -115,7 +109,6 @@ public class DesignModeView extends JPanel {
     }
 
     // ── Hover ────────────────────────────────────────────────────────────────
-
 
     // ── Drag ─────────────────────────────────────────────────────────────────
     private boolean isDragging = false;
@@ -287,10 +280,6 @@ public class DesignModeView extends JPanel {
         return new int[] { tx, ty };
     }
 
-
-
-
-
     public int countItems() {
         int count = 0;
         int w = map.getWidth();
@@ -447,235 +436,6 @@ public class DesignModeView extends JPanel {
     // ACTION BUTTON HANDLING
     // ─────────────────────────────────────────────────────────────────────────
 
-    private int countLockedChests() {
-        int count = 0;
-        for (int x = 0; x < map.getWidth(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof Chest && ((Chest) obj).isLocked()) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-
-    private int countKeys() {
-        int count = 0;
-        for (int x = 0; x < map.getWidth(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof KeyItem) {
-                    count++;
-                }
-            }
-        }
-        return count;
-    }
-
-    private boolean validateChestKeyCounts() {
-        int lockedChests = countLockedChests();
-        int keys = countKeys();
-        if (keys != lockedChests) {
-            showInvalidMapDialog();
-            return false;
-        }
-        return true;
-    }
-
-    private void doPlay() {
-        if (!validateChestKeyCounts())
-            return;
-        if (onPlayMap != null)
-            onPlayMap.accept(map);
-    }
-
-    private void doPlayTeamMatch() {
-        if (!validateChestKeyCounts())
-            return;
-        if (onPlayTeamMatchMap != null)
-            onPlayTeamMatchMap.accept(map);
-    }
-
-    // ── 2. Add 5 Random Items + 1 Hidden ─────────────────────────────────────
-    private void doAddRandom() {
-        List<int[]> freeTiles = getFreeTiles();
-        if (freeTiles.isEmpty()) {
-            showMsg("Boş tile yok! Önce bazı nesneleri silin.", "Uyarı");
-            return;
-        }
-
-        int currentItems = countItems();
-        if (currentItems >= MAX_ITEMS) {
-            showMaxItemDialog();
-            return;
-        }
-
-        Random rand = new Random();
-        int placed = 0;
-        int remainingSlots = MAX_ITEMS - currentItems;
-        int toPlace = Math.min(5, remainingSlots);
-
-        // 5 adet rastgele item
-        while (placed < toPlace && !freeTiles.isEmpty()) {
-            int[] pos = freeTiles.remove(rand.nextInt(freeTiles.size()));
-            GameObject item = MapItem.createRandomItem(pos[0], pos[1]);
-            // Container ise içini rastgele doldur
-            if (item instanceof Chest) {
-                populateContainer((Chest) item, rand);
-            } else if (item instanceof Crate) {
-                // Crate için özel davranış yok ama kurala uygun hale getirebiliriz
-            }
-            map.placeObject(item, pos[0], pos[1]);
-            placed++;
-        }
-
-        repaint();
-    }
-
-    /**
-     * Container (Chest) içine 1-10 roll ile item ekle.
-     * Roll ≥ 8 → yeni item ekle, tekrar et; roll < 8 → dur.
-     */
-    private void populateContainer(Chest chest, Random rand) {
-        // Mevcut mimariye göre Chest'in actions'ı var, ama içerik listesi
-        // constructor'da yaratılıyor. Design modunda sadece marker olarak kullanıyoruz.
-        // Gerçek oyun akışında OpenAction içeriği halleder.
-        // Bu metodda gereksinim kuralını logluyoruz.
-        int roll;
-        int count = 0;
-        do {
-            roll = rand.nextInt(10) + 1; // 1-10
-            count++;
-        } while (roll >= 8 && count < 20); // sonsuz döngü koruması
-    }
-
-    private void doSave() {
-        if (!validateChestKeyCounts())
-            return;
-
-        Window parentWindow = SwingUtilities.getWindowAncestor(this);
-        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
-
-        java.util.List<String> existingMaps = new java.util.ArrayList<>();
-        File dir = new File("saves/maps");
-        if (dir.exists() && dir.listFiles() != null) {
-            File[] files = dir.listFiles((d, n) -> n.endsWith(".mapjson"));
-            if (files != null) {
-                for (File f : files) {
-                    existingMaps.add(f.getName().replace(".mapjson", ""));
-                }
-            }
-        }
-
-        SaveMapDialog dialog = new SaveMapDialog(parentFrame, existingMaps);
-        dialog.setVisible(true);
-
-        if (!dialog.isSaved())
-            return;
-
-        String name = dialog.getMapName();
-        if (name == null || name.trim().isEmpty())
-            return;
-        name = name.trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
-
-        try {
-            new File("saves/maps").mkdirs();
-            String json = domain.logic.MapFileManager.mapToJson(map, name);
-            try (FileWriter fw = new FileWriter("saves/maps/" + name + ".mapjson")) {
-                fw.write(json);
-            }
-            showMsg("Harita kaydedildi: saves/maps/" + name + ".mapjson", "Kayıt Başarılı");
-        } catch (Exception ex) {
-            showMsg("Kayıt hatası: " + ex.getMessage(), "Hata");
-        }
-    }
-
-    // ── 4. Load Map ──────────────────────────────────────────────────────────
-    private void doLoad() {
-        Window parentWindow = SwingUtilities.getWindowAncestor(this);
-        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
-
-        java.util.List<String> existingMaps = new java.util.ArrayList<>();
-        File dir = new File("saves/maps");
-        if (dir.exists() && dir.listFiles() != null) {
-            File[] files = dir.listFiles((d, n) -> n.endsWith(".mapjson"));
-            if (files != null) {
-                for (File f : files) {
-                    existingMaps.add(f.getName().replace(".mapjson", ""));
-                }
-            }
-        }
-
-        if (existingMaps.isEmpty()) {
-            showMsg("Kayıtlı harita bulunamadı.", "Yükle");
-            return;
-        }
-
-        LoadMapDialog dialog = new LoadMapDialog(parentFrame, existingMaps);
-        dialog.setVisible(true);
-
-        if (dialog.isLoaded()) {
-            String chosen = dialog.getSelectedMapName();
-            try (FileReader fr = new FileReader("saves/maps/" + chosen + ".mapjson")) {
-                StringBuilder sb = new StringBuilder();
-                int c;
-                while ((c = fr.read()) != -1)
-                    sb.append((char) c);
-                domain.logic.MapFileManager.loadMapFromJson(map, sb.toString());
-                repaint();
-                showMsg("Harita yüklendi: " + chosen, "Yükleme Başarılı");
-            } catch (Exception ex) {
-                showMsg("Yükleme hatası: " + ex.getMessage(), "Hata");
-            }
-        } else if (dialog.isDeleteRequested()) {
-            String deleteTarget = dialog.getDeleteMapName();
-            DeleteConfirmDialog confirmDialog = new DeleteConfirmDialog(parentFrame,
-                    "Delete map: " + deleteTarget + "?");
-            confirmDialog.setVisible(true);
-            if (confirmDialog.isConfirmed()) {
-                File file = new File("saves/maps/" + deleteTarget + ".mapjson");
-                if (file.exists()) {
-                    file.delete();
-                }
-            }
-            // Re-run doLoad to show the dialog again
-            doLoad();
-        }
-    }
-
-    private void doClear() {
-        Window parentWindow = SwingUtilities.getWindowAncestor(this);
-        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
-
-        ClearMapDialog dialog = new ClearMapDialog(parentFrame);
-        dialog.setVisible(true);
-
-        if (!dialog.isConfirmed())
-            return;
-
-        for (int x = 0; x < map.getWidth(); x++) {
-            for (int y = 0; y < map.getHeight(); y++) {
-                GameObject obj = map.getObjectAt(x, y);
-                if (obj instanceof WallTile) {
-                    ((WallTile) obj).setDecoration(null);
-                    continue;
-                }
-                if (obj == null || obj instanceof FloorTile || obj instanceof domain.models.staticObjects.LevelDoor)
-                    continue;
-                // Sadece yerleştirilen objeleri sil → FloorTile ile değiştir
-                map.placeObject(new FloorTile(), x, y);
-            }
-        }
-        repaint();
-    }
-
-    // ── 6. Generate Random Map ───────────────────────────────────────────────
-    private void doGenerateRandomMap() {
-        domain.logic.RandomMapGenerator.generateRandomMap(map);
-        repaint();
-    }
-
     // ─────────────────────────────────────────────────────────────────────────
     // PAINT
     // ─────────────────────────────────────────────────────────────────────────
@@ -762,7 +522,7 @@ public class DesignModeView extends JPanel {
                 g.fillRoundRect(bounds.x - 2, bounds.y - 2, bounds.width + 4, bounds.height + 4, 8, 8);
             }
 
-            BufferedImage icon = paletteManager.getIcon(item);
+            BufferedImage icon = getIcon(item);
             drawIconFit(g, icon, bounds.x, bounds.y, bounds.width);
 
             if (selected) {
@@ -1153,7 +913,7 @@ public class DesignModeView extends JPanel {
         ui.design.PaletteItem item = getSelectedPaletteItem();
         if (item == null || item.factory == null)
             return;
-            
+
         int hoverTileX = inputHandler.getHoverTileX();
         int hoverTileY = inputHandler.getHoverTileY();
         if (hoverTileX < 0 || hoverTileY < 0)

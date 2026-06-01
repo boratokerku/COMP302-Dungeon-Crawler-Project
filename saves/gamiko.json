@@ -1,0 +1,258 @@
+{
+  "saveName": "gamiko",
+  "timestamp": "2026-06-01 15:25",
+  "enemySpawnTimeLeft": 714,
+  "scrollSpawnTimeLeft": 6714,
+  "elapsedSeconds": 0,
+  "currentLevel": 1,
+  "hero": {
+    "x": 4,
+    "y": 4,
+    "hp": 17,
+    "mana": 80,
+    "energy": 100,
+    "str": 8
+  },
+  "inventoryItems": [],
+  "mapItems": [
+    {
+      "type": "Chest",
+      "name": "Red Chest",
+      "x": 1,
+      "y": 18,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "containers/chest_red"
+    },
+    {
+      "type": "Column",
+      "name": "Column",
+      "x": 2,
+      "y": 2,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "colon/gray_colon_whole"
+    },
+    {
+      "type": "PotionItem",
+      "name": "Poison Potion",
+      "x": 2,
+      "y": 10,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/potion/green_potion.png"
+    },
+    {
+      "type": "KeyItem",
+      "name": "Golden Key 1",
+      "x": 2,
+      "y": 14,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/key/golden_key_1.png"
+    },
+    {
+      "type": "Chest",
+      "name": "Gold Chest",
+      "x": 5,
+      "y": 17,
+      "isLocked": true,
+      "searched": false,
+      "imageName": "containers/gold_chest_closed"
+    },
+    {
+      "type": "Crate",
+      "name": "Crate",
+      "x": 6,
+      "y": 14,
+      "isLocked": false,
+      "searched": false,
+      "hiddenItemType": "LevelKey",
+      "imageName": "crate"
+    },
+    {
+      "type": "Crate",
+      "name": "Crate",
+      "x": 8,
+      "y": 15,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "crate"
+    },
+    {
+      "type": "Decoration",
+      "name": "Torch",
+      "x": 8,
+      "y": 18,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "torch/torch_1"
+    },
+    {
+      "type": "ArmorItem",
+      "name": "Steel Armor",
+      "x": 9,
+      "y": 17,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/steel_armor.png"
+    },
+    {
+      "type": "AxeItem",
+      "name": "Battle Axe",
+      "x": 10,
+      "y": 1,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/axe.png"
+    },
+    {
+      "type": "Column",
+      "name": "Column",
+      "x": 13,
+      "y": 14,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "colon/gray_colon_whole"
+    },
+    {
+      "type": "PotionItem",
+      "name": "Poison Potion",
+      "x": 14,
+      "y": 2,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/potion/green_potion.png"
+    },
+    {
+      "type": "Chest",
+      "name": "Bag",
+      "x": 15,
+      "y": 4,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "containers/bag"
+    },
+    {
+      "type": "Decoration",
+      "name": "Torch",
+      "x": 16,
+      "y": 10,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "torch/torch_1"
+    },
+    {
+      "type": "PotionItem",
+      "name": "Health Potion",
+      "x": 17,
+      "y": 6,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/potion/red_potion.png"
+    },
+    {
+      "type": "Decoration",
+      "name": "Torch",
+      "x": 18,
+      "y": 1,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "torch/torch_1"
+    },
+    {
+      "type": "Crate",
+      "name": "Crate",
+      "x": 18,
+      "y": 11,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "crate"
+    },
+    {
+      "type": "SamuraiSwordItem",
+      "name": "Samurai Katana",
+      "x": 19,
+      "y": 14,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/samurai_sword.png"
+    },
+    {
+      "type": "Column",
+      "name": "Column",
+      "x": 20,
+      "y": 5,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "colon/purple_colon_whole"
+    },
+    {
+      "type": "Door",
+      "name": "Level Gate",
+      "x": 21,
+      "y": 0,
+      "isLocked": true,
+      "searched": false,
+      "imageName": "door/door_closed"
+    },
+    {
+      "type": "Column",
+      "name": "Column",
+      "x": 21,
+      "y": 10,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "colon/gray_colon_whole"
+    },
+    {
+      "type": "Crate",
+      "name": "Crate",
+      "x": 26,
+      "y": 4,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "crate"
+    },
+    {
+      "type": "Crate",
+      "name": "Crate",
+      "x": 26,
+      "y": 14,
+      "isLocked": false,
+      "searched": false,
+      "hiddenItemType": "LevelKey",
+      "imageName": "crate"
+    },
+    {
+      "type": "ArmorItem",
+      "name": "Steel Armor",
+      "x": 27,
+      "y": 2,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/steel_armor.png"
+    }
+  ],
+  "enemies": [
+    {
+      "type": "Knight",
+      "x": 12,
+      "y": 9,
+      "hp": 20,
+      "alive": true,
+      "timeLeft": 0,
+      "projectileTimeLeft": 0
+    },
+    {
+      "type": "Sorcerer",
+      "x": 18,
+      "y": 5,
+      "hp": 10,
+      "alive": true,
+      "timeLeft": 0,
+      "projectileTimeLeft": 0
+    }
+  ],
+  "projectiles": []
+}

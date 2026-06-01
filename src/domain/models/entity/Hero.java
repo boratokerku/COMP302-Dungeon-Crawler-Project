@@ -160,7 +160,14 @@ public class Hero extends Entity {
     }
 
     public int getDef() {
-        int bonus = (equippedArmor != null) ? equippedArmor.getDefBonus() : 0;
+        int bonus = 0;
+        if (inventory != null) {
+            for (GameObject item : inventory.getItems()) {
+                if (item instanceof domain.models.item.wearables.ArmorItem) {
+                    bonus += ((domain.models.item.wearables.ArmorItem) item).getDefBonus();
+                }
+            }
+        }
         return this.def + bonus;
     }
 

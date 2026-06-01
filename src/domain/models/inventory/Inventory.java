@@ -46,6 +46,15 @@ public class Inventory {
         if (item != null && items.remove(item)) {
             System.out.println("Removed " + item.getName() + " from inventory.");
             if (owner != null) {
+                if (owner.getEquippedWeapon() == item) {
+                    owner.unequipWeapon();
+                }
+                if (owner.getEquippedArmor() == item) {
+                    owner.unequipArmor();
+                }
+                if (owner.getEquippedRing() == item) {
+                    owner.unequipRing();
+                }
                 owner.onInventoryChanged();
             }
             return true;

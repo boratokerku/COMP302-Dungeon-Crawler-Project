@@ -959,9 +959,7 @@ public class DesignModeView extends JPanel {
         int lockedChests = countLockedChests();
         int keys = countKeys();
         if (keys != lockedChests) {
-            showMsg("Validation Error: The number of keys placed on the map (" + keys
-                    + ") must be equal to the number of locked chests (" + lockedChests + ").",
-                    "Invalid Map");
+            showInvalidMapDialog();
             return false;
         }
         return true;
@@ -2519,6 +2517,13 @@ public class DesignModeView extends JPanel {
         Window parentWindow = SwingUtilities.getWindowAncestor(this);
         Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
         MaxWallDialog dialog = new MaxWallDialog(parentFrame);
+        dialog.setVisible(true);
+    }
+
+    private void showInvalidMapDialog() {
+        Window parentWindow = SwingUtilities.getWindowAncestor(this);
+        Frame parentFrame = (parentWindow instanceof Frame) ? (Frame) parentWindow : null;
+        InvalidMapDialog dialog = new InvalidMapDialog(parentFrame);
         dialog.setVisible(true);
     }
 

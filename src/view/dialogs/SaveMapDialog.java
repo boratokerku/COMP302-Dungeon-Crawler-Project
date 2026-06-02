@@ -20,12 +20,14 @@ public class SaveMapDialog extends JDialog {
 
     private boolean saved = false;
     private String resultMapName = null;
+    private final List<String> existingMaps;
 
     private static final int DIALOG_W = 460;
     private static final int DIALOG_H = 240;
 
     public SaveMapDialog(Frame owner, List<String> existingMaps) {
         super(owner, "Save Map", true);
+        this.existingMaps = existingMaps;
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0));
         setSize(DIALOG_W, DIALOG_H);
@@ -121,6 +123,18 @@ public class SaveMapDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "Please enter a valid map name.", "Error",
                         JOptionPane.ERROR_MESSAGE);
                 return;
+            }
+            // Duplicate name check
+            String sanitized = text.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+            boolean duplicate = existingMaps.stream()
+                    .anyMatch(m -> sanitized.equalsIgnoreCase(m));
+            if (duplicate) {
+                int choice = JOptionPane.showConfirmDialog(this,
+                        "'" + sanitized + "' already exists. Overwrite?",
+                        "Overwrite Map?",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE);
+                if (choice != JOptionPane.YES_OPTION) return;
             }
             saved = true;
             resultMapName = text;

@@ -219,7 +219,6 @@ public class DesignModeActionHandler {
                     sb.append((char) c);
                 domain.logic.MapFileManager.loadMapFromJson(map, sb.toString());
                 view.repaint();
-                JOptionPane.showMessageDialog(view, "Harita yüklendi: " + chosen, "Yükleme Başarılı", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(view, "Yükleme hatası: " + ex.getMessage(), "Hata", JOptionPane.ERROR_MESSAGE);
             }

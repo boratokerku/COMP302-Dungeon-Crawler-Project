@@ -29,6 +29,7 @@ public class PauseMenu extends JPanel {
     private final domain.logic.ScrollSpawner scrollSpawner;
     private final LevelManager levelManager;
     private final GameView gameView;
+    private final domain.models.GameMode gameMode;
     private final Runnable onResume;
     private final Runnable onRestart;
     private final Runnable onMainMenu;
@@ -43,6 +44,7 @@ public class PauseMenu extends JPanel {
     public PauseMenu(Hero hero, List<Entity> entities, GameMap map,
                      domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner,
                      LevelManager levelManager, GameView gameView,
+                     domain.models.GameMode gameMode,
                      Runnable onResume, Runnable onRestart, Runnable onMainMenu) {
         this.hero = hero;
         this.entities = entities;
@@ -51,6 +53,7 @@ public class PauseMenu extends JPanel {
         this.scrollSpawner = scrollSpawner;
         this.levelManager = levelManager;
         this.gameView = gameView;
+        this.gameMode = gameMode;
         this.onResume = onResume;
         this.onRestart = onRestart;
         this.onMainMenu = onMainMenu;
@@ -236,7 +239,9 @@ public class PauseMenu extends JPanel {
             String saveName = dialog.getSaveName();
             // Sanitise save name to prevent file path injection issues
             saveName = saveName.trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
-            SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner, levelManager.getCurrentLevel(), gameView.getElapsedSeconds());
+            int currentLevel = (levelManager != null) ? levelManager.getCurrentLevel() : 1;
+            domain.models.GameMode mode = (gameMode != null) ? gameMode : domain.models.GameMode.ADVENTURE;
+            SaveManager.save(saveName, hero, entities, map, enemySpawner, scrollSpawner, currentLevel, gameView.getElapsedSeconds(), mode);
             GameSavedDialog successDialog = new GameSavedDialog(parentFrame);
             successDialog.setVisible(true);
         }

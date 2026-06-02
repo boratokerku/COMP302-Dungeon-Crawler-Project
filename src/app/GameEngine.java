@@ -184,6 +184,9 @@ public class GameEngine {
     }
 
     private static void startTeamMatchWithMap(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameMap map) {
+        // Initialize level manager for Team Match (no level progression, but needed for save/load)
+        levelManager = new LevelManager();
+
         List<Entity> entities = new ArrayList<>();
 
         // Split map into left and right halves (ignore walls on borders)
@@ -348,7 +351,12 @@ public class GameEngine {
     // Kaydedilmiş oyunu yükle — GameState'ten tüm nesneler yeniden oluşturulur
     public static void loadGame(JFrame frame, JPanel mainPanel, CardLayout cardLayout, GameState state) {
         initialDesignedMap = null;
-        activeGameMode = domain.models.GameMode.ADVENTURE;
+        // Restore the game mode from save (default ADVENTURE for old saves)
+        domain.models.GameMode loadedMode = domain.models.GameMode.ADVENTURE;
+        if ("TEAM_MATCH".equals(state.gameMode)) {
+            loadedMode = domain.models.GameMode.TEAM_MATCH;
+        }
+        activeGameMode = loadedMode;
 
         // Initialize level manager with loaded level
         levelManager = new LevelManager();
@@ -365,7 +373,14 @@ public class GameEngine {
         hero.setMana(state.hero.mana);
         hero.setEnergy(state.hero.energy);
         if (state.hero.str > 0)
-            hero.setStr(state.hero.str); // str bilgisini yükle
+            hero.setStr(state.hero.str);
+        // Hero team bilgisini restore et
+        if (state.hero.team != null && !state.hero.team.isEmpty() && !"NONE".equals(state.hero.team)) {
+            try { hero.setTeam(domain.models.Team.valueOf(state.hero.team)); } catch (Exception ignored) {}
+        } else if (loadedMode == domain.models.GameMode.TEAM_MATCH) {
+            // Eski format save: Team Match'te hero varsayılan olarak CYAN
+            hero.setTeam(domain.models.Team.CYAN);
+        }
 
         // Kılıcı veya kuşanılmış silahı takılıysa ayarla
         if (state.hero.equippedWeaponType != null && !state.hero.equippedWeaponType.isEmpty()) {
@@ -395,27 +410,50 @@ public class GameEngine {
         List<Entity> entities = new ArrayList<>();
         entities.add(hero);
 
+        int cyanKnightsAssigned = 0;
+        int cyanSorcerersAssigned = 0;
+
         for (GameState.EnemyRecord rec : state.enemies) {
             if ("Knight".equals(rec.type)) {
                 Knight k = new Knight(rec.x, rec.y);
                 k.setHp(rec.hp);
+                if (!rec.alive) k.takeDamage(999);
+                // Team bilgisini restore et
+                if (rec.team != null && !"NONE".equals(rec.team)) {
+                    try { k.setTeam(domain.models.Team.valueOf(rec.team)); } catch (Exception ignored) {}
+                } else if (loadedMode == domain.models.GameMode.TEAM_MATCH) {
+                    if (cyanKnightsAssigned < 2) {
+                        k.setTeam(domain.models.Team.CYAN);
+                        cyanKnightsAssigned++;
+                    } else {
+                        k.setTeam(domain.models.Team.ORANGE);
+                    }
+                }
                 entities.add(k);
-                if (knight == null)
-                    knight = k;
+                if (knight == null) knight = k;
             } else if ("Sorcerer".equals(rec.type)) {
                 Sorcerer s = new Sorcerer(rec.x, rec.y);
                 s.setHp(rec.hp);
-                s.setTimeLeft(rec.timeLeft); // Işınlanma timer'ı
-                s.setProjectileTimeLeft(rec.projectileTimeLeft); // Mermi timer'ı
-                if (!rec.alive)
-                    s.takeDamage(999);
+                s.setTimeLeft(rec.timeLeft);
+                s.setProjectileTimeLeft(rec.projectileTimeLeft);
+                if (!rec.alive) s.takeDamage(999);
+                // Team bilgisini restore et
+                if (rec.team != null && !"NONE".equals(rec.team)) {
+                    try { s.setTeam(domain.models.Team.valueOf(rec.team)); } catch (Exception ignored) {}
+                } else if (loadedMode == domain.models.GameMode.TEAM_MATCH) {
+                    if (cyanSorcerersAssigned < 1) {
+                        s.setTeam(domain.models.Team.CYAN);
+                        cyanSorcerersAssigned++;
+                    } else {
+                        s.setTeam(domain.models.Team.ORANGE);
+                    }
+                }
                 entities.add(s);
-                sorcerer = s;
+                if (sorcerer == null) sorcerer = s;
             } else if ("ShadowClone".equals(rec.type)) {
                 domain.models.entity.ShadowClone clone = new domain.models.entity.ShadowClone(rec.x, rec.y);
                 clone.setTimeLeft(rec.timeLeft);
-                if (!rec.alive)
-                    clone.takeDamage(999);
+                if (!rec.alive) clone.takeDamage(999);
                 entities.add(clone);
             } else if ("FinalBoss".equals(rec.type)) {
                 domain.models.entity.FinalBoss fb = new domain.models.entity.FinalBoss(rec.x, rec.y);
@@ -426,20 +464,22 @@ public class GameEngine {
                 fb.setPhase60Triggered(rec.hp < 60);
                 fb.setPhase40Triggered(rec.hp < 40);
                 fb.setPhase20Triggered(rec.hp < 20);
-                if (!rec.alive)
-                    fb.takeDamage(999);
+                if (!rec.alive) fb.takeDamage(999);
                 entities.add(fb);
             }
         }
 
-        // Fallback: kayıtta düşman yoksa default pozisyon
-        if (knight == null) {
-            knight = new Knight(12, 10);
-            entities.add(knight);
-        }
-        if (sorcerer == null) {
-            sorcerer = new Sorcerer(18, 5);
-            entities.add(sorcerer);
+        // Fallback: Adventure modunda kayıtta düşman yoksa default pozisyon
+        // Team Match modunda fallback eklenmez — takımlar save'de mükemmel yüklenir
+        if (loadedMode == domain.models.GameMode.ADVENTURE) {
+            if (knight == null) {
+                knight = new Knight(12, 10);
+                entities.add(knight);
+            }
+            if (sorcerer == null) {
+                sorcerer = new Sorcerer(18, 5);
+                entities.add(sorcerer);
+            }
         }
 
         // Kaydedilmiş uçan mermileri yeniden oluştur
@@ -507,7 +547,7 @@ public class GameEngine {
         }
 
         setupGameView(frame, mainPanel, cardLayout, hero, entities, map, knight, sorcerer, scrollItems,
-                inventoryScrollTypes, state, domain.models.GameMode.ADVENTURE);
+                inventoryScrollTypes, state, loadedMode);
     }
 
 
@@ -761,6 +801,7 @@ public class GameEngine {
         // PauseMenu — JFrame glass pane olarak oyunun üstüne bindiriliyor
         view.PauseMenu pauseMenu = new view.PauseMenu(
                 hero, entities, map, spawner, scrollSpawner, levelManager, gameView,
+                mode,
                 () -> {
                     lastTickTime[0] = System.currentTimeMillis();
                     if (logicRef[0] != null)

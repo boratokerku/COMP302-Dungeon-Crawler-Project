@@ -22,6 +22,9 @@ public class GameState {
     public int mapWidth = 22;
     public int mapHeight = 16;
 
+    // Game mode ("ADVENTURE" or "TEAM_MATCH")
+    public String gameMode = "ADVENTURE";
+
     // Multi-level progression
     public int currentLevel = 1;
 
@@ -43,10 +46,11 @@ public class GameState {
         public String equippedWeaponType; // null veya "SwordItem"
         public String equippedArmorType;  // null veya "ArmorItem"
         public String equippedRingType;   // null veya "RingItem"
+        public String team = "NONE";      // Team Match ekip bilgisi
 
         public HeroRecord() {}
 
-        public HeroRecord(int x, int y, int hp, int mana, int energy, int str, String equippedWeaponType, String equippedArmorType, String equippedRingType) {
+        public HeroRecord(int x, int y, int hp, int mana, int energy, int str, String equippedWeaponType, String equippedArmorType, String equippedRingType, String team) {
             this.x = x;
             this.y = y;
             this.hp = hp;
@@ -56,6 +60,7 @@ public class GameState {
             this.equippedWeaponType = equippedWeaponType;
             this.equippedArmorType = equippedArmorType;
             this.equippedRingType = equippedRingType;
+            this.team = (team != null) ? team : "NONE";
         }
     }
 
@@ -108,6 +113,7 @@ public class GameState {
         public boolean alive;
         public long timeLeft;            // Sorcerer ışınlanma timerı (ms)
         public long projectileTimeLeft;  // Sorcerer projectile timerı (ms)
+        public String team = "NONE";     // Team Match ekip bilgisi
 
         public EnemyRecord() {}
 
@@ -123,6 +129,11 @@ public class GameState {
         public EnemyRecord(String type, int x, int y, int hp, boolean alive, long timeLeft, long projectileTimeLeft) {
             this(type, x, y, hp, alive, timeLeft);
             this.projectileTimeLeft = projectileTimeLeft;
+        }
+
+        public EnemyRecord withTeam(String team) {
+            this.team = (team != null) ? team : "NONE";
+            return this;
         }
     }
 

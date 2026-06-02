@@ -23,7 +23,7 @@ public class SaveManager {
     // Oyunu kaydet — saves/<saveName>.json dosyasına yazar
     public static void save(String saveName, Hero hero, List<Entity> entities, GameMap map,
                             domain.logic.EnemySpawner enemySpawner, domain.logic.ScrollSpawner scrollSpawner,
-                            int currentLevel, long elapsedSeconds) {
+                            int currentLevel, long elapsedSeconds, domain.models.GameMode gameMode) {
         GameState state = new GameState();
         state.saveName = saveName;
         state.currentLevel = currentLevel;
@@ -31,6 +31,7 @@ public class SaveManager {
         state.elapsedSeconds = elapsedSeconds;
         state.mapWidth = map.getWidth();
         state.mapHeight = map.getHeight();
+        state.gameMode = (gameMode != null) ? gameMode.name() : "ADVENTURE";
 
         // Global Timerlar
         state.enemySpawnTimeLeft = enemySpawner != null ? enemySpawner.getTimeLeft() : 9000;
@@ -44,7 +45,8 @@ public class SaveManager {
         state.hero = new GameState.HeroRecord(
                 hero.getX(), hero.getY(),
                 hero.getHp(), hero.getMana(), hero.getEnergy(),
-                hero.getStr(), equippedWeaponType, equippedArmorType, equippedRingType
+                hero.getStr(), equippedWeaponType, equippedArmorType, equippedRingType,
+                hero.getTeam() != null ? hero.getTeam().name() : "NONE"
         );
 
         // Envanter (detaylı nesne kaydı)
@@ -116,15 +118,17 @@ public class SaveManager {
         // Düşmanlar ve ShadowClone
         for (Entity e : entities) {
             if (e instanceof Knight) {
+                String team = (e.getTeam() != null) ? e.getTeam().name() : "NONE";
                 state.enemies.add(new GameState.EnemyRecord(
                         "Knight", e.getX(), e.getY(), e.getHp(), e.isAlive(), 0
-                ));
+                ).withTeam(team));
             } else if (e instanceof Sorcerer) {
                 long teleportLeft    = ((Sorcerer) e).getTimeLeft();
                 long projectileLeft  = ((Sorcerer) e).getProjectileTimeLeft();
+                String team = (e.getTeam() != null) ? e.getTeam().name() : "NONE";
                 state.enemies.add(new GameState.EnemyRecord(
                         "Sorcerer", e.getX(), e.getY(), e.getHp(), e.isAlive(), teleportLeft, projectileLeft
-                ));
+                ).withTeam(team));
             } else if (e instanceof domain.models.entity.FinalBoss) {
                 domain.models.entity.FinalBoss fb = (domain.models.entity.FinalBoss) e;
                 state.enemies.add(new GameState.EnemyRecord(

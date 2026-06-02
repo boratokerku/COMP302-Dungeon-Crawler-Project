@@ -1,0 +1,357 @@
+{
+  "saveName": "yusufi",
+  "timestamp": "2026-06-02 17:52",
+  "enemySpawnTimeLeft": 2425,
+  "scrollSpawnTimeLeft": 8425,
+  "elapsedSeconds": 1,
+  "mapWidth": 30,
+  "mapHeight": 20,
+  "gameMode": "TEAM_MATCH",
+  "currentLevel": 1,
+  "hero": {
+    "x": 19,
+    "y": 3,
+    "hp": 17,
+    "mana": 80,
+    "energy": 100,
+    "str": 14,
+    "team": "CYAN"
+  },
+  "inventoryItems": [],
+  "mapItems": [
+    {
+      "type": "Crate",
+      "name": "Crate",
+      "x": 1,
+      "y": 4,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "crate"
+    },
+    {
+      "type": "Door",
+      "name": "Level Gate",
+      "x": 2,
+      "y": 0,
+      "isLocked": true,
+      "searched": false,
+      "imageName": "door/door_closed"
+    },
+    {
+      "type": "Decoration",
+      "name": "Torch",
+      "x": 2,
+      "y": 12,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "torch/torch_1"
+    },
+    {
+      "type": "Column",
+      "name": "Column",
+      "x": 3,
+      "y": 9,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "colon/gray_colon_whole"
+    },
+    {
+      "type": "Decoration",
+      "name": "Statue",
+      "x": 3,
+      "y": 14,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/containers/statue.png"
+    },
+    {
+      "type": "GoldenSwordItem",
+      "name": "Golden Sword",
+      "x": 3,
+      "y": 18,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/golden_sword_1.png"
+    },
+    {
+      "type": "DiamondSwordItem",
+      "name": "Diamond Sword",
+      "x": 4,
+      "y": 5,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/diamond_sword_1.png"
+    },
+    {
+      "type": "Chest",
+      "name": "Brown Chest",
+      "x": 4,
+      "y": 8,
+      "isLocked": true,
+      "searched": false,
+      "imageName": "containers/chest_brown"
+    },
+    {
+      "type": "SearchableObject",
+      "name": "Gargoyle Statue",
+      "x": 5,
+      "y": 0,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/WallSearchable/gargoyle.png"
+    },
+    {
+      "type": "WoodenSwordItem",
+      "name": "Wooden Sword",
+      "x": 6,
+      "y": 6,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/wooden_sword.png"
+    },
+    {
+      "type": "Decoration",
+      "name": "Torch",
+      "x": 6,
+      "y": 18,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "torch/torch_1"
+    },
+    {
+      "type": "GoldenSwordItem",
+      "name": "Golden Sword",
+      "x": 7,
+      "y": 6,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/golden_sword_1.png"
+    },
+    {
+      "type": "Decoration",
+      "name": "Skull",
+      "x": 8,
+      "y": 10,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/containers/skull.png"
+    },
+    {
+      "type": "Decoration",
+      "name": "Torch",
+      "x": 9,
+      "y": 5,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "torch/torch_1"
+    },
+    {
+      "type": "AxeItem",
+      "name": "Battle Axe",
+      "x": 11,
+      "y": 1,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/axe.png"
+    },
+    {
+      "type": "Chest",
+      "name": "Bag",
+      "x": 13,
+      "y": 8,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "containers/bag"
+    },
+    {
+      "type": "BowItem",
+      "name": "Hunting Bow",
+      "x": 14,
+      "y": 5,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/bow.png"
+    },
+    {
+      "type": "KeyItem",
+      "name": "Golden Key 1",
+      "x": 15,
+      "y": 6,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/key/golden_key_1.png"
+    },
+    {
+      "type": "Column",
+      "name": "Column",
+      "x": 15,
+      "y": 13,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "colon/gray_colon_whole"
+    },
+    {
+      "type": "Crate",
+      "name": "Brown Crate",
+      "x": 17,
+      "y": 13,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "containers/crate_brown"
+    },
+    {
+      "type": "SearchableObject",
+      "name": "Wall Grill",
+      "x": 18,
+      "y": 19,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/WallSearchable/wall_grill.png"
+    },
+    {
+      "type": "PotionItem",
+      "name": "Health Potion",
+      "x": 20,
+      "y": 5,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/potion/red_potion.png"
+    },
+    {
+      "type": "Crate",
+      "name": "Double Crate",
+      "x": 20,
+      "y": 13,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "double_crate"
+    },
+    {
+      "type": "Decoration",
+      "name": "Skull",
+      "x": 20,
+      "y": 16,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/containers/skull.png"
+    },
+    {
+      "type": "PotionItem",
+      "name": "Poison Potion",
+      "x": 21,
+      "y": 4,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/potion/green_potion.png"
+    },
+    {
+      "type": "Crate",
+      "name": "Double Crate",
+      "x": 21,
+      "y": 9,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "double_crate"
+    },
+    {
+      "type": "ShadowCloneScroll",
+      "name": "Shadow Clone Scroll",
+      "x": 24,
+      "y": 5,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/readings/totem_3.png"
+    },
+    {
+      "type": "AxeItem",
+      "name": "Battle Axe",
+      "x": 24,
+      "y": 11,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/weapons/axe.png"
+    },
+    {
+      "type": "SearchableObject",
+      "name": "Wall Cavity",
+      "x": 27,
+      "y": 0,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/WallSearchable/wall_cavity.png"
+    }
+  ],
+  "enemies": [
+    {
+      "type": "Sorcerer",
+      "x": 13,
+      "y": 14,
+      "hp": 10,
+      "alive": true,
+      "timeLeft": 332,
+      "projectileTimeLeft": 0,
+      "team": "ORANGE"
+    },
+    {
+      "type": "Knight",
+      "x": 9,
+      "y": 17,
+      "hp": 20,
+      "alive": true,
+      "timeLeft": 0,
+      "projectileTimeLeft": 0,
+      "team": "ORANGE"
+    },
+    {
+      "type": "Knight",
+      "x": 10,
+      "y": 2,
+      "hp": 20,
+      "alive": true,
+      "timeLeft": 0,
+      "projectileTimeLeft": 0,
+      "team": "ORANGE"
+    },
+    {
+      "type": "Knight",
+      "x": 14,
+      "y": 2,
+      "hp": 20,
+      "alive": true,
+      "timeLeft": 0,
+      "projectileTimeLeft": 0,
+      "team": "ORANGE"
+    },
+    {
+      "type": "Sorcerer",
+      "x": 26,
+      "y": 10,
+      "hp": 10,
+      "alive": true,
+      "timeLeft": 332,
+      "projectileTimeLeft": 0,
+      "team": "CYAN"
+    },
+    {
+      "type": "Knight",
+      "x": 23,
+      "y": 1,
+      "hp": 20,
+      "alive": true,
+      "timeLeft": 0,
+      "projectileTimeLeft": 0,
+      "team": "CYAN"
+    },
+    {
+      "type": "Knight",
+      "x": 21,
+      "y": 15,
+      "hp": 20,
+      "alive": true,
+      "timeLeft": 0,
+      "projectileTimeLeft": 0,
+      "team": "CYAN"
+    }
+  ],
+  "projectiles": []
+}

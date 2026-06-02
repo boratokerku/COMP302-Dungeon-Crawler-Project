@@ -18,6 +18,10 @@ public class GameState {
     public long scrollSpawnTimeLeft = 15000;
     public long elapsedSeconds = 0;
 
+    // Map dimensions (saved to restore correct size on load)
+    public int mapWidth = 22;
+    public int mapHeight = 16;
+
     // Multi-level progression
     public int currentLevel = 1;
 

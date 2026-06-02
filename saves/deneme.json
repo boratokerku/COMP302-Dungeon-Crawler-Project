@@ -1,0 +1,60 @@
+{
+  "saveName": "deneme",
+  "timestamp": "2026-06-02 17:15",
+  "enemySpawnTimeLeft": 3018,
+  "scrollSpawnTimeLeft": 9018,
+  "elapsedSeconds": 1,
+  "mapWidth": 30,
+  "mapHeight": 20,
+  "currentLevel": 1,
+  "hero": {
+    "x": 4,
+    "y": 4,
+    "hp": 17,
+    "mana": 80,
+    "energy": 100,
+    "str": 13
+  },
+  "inventoryItems": [],
+  "mapItems": [
+    {
+      "type": "LevelKey",
+      "name": "Skull Key",
+      "x": 2,
+      "y": 3,
+      "isLocked": false,
+      "searched": false,
+      "imageName": "images/items/key/skull_key.png"
+    },
+    {
+      "type": "Door",
+      "name": "Level Gate",
+      "x": 9,
+      "y": 0,
+      "isLocked": true,
+      "searched": false,
+      "imageName": "door/door_closed"
+    }
+  ],
+  "enemies": [
+    {
+      "type": "Knight",
+      "x": 14,
+      "y": 10,
+      "hp": 20,
+      "alive": true,
+      "timeLeft": 0,
+      "projectileTimeLeft": 0
+    },
+    {
+      "type": "Sorcerer",
+      "x": 18,
+      "y": 5,
+      "hp": 10,
+      "alive": true,
+      "timeLeft": 952,
+      "projectileTimeLeft": 0
+    }
+  ],
+  "projectiles": []
+}

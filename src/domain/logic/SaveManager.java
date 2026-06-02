@@ -29,6 +29,8 @@ public class SaveManager {
         state.currentLevel = currentLevel;
         state.timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(new java.util.Date());
         state.elapsedSeconds = elapsedSeconds;
+        state.mapWidth = map.getWidth();
+        state.mapHeight = map.getHeight();
 
         // Global Timerlar
         state.enemySpawnTimeLeft = enemySpawner != null ? enemySpawner.getTimeLeft() : 9000;

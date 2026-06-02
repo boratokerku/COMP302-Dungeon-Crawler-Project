@@ -354,7 +354,9 @@ public class GameEngine {
         levelManager = new LevelManager();
         levelManager.setCurrentLevel(state.currentLevel);
 
-        GameMap map = new GameMap(22, 16);
+        GameMap map = new GameMap(
+                state.mapWidth > 0 ? state.mapWidth : 22,
+                state.mapHeight > 0 ? state.mapHeight : 16);
 
         // Hero oluştur ve durumunu yükle
         Hero hero = new Hero(state.hero.x, state.hero.y);

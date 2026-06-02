@@ -706,6 +706,20 @@ public class GameEngine {
                     entities.clear();
                     entities.add(hero);
 
+                    // Remove the Skull Key (LevelKey) from the hero's inventory upon level completion
+                    if (hero.getInventory() != null) {
+                        java.util.List<domain.models.GameObject> toRemove = new java.util.ArrayList<>();
+                        for (domain.models.GameObject item : hero.getInventory().getItems()) {
+                            if (item instanceof domain.models.item.LevelKey) {
+                                toRemove.add(item);
+                            }
+                        }
+                        for (domain.models.GameObject key : toRemove) {
+                            hero.getInventory().removeItem(key);
+                            System.out.println("Removed Skull Key from inventory on level transition.");
+                        }
+                    }
+
                     levelManager.populateEnemies(levelManager.getCurrentLevel(), newMap, entities, hero);
                     spawner.clearSpawnedEnemies();
                     inputHandler.setShadowClone(null);

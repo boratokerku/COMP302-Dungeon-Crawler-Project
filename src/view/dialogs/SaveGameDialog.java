@@ -21,13 +21,11 @@ public class SaveGameDialog extends JDialog {
 
     private boolean saved = false;
     private String resultSaveName = null;
-    private final List<GameState> existingSaves;
 
     private static final int INSET = 60; // 9-slice boundary insets
 
     public SaveGameDialog(Frame owner, List<GameState> existingSaves) {
         super(owner, "Save Game", true);
-        this.existingSaves = existingSaves;
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0));
 
@@ -91,18 +89,6 @@ public class SaveGameDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "Please enter a valid save name.", "Error",
                         JOptionPane.ERROR_MESSAGE);
                 return;
-            }
-            // Duplicate name check
-            String sanitized = text.replaceAll("[^a-zA-Z0-9_\\-]", "_");
-            boolean duplicate = existingSaves.stream()
-                    .anyMatch(s -> sanitized.equalsIgnoreCase(s.saveName));
-            if (duplicate) {
-                int choice = JOptionPane.showConfirmDialog(this,
-                        "'" + sanitized + "' already exists. Overwrite?",
-                        "Overwrite Save?",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE);
-                if (choice != JOptionPane.YES_OPTION) return;
             }
             saved = true;
             resultSaveName = text;
